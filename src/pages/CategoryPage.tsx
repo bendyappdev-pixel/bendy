@@ -61,13 +61,13 @@ const outdoorSubcategories: Subcategory[] = [
     id: 'dogs',
     label: 'Dog Friendly',
     icon: Dog,
-    filter: (loc) => loc.type === 'dog-park' || loc.amenities?.some(a => a.toLowerCase().includes('dog')),
+    filter: (loc) => loc.type === 'dog-park' || (loc.amenities?.some(a => a.toLowerCase().includes('dog')) ?? false),
   },
   {
     id: 'hiking',
     label: 'Hiking',
     icon: Footprints,
-    filter: (loc) => loc.type === 'trailhead' || (loc.type === 'park' && loc.difficulty),
+    filter: (loc) => loc.type === 'trailhead' || (loc.type === 'park' && !!loc.difficulty),
   },
 ];
 

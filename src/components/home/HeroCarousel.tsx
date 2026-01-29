@@ -14,7 +14,6 @@ interface HeroCarouselProps {
 
 export default function HeroCarousel({ children }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoaded, setIsLoaded] = useState<boolean[]>([]);
   const [isPaused, setIsPaused] = useState(false);
 
   const hasImages = heroImages.length > 0;
@@ -23,14 +22,8 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
   useEffect(() => {
     if (!hasImages) return;
 
-    const loadStates = new Array(heroImages.length).fill(false);
-
-    heroImages.forEach((src, index) => {
+    heroImages.forEach((src) => {
       const img = new Image();
-      img.onload = () => {
-        loadStates[index] = true;
-        setIsLoaded([...loadStates]);
-      };
       img.src = src;
     });
   }, [hasImages]);

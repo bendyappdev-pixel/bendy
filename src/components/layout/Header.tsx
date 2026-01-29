@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin } from 'lucide-react';
+import { Menu, MapPin } from 'lucide-react';
 import MobileNav from './MobileNav';
 
 const navLinks = [

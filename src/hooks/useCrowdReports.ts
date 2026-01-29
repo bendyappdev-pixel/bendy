@@ -72,8 +72,6 @@ export function useCrowdReports() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fourHoursAgo = new Date(Date.now() - REPORT_DURATION_HOURS * 60 * 60 * 1000);
-
     const q = query(
       collection(db, COLLECTION_NAME),
       where('expiresAt', '>', Timestamp.fromDate(new Date())),
