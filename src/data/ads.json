@@ -1,0 +1,64 @@
+{
+  "_comments": {
+    "instructions": "Ad Management System for Bendy",
+    "howToAddAd": "Replace placeholder values with real ad content. Set 'enabled: true' to show the slot.",
+    "toDisable": "Set 'enabled: false' to completely hide any ad slot.",
+    "imageSizes": {
+      "partnerLogo": "200x80px - Partner/sponsor logos",
+      "weekendPick": "800x400px - Featured experience wide banner",
+      "sponsoredEvent": "No image needed - uses event card styling",
+      "inFeedBanner": "600x300px - In-feed promotional banner",
+      "contextualBanner": "1200x200px - Wide contextual banner below map"
+    },
+    "futureAPI": "This JSON can be replaced with an API endpoint in useAds.ts"
+  },
+  "partnerBanner": {
+    "enabled": true,
+    "title": "Our Partners",
+    "partners": [
+      { "name": "Your Business Here", "logo": "/ads/placeholder-logo.svg", "url": "#" },
+      { "name": "Your Business Here", "logo": "/ads/placeholder-logo.svg", "url": "#" },
+      { "name": "Your Business Here", "logo": "/ads/placeholder-logo.svg", "url": "#" }
+    ]
+  },
+  "weekendPick": {
+    "enabled": true,
+    "title": "Your Business Featured Here",
+    "description": "Premium placement for local experiences and businesses",
+    "image": "/ads/placeholder-wide.svg",
+    "url": "#",
+    "sponsor": "Advertise with Bendy"
+  },
+  "sponsoredEvent": {
+    "enabled": true,
+    "title": "Your Event Here",
+    "description": "Get your event featured at the top of the listings",
+    "date": "Coming Soon",
+    "location": "Bend, OR",
+    "price": "Contact Us",
+    "url": "#",
+    "sponsor": "Advertise with Bendy"
+  },
+  "inFeedBanner": {
+    "enabled": true,
+    "title": "Reach Bend Visitors",
+    "description": "Advertise your business to thousands of Bend visitors and locals",
+    "image": "/ads/placeholder-banner.svg",
+    "url": "#",
+    "sponsor": "Your Business",
+    "ctaText": "Learn More"
+  },
+  "sponsoredMapPins": {
+    "enabled": true,
+    "pins": []
+  },
+  "contextualBanner": {
+    "enabled": true,
+    "title": "Featured Local Business",
+    "description": "Premium map placement available for your business",
+    "image": "/ads/placeholder-banner.svg",
+    "url": "#",
+    "sponsor": "Advertise with Bendy",
+    "ctaText": "Get Featured"
+  }
+}

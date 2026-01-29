@@ -1,0 +1,6 @@
+<svg width="1200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="200" fill="#D1D5DB" rx="12"/>
+  <rect x="40" y="30" width="1120" height="140" fill="#E5E7EB" rx="8" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="600" y="95" font-family="system-ui, sans-serif" font-size="20" fill="#6B7280" text-anchor="middle" font-weight="600">Advertise with Bendy</text>
+  <text x="600" y="125" font-family="system-ui, sans-serif" font-size="12" fill="#9CA3AF" text-anchor="middle">Reach thousands of Bend visitors • 1200 x 200 pixels</text>
+</svg>
