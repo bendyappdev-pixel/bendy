@@ -7,6 +7,12 @@
 
 import adsData from '../data/ads.json';
 
+/**
+ * Global flag to disable all ads until real advertisers are onboarded.
+ * Set to true when ready to show ads.
+ */
+const ADS_ENABLED = false;
+
 // Type definitions for ad slots
 export interface Partner {
   name: string;
@@ -107,6 +113,7 @@ export function getAd<T extends AdSlotName>(slotName: T): AdsConfig[T] | null {
  * Check if an ad slot is enabled
  */
 export function isAdEnabled(slotName: AdSlotName): boolean {
+  if (!ADS_ENABLED) return false;
   const ad = getAd(slotName);
   return ad?.enabled ?? false;
 }
@@ -116,6 +123,21 @@ export function isAdEnabled(slotName: AdSlotName): boolean {
  */
 export function useAds() {
   const ads = getAds();
+
+  // When ads are globally disabled, override all enabled flags to false
+  if (!ADS_ENABLED) {
+    return {
+      ads,
+      getAd,
+      isAdEnabled,
+      partnerBanner: { ...ads.partnerBanner, enabled: false },
+      weekendPick: { ...ads.weekendPick, enabled: false },
+      sponsoredEvent: { ...ads.sponsoredEvent, enabled: false },
+      inFeedBanner: { ...ads.inFeedBanner, enabled: false },
+      sponsoredMapPins: { ...ads.sponsoredMapPins, enabled: false },
+      contextualBanner: { ...ads.contextualBanner, enabled: false },
+    };
+  }
 
   return {
     ads,
