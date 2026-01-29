@@ -1,0 +1,8 @@
+# Bendy - Bend, Oregon Guide
+# https://bendy.app
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://bendy.app/sitemap.xml

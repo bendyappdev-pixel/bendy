@@ -2,13 +2,99 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Bendy - Your guide to Bend, Oregon. Discover events, outdoor activities, and local favorites." />
-    <title>Bendy - Bend, Oregon Guide</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Primary Meta Tags -->
+    <title>Bendy - Your Guide to Bend, Oregon</title>
+    <meta name="title" content="Bendy - Your Guide to Bend, Oregon" />
+    <meta name="description" content="Discover the best of Bend, Oregon. Events, outdoor adventures, local breweries, family fun, and everything the Bend area has to offer." />
+    <meta name="keywords" content="Bend Oregon, Central Oregon, outdoor activities, hiking, skiing, Mt Bachelor, breweries, events, family activities, Deschutes River, Smith Rock" />
+    <meta name="author" content="Bendy" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2D5016" />
+    <meta name="msapplication-TileColor" content="#2D5016" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Canonical URL - Update with your actual domain -->
+    <link rel="canonical" href="https://bendy.app/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bendy.app/" />
+    <meta property="og:title" content="Bendy - Your Guide to Bend, Oregon" />
+    <meta property="og:description" content="Discover the best of Bend, Oregon. Events, outdoor adventures, local breweries, family fun, and everything the Bend area has to offer." />
+    <meta property="og:image" content="https://bendy.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Bendy" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://bendy.app/" />
+    <meta name="twitter:title" content="Bendy - Your Guide to Bend, Oregon" />
+    <meta name="twitter:description" content="Discover the best of Bend, Oregon. Events, outdoor adventures, local breweries, family fun, and everything the Bend area has to offer." />
+    <meta name="twitter:image" content="https://bendy.app/og-image.jpg" />
+
+    <!-- Geo Tags -->
+    <meta name="geo.region" content="US-OR" />
+    <meta name="geo.placename" content="Bend, Oregon" />
+    <meta name="geo.position" content="44.0582;-121.3153" />
+    <meta name="ICBM" content="44.0582, -121.3153" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Structured Data - LocalBusiness + WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://bendy.app/#website",
+          "url": "https://bendy.app/",
+          "name": "Bendy",
+          "description": "Your guide to Bend, Oregon",
+          "publisher": {
+            "@id": "https://bendy.app/#organization"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://bendy.app/#organization",
+          "name": "Bendy",
+          "url": "https://bendy.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://bendy.app/logo.png"
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "TouristDestination",
+          "name": "Bend, Oregon",
+          "description": "A premier outdoor destination in Central Oregon featuring world-class skiing, mountain biking, hiking, and craft breweries.",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 44.0582,
+            "longitude": -121.3153
+          },
+          "touristType": ["Adventure travelers", "Outdoor enthusiasts", "Families", "Beer lovers"]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
