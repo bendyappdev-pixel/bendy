@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Crowd Reports Collection
+    match /crowdReports/{reportId} {
+      // Anyone can read crowd reports (they're public data)
+      allow read: if true;
+
+      // Writing has restrictions
+      allow create: if isValidCrowdReport(request.resource.data);
+
+      // No updates or deletes allowed from clients
+      allow update, delete: if false;
+    }
+
+    // Validate crowd report structure
+    function isValidCrowdReport(data) {
+      return data.keys().hasAll(['locationId', 'locationName', 'crowdLevel', 'timestamp', 'expiresAt'])
+        && data.keys().hasOnly(['locationId', 'locationName', 'crowdLevel', 'comment', 'timestamp', 'expiresAt'])
+        && isValidLocation(data.locationId)
+        && isValidCrowdLevel(data.crowdLevel)
+        && isValidStrings(data)
+        && isValidTiming(data);
+    }
+
+    function isValidLocation(locationId) {
+      return locationId in [
+        'elk-lake', 'sparks-lake', 'tumalo-falls', 'phils-trail', 'downtown-bend',
+        'deschutes-river-trail', 'smith-rock', 'mt-bachelor', 'todd-lake', 'lava-river-cave'
+      ];
+    }
+
+    function isValidCrowdLevel(level) {
+      return level in ['empty', 'moderate', 'busy', 'packed'];
+    }
+
+    function isValidStrings(data) {
+      return data.locationName is string
+        && data.locationName.size() > 0
+        && data.locationName.size() <= 100
+        && (!('comment' in data.keys()) || data.comment == null || (data.comment is string && data.comment.size() <= 150));
+    }
+
+    function isValidTiming(data) {
+      return data.timestamp == request.time
+        && data.expiresAt is timestamp
+        && data.expiresAt > request.time;
+    }
+
+    // Deny access to all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

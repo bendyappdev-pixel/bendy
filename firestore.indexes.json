@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "crowdReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "expiresAt", "order": "DESCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crowdReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "locationId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
