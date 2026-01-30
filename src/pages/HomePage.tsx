@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import Hero from '../components/home/Hero';
 import CategoryCard from '../components/home/CategoryCard';
 import { categories } from '../data/categories';
-import { MapPin, Compass, Sun, Users } from 'lucide-react';
-import { PartnerBanner, WeekendPick } from '../components/ads';
+import { MapPin, Compass, Sun, Users, Cloud, Calendar, ArrowRight } from 'lucide-react';
+import { PartnerBanner } from '../components/ads';
 import { CrowdReportsList } from '../components/crowd';
 import { WeatherWidget } from '../components/weather';
+import { events } from '../data/events';
 
 export default function HomePage() {
   return (
@@ -30,36 +31,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Weekend Pick Ad */}
+      {/* Plan Your Visit Section */}
       <section className="container-app pb-16">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">This Weekend</h2>
-        <WeekendPick />
-      </section>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Plan Your Visit
+          </h2>
+          <p className="text-gray-600">Current conditions and what's happening in Bend</p>
+        </div>
 
-      {/* Weather & Current Conditions */}
-      <section className="container-app pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Weather */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Bend Weather</h2>
-            <WeatherWidget />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Weather Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-mountain to-mountain/80 px-5 py-4">
+              <div className="flex items-center gap-2 text-white">
+                <Cloud className="w-5 h-5" />
+                <h3 className="font-semibold">Weather</h3>
+              </div>
+            </div>
+            <div className="p-4">
+              <WeatherWidget />
+            </div>
           </div>
 
-          {/* Crowd Conditions */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <Users className="w-6 h-6 text-forest" />
-                <h2 className="text-2xl font-bold text-gray-900">Crowd Reports</h2>
+          {/* Crowd Reports Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-forest to-forest/80 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <Users className="w-5 h-5" />
+                  <h3 className="font-semibold">Crowd Reports</h3>
+                </div>
+                <Link
+                  to="/map"
+                  className="text-white/80 hover:text-white text-sm flex items-center gap-1"
+                >
+                  Report
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
-              <Link
-                to="/map"
-                className="text-forest hover:underline font-medium text-sm"
-              >
-                Report conditions →
-              </Link>
             </div>
-            <CrowdReportsList limit={3} showTitle={false} />
+            <div className="p-4">
+              <CrowdReportsList limit={3} showTitle={false} compact />
+            </div>
+          </div>
+
+          {/* Upcoming Events Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-400 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <Calendar className="w-5 h-5" />
+                  <h3 className="font-semibold">Upcoming Events</h3>
+                </div>
+                <Link
+                  to="/events"
+                  className="text-white/80 hover:text-white text-sm flex items-center gap-1"
+                >
+                  View all
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+            <div className="p-4">
+              <UpcomingEventsList />
+            </div>
           </div>
         </div>
       </section>
@@ -143,6 +179,72 @@ export default function HomePage() {
 
       {/* Partner Banner */}
       <PartnerBanner />
+    </div>
+  );
+}
+
+// Helper component to show upcoming events
+function UpcomingEventsList() {
+  const today = new Date();
+  const nextWeek = new Date(today);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+
+  // Get events in the next 7 days
+  const upcomingEvents = events
+    .filter((event) => {
+      const eventDate = new Date(
+        event.date.getUTCFullYear(),
+        event.date.getUTCMonth(),
+        event.date.getUTCDate()
+      );
+      const endDate = event.endDate
+        ? new Date(
+            event.endDate.getUTCFullYear(),
+            event.endDate.getUTCMonth(),
+            event.endDate.getUTCDate()
+          )
+        : eventDate;
+
+      // Check if event falls within next 7 days
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      return endDate >= todayStart && eventDate <= nextWeek;
+    })
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, 4);
+
+  if (upcomingEvents.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+        <p className="text-sm text-gray-500">No events this week</p>
+        <Link to="/events" className="text-sm text-forest hover:underline">
+          Browse all events
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {upcomingEvents.map((event) => (
+        <Link
+          key={event.id}
+          to="/events"
+          className="block p-3 bg-gray-50 rounded-xl hover:bg-sage/20 transition-colors"
+        >
+          <p className="font-medium text-gray-900 text-sm truncate">{event.title}</p>
+          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+            <span>
+              {event.date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+            <span>•</span>
+            <span className="truncate">{event.location}</span>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
