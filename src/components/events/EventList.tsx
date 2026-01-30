@@ -6,7 +6,7 @@ interface EventListProps {
   events: Event[];
 }
 
-const categories = [
+export const categories = [
   { value: 'all', label: 'All Events' },
   { value: 'music', label: 'Live Music' },
   { value: 'outdoor', label: 'Outdoor' },

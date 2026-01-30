@@ -68,7 +68,18 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-1">
+          <p className="text-sage/60 text-xs">
+            Photography by{' '}
+            <a
+              href="https://www.benjaminedwardsphotography.com"
+              target="_blank"
+              rel="noopener"
+              className="hover:text-sage transition-colors"
+            >
+              Benjamin Edwards Photography
+            </a>
+          </p>
           <p className="text-sage/60 text-xs">
             Powered by Autom8 Media, a division of Edwards Creative Co.
           </p>

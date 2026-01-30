@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Map, Users, X } from 'lucide-react';
+import { Map, Users, X, History } from 'lucide-react';
 import InteractiveMap from '../components/map/InteractiveMap';
 import { ContextualBanner } from '../components/ads';
-import { CrowdReportForm, CrowdReportsList } from '../components/crowd';
+import { CrowdReportForm, CrowdReportsList, CrowdReportHistory } from '../components/crowd';
+
+type CrowdTab = 'current' | 'history';
 
 export default function MapPage() {
   const [showReportModal, setShowReportModal] = useState(false);
+  const [crowdTab, setCrowdTab] = useState<CrowdTab>('current');
 
   return (
     <div className="container-app py-8 md:py-12">
@@ -31,9 +34,40 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Current Conditions */}
+      {/* Crowd Reports Section */}
       <div className="mb-8">
-        <CrowdReportsList limit={5} compact />
+        {/* Tab Toggle */}
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setCrowdTab('current')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              crowdTab === 'current'
+                ? 'bg-forest text-white'
+                : 'bg-white text-gray-700 hover:bg-sage/20'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Current
+          </button>
+          <button
+            onClick={() => setCrowdTab('history')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              crowdTab === 'history'
+                ? 'bg-forest text-white'
+                : 'bg-white text-gray-700 hover:bg-sage/20'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            History
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {crowdTab === 'current' ? (
+          <CrowdReportsList limit={5} compact showTitle={false} />
+        ) : (
+          <CrowdReportHistory />
+        )}
       </div>
 
       {/* Map */}

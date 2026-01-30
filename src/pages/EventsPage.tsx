@@ -1,9 +1,38 @@
+import { useState } from 'react';
 import { Calendar, ExternalLink } from 'lucide-react';
-import EventList from '../components/events/EventList';
+import { categories } from '../components/events/EventList';
+import EventCard from '../components/events/EventCard';
+import EventCalendar from '../components/events/EventCalendar';
+import DayEventsPanel from '../components/events/DayEventsPanel';
+import ViewToggle, { ViewMode } from '../components/events/ViewToggle';
 import { events, eventSources } from '../data/events';
 import { SponsoredEvent, InFeedBanner } from '../components/ads';
+import { getEventsForDay } from '../utils/dateUtils';
 
 export default function EventsPage() {
+  const [view, setView] = useState<ViewMode>('list');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [filter, setFilter] = useState('all');
+
+  // Filter events based on selected category
+  const filteredEvents = filter === 'all'
+    ? events
+    : events.filter((event) => event.category === filter);
+
+  // Get events for the selected date (respecting filters)
+  const selectedDayEvents = selectedDate
+    ? getEventsForDay(filteredEvents, selectedDate)
+    : [];
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  const handleClosePanel = () => {
+    setSelectedDate(null);
+  };
+
   return (
     <div className="container-app py-8 md:py-12">
       {/* Header */}
@@ -24,8 +53,83 @@ export default function EventsPage() {
         <SponsoredEvent />
       </div>
 
-      {/* Events List */}
-      <EventList events={events} />
+      {/* View Toggle */}
+      <div className="mb-4">
+        <ViewToggle view={view} onViewChange={setView} />
+      </div>
+
+      {/* Category Filters */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {categories.map((cat) => (
+          <button
+            key={cat.value}
+            onClick={() => setFilter(cat.value)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              filter === cat.value
+                ? 'bg-forest text-white'
+                : 'bg-white text-gray-700 hover:bg-sage/20'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content based on view mode */}
+      {view === 'list' ? (
+        <>
+          {/* Events Grid */}
+          {filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map((event) => (
+                <div key={event.id}>
+                  {/* Importing EventCard directly to avoid double filtering */}
+                  <EventCard event={event} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No events found in this category.</p>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Calendar View */
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className={selectedDate ? 'md:w-2/3' : 'w-full'}>
+            <EventCalendar
+              events={filteredEvents}
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+              currentMonth={currentMonth}
+              onMonthChange={setCurrentMonth}
+            />
+          </div>
+
+          {/* Day Events Panel - Desktop sidebar */}
+          {selectedDate && (
+            <div className="hidden md:block md:w-1/3">
+              <DayEventsPanel
+                date={selectedDate}
+                events={selectedDayEvents}
+                onClose={handleClosePanel}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mobile Day Events Panel - Bottom sheet */}
+      {view === 'calendar' && selectedDate && (
+        <div className="md:hidden">
+          <DayEventsPanel
+            date={selectedDate}
+            events={selectedDayEvents}
+            onClose={handleClosePanel}
+          />
+        </div>
+      )}
 
       {/* In-Feed Banner Ad */}
       <div className="my-8">
