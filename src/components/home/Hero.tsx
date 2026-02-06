@@ -47,11 +47,11 @@ export default function Hero() {
             Local Guides
           </Link>
           <Link
-            to="/trails"
+            to="/category/outdoor"
             className="w-full sm:w-auto btn-secondary inline-flex items-center justify-center gap-2"
           >
             <Mountain className="w-5 h-5" />
-            Trails
+            Outdoor Activities
           </Link>
         </div>
       </div>
