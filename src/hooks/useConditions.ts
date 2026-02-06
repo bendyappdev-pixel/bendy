@@ -16,7 +16,8 @@ const USGS_SITES = {
   deschutesAtBend: '14064500',
   deschutesBelowWickiup: '14056500',
   metolius: '14091500',
-  crookedRiver: '14087400', // Below Bowman Dam - prime tailwater fishery
+  crookedOsborne: '14087380', // Below Osborne Canyon - upper tailwater
+  crookedOpalSprings: '14087400', // Below Opal Springs - lower tailwater
   fallRiver: '14057500', // Spring-fed, premiere fly fishing
 };
 
@@ -308,7 +309,8 @@ function getLocationFromSiteName(siteName: string): string {
   if (parts.toLowerCase().includes('at bend')) return 'At Bend';
   if (parts.toLowerCase().includes('below wickiup')) return 'Below Wickiup Dam';
   if (parts.toLowerCase().includes('near grandview')) return 'Near Camp Sherman';
-  if (parts.toLowerCase().includes('below bowman')) return 'Below Bowman Dam';
+  if (parts.toLowerCase().includes('osborne canyon')) return 'Below Osborne Canyon';
+  if (parts.toLowerCase().includes('opal springs')) return 'Below Opal Springs';
   if (parts.toLowerCase().includes('fall river')) return 'Near La Pine';
   // Return last part of name before comma
   const match = siteName.match(/(?:at|near|below|above)\s+([^,]+)/i);
@@ -433,10 +435,21 @@ function getFallbackRiverData(): RiverConditions[] {
     },
     {
       name: 'Crooked River',
-      location: 'Below Bowman Dam',
-      flowRate: 120,
+      location: 'Below Osborne Canyon',
+      flowRate: 100,
       flowTrend: 'stable',
-      temperature: 45,
+      temperature: 48,
+      status: 'good',
+      fishingRating: 'Data unavailable',
+      paddlingRating: 'Fly fishing only - not for paddling',
+      lastUpdated: new Date(),
+    },
+    {
+      name: 'Crooked River',
+      location: 'Below Opal Springs',
+      flowRate: 150,
+      flowTrend: 'stable',
+      temperature: 50,
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Fly fishing only - not for paddling',
