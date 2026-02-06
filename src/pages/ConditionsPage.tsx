@@ -331,7 +331,7 @@ export default function ConditionsPage() {
               <LoadingCard />
             ) : rivers.length > 0 ? (
               <div className="space-y-4">
-                {rivers.map((river, idx) => (
+                {[...rivers].sort((a, b) => a.name.localeCompare(b.name)).map((river, idx) => (
                   <div key={idx} className="bg-navy-700/50 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
