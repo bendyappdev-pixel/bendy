@@ -16,6 +16,7 @@ const USGS_SITES = {
   deschutesAtBend: '14064500',
   deschutesBelowWickiup: '14056500',
   metolius: '14091500',
+  crookedRiver: '14087400', // Below Bowman Dam - prime tailwater fishery
 };
 
 // Bend, OR coordinates for weather APIs
@@ -295,6 +296,7 @@ export function useRoadConditions() {
 function getShortenedName(siteName: string): string {
   if (siteName.toLowerCase().includes('metolius')) return 'Metolius River';
   if (siteName.toLowerCase().includes('deschutes')) return 'Deschutes River';
+  if (siteName.toLowerCase().includes('crooked')) return 'Crooked River';
   return siteName.split(' ').slice(0, 2).join(' ');
 }
 
@@ -304,6 +306,7 @@ function getLocationFromSiteName(siteName: string): string {
   if (parts.toLowerCase().includes('at bend')) return 'At Bend';
   if (parts.toLowerCase().includes('below wickiup')) return 'Below Wickiup Dam';
   if (parts.toLowerCase().includes('near grandview')) return 'Near Camp Sherman';
+  if (parts.toLowerCase().includes('below bowman')) return 'Below Bowman Dam';
   // Return last part of name before comma
   const match = siteName.match(/(?:at|near|below|above)\s+([^,]+)/i);
   return match ? match[0] : 'Central Oregon';
@@ -316,13 +319,26 @@ function getFlowStatus(flowRate: number, siteName: string): ConditionStatus {
     if (flowRate >= 500 && flowRate <= 3000) return 'moderate';
     return 'poor';
   }
+  // Crooked River tailwater has much lower optimal flows
+  if (siteName.toLowerCase().includes('crooked')) {
+    if (flowRate >= 80 && flowRate <= 200) return 'good';
+    if (flowRate >= 50 && flowRate <= 300) return 'moderate';
+    return 'poor';
+  }
   // Default ranges
   if (flowRate >= 500 && flowRate <= 2500) return 'good';
   if (flowRate >= 200 && flowRate <= 4000) return 'moderate';
   return 'poor';
 }
 
-function getFishingRating(flowRate: number, _siteName: string): string {
+function getFishingRating(flowRate: number, siteName: string): string {
+  // Crooked River is a tailwater with lower optimal flows
+  if (siteName.toLowerCase().includes('crooked')) {
+    if (flowRate < 50) return 'Very low - tough fishing';
+    if (flowRate > 300) return 'High flows - fish scattered';
+    if (flowRate >= 80 && flowRate <= 200) return 'Excellent - prime tailwater conditions';
+    return 'Good - fishable conditions';
+  }
   if (flowRate < 400) return 'Low flows - fish stressed';
   if (flowRate > 3000) return 'High flows - difficult wading';
   if (flowRate >= 800 && flowRate <= 1800) return 'Excellent - optimal flows';
@@ -332,6 +348,9 @@ function getFishingRating(flowRate: number, _siteName: string): string {
 function getPaddlingRating(flowRate: number, riverName: string): string {
   if (riverName.toLowerCase().includes('metolius')) {
     return 'Not recommended - cold, swift';
+  }
+  if (riverName.toLowerCase().includes('crooked')) {
+    return 'Fly fishing only - not for paddling';
   }
   if (flowRate < 600) return 'Low - watch for rocks';
   if (flowRate > 2500) return 'High - experienced only';
@@ -392,6 +411,17 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Data unavailable',
+      lastUpdated: new Date(),
+    },
+    {
+      name: 'Crooked River',
+      location: 'Below Bowman Dam',
+      flowRate: 120,
+      flowTrend: 'stable',
+      temperature: 45,
+      status: 'good',
+      fishingRating: 'Data unavailable',
+      paddlingRating: 'Fly fishing only - not for paddling',
       lastUpdated: new Date(),
     },
   ];

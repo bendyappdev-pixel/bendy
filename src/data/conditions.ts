@@ -104,24 +104,24 @@ export const mockRoadConditions: RoadCondition[] = [
 export const mockParkingConditions: ParkingConditions[] = [
   {
     zone: 'Downtown Core',
-    available: 45,
+    available: 108,
     total: 120,
-    status: 'moderate',
-    trend: 'filling',
+    status: 'good',
+    trend: 'stable',
   },
   {
     zone: 'Old Mill District',
-    available: 180,
+    available: 315,
     total: 350,
     status: 'good',
     trend: 'stable',
   },
   {
     zone: 'Box Factory',
-    available: 12,
+    available: 72,
     total: 80,
-    status: 'poor',
-    trend: 'filling',
+    status: 'good',
+    trend: 'stable',
   },
 ];
 
