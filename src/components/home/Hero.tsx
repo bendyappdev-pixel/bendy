@@ -1,4 +1,4 @@
-import { ArrowRight, MapPin, Compass } from 'lucide-react';
+import { ArrowRight, MapPin, Compass, Mountain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import HeroCarousel from './HeroCarousel';
 
@@ -45,6 +45,13 @@ export default function Hero() {
           >
             <Compass className="w-5 h-5" />
             Local Guides
+          </Link>
+          <Link
+            to="/trails"
+            className="w-full sm:w-auto btn-secondary inline-flex items-center justify-center gap-2"
+          >
+            <Mountain className="w-5 h-5" />
+            Trails
           </Link>
         </div>
       </div>
