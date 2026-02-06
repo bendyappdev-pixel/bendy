@@ -17,6 +17,7 @@ const USGS_SITES = {
   deschutesBelowWickiup: '14056500',
   metolius: '14091500',
   crookedRiver: '14087400', // Below Bowman Dam - prime tailwater fishery
+  fallRiver: '14057500', // Spring-fed, premiere fly fishing
 };
 
 // Bend, OR coordinates for weather APIs
@@ -297,6 +298,7 @@ function getShortenedName(siteName: string): string {
   if (siteName.toLowerCase().includes('metolius')) return 'Metolius River';
   if (siteName.toLowerCase().includes('deschutes')) return 'Deschutes River';
   if (siteName.toLowerCase().includes('crooked')) return 'Crooked River';
+  if (siteName.toLowerCase().includes('fall river')) return 'Fall River';
   return siteName.split(' ').slice(0, 2).join(' ');
 }
 
@@ -307,6 +309,7 @@ function getLocationFromSiteName(siteName: string): string {
   if (parts.toLowerCase().includes('below wickiup')) return 'Below Wickiup Dam';
   if (parts.toLowerCase().includes('near grandview')) return 'Near Camp Sherman';
   if (parts.toLowerCase().includes('below bowman')) return 'Below Bowman Dam';
+  if (parts.toLowerCase().includes('fall river')) return 'Near La Pine';
   // Return last part of name before comma
   const match = siteName.match(/(?:at|near|below|above)\s+([^,]+)/i);
   return match ? match[0] : 'Central Oregon';
@@ -325,6 +328,12 @@ function getFlowStatus(flowRate: number, siteName: string): ConditionStatus {
     if (flowRate >= 50 && flowRate <= 300) return 'moderate';
     return 'poor';
   }
+  // Fall River is spring-fed with very consistent flows
+  if (siteName.toLowerCase().includes('fall river')) {
+    if (flowRate >= 150 && flowRate <= 300) return 'good';
+    if (flowRate >= 100 && flowRate <= 400) return 'moderate';
+    return 'poor';
+  }
   // Default ranges
   if (flowRate >= 500 && flowRate <= 2500) return 'good';
   if (flowRate >= 200 && flowRate <= 4000) return 'moderate';
@@ -339,6 +348,12 @@ function getFishingRating(flowRate: number, siteName: string): string {
     if (flowRate >= 80 && flowRate <= 200) return 'Excellent - prime tailwater conditions';
     return 'Good - fishable conditions';
   }
+  // Fall River is spring-fed, consistent flows, flies only
+  if (siteName.toLowerCase().includes('fall river')) {
+    if (flowRate >= 150 && flowRate <= 300) return 'Excellent - clear spring water';
+    if (flowRate < 100) return 'Low flows - approach carefully';
+    return 'Good - flies only, catch & release';
+  }
   if (flowRate < 400) return 'Low flows - fish stressed';
   if (flowRate > 3000) return 'High flows - difficult wading';
   if (flowRate >= 800 && flowRate <= 1800) return 'Excellent - optimal flows';
@@ -351,6 +366,9 @@ function getPaddlingRating(flowRate: number, riverName: string): string {
   }
   if (riverName.toLowerCase().includes('crooked')) {
     return 'Fly fishing only - not for paddling';
+  }
+  if (riverName.toLowerCase().includes('fall river')) {
+    return 'No boats - protected fly fishing water';
   }
   if (flowRate < 600) return 'Low - watch for rocks';
   if (flowRate > 2500) return 'High - experienced only';
@@ -422,6 +440,17 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Fly fishing only - not for paddling',
+      lastUpdated: new Date(),
+    },
+    {
+      name: 'Fall River',
+      location: 'Near La Pine',
+      flowRate: 200,
+      flowTrend: 'stable',
+      temperature: 42,
+      status: 'good',
+      fishingRating: 'Data unavailable',
+      paddlingRating: 'No boats - protected fly fishing water',
       lastUpdated: new Date(),
     },
   ];
