@@ -233,6 +233,16 @@ export default function CategoryPage() {
                 </button>
               );
             })}
+            {/* Trails Link - only show for outdoor category */}
+            {category === 'outdoor' && (
+              <Link
+                to="/trails"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors bg-pine-600 text-white hover:bg-pine-500"
+              >
+                <Mountain className="w-4 h-4" />
+                Explore Trails
+              </Link>
+            )}
           </div>
         </div>
       )}
