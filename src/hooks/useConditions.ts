@@ -15,6 +15,7 @@ import {
 const USGS_SITES = {
   deschutesAtBend: '14064500',
   deschutesBelowWickiup: '14056500',
+  deschutesAtMadras: '14092500', // Lower Deschutes - drift boat fishing
   metolius: '14091500',
   crookedOsborne: '14087380', // Below Osborne Canyon - upper tailwater
   crookedOpalSprings: '14087400', // Below Opal Springs - lower tailwater
@@ -308,6 +309,7 @@ function getLocationFromSiteName(siteName: string): string {
   const parts = siteName.split(',')[0];
   if (parts.toLowerCase().includes('at bend')) return 'At Bend';
   if (parts.toLowerCase().includes('below wickiup')) return 'Below Wickiup Dam';
+  if (parts.toLowerCase().includes('near madras')) return 'Near Madras';
   if (parts.toLowerCase().includes('near grandview')) return 'Near Camp Sherman';
   if (parts.toLowerCase().includes('osborne canyon')) return 'Below Osborne Canyon';
   if (parts.toLowerCase().includes('opal springs')) return 'Below Opal Springs';
@@ -322,6 +324,12 @@ function getFlowStatus(flowRate: number, siteName: string): ConditionStatus {
   if (siteName.toLowerCase().includes('bend')) {
     if (flowRate >= 800 && flowRate <= 2000) return 'good';
     if (flowRate >= 500 && flowRate <= 3000) return 'moderate';
+    return 'poor';
+  }
+  // Lower Deschutes near Madras - drift boat section, higher flows
+  if (siteName.toLowerCase().includes('madras')) {
+    if (flowRate >= 3000 && flowRate <= 5500) return 'good';
+    if (flowRate >= 2000 && flowRate <= 7000) return 'moderate';
     return 'poor';
   }
   // Crooked River tailwater has much lower optimal flows
@@ -356,6 +364,13 @@ function getFishingRating(flowRate: number, siteName: string): string {
     if (flowRate < 100) return 'Low flows - approach carefully';
     return 'Good - flies only, catch & release';
   }
+  // Lower Deschutes near Madras - drift boat country
+  if (siteName.toLowerCase().includes('madras')) {
+    if (flowRate >= 3000 && flowRate <= 5500) return 'Excellent - ideal drift boat flows';
+    if (flowRate > 6000) return 'High water - experienced boaters only';
+    if (flowRate < 2500) return 'Low flows - watch for rocks';
+    return 'Good - floatable conditions';
+  }
   if (flowRate < 400) return 'Low flows - fish stressed';
   if (flowRate > 3000) return 'High flows - difficult wading';
   if (flowRate >= 800 && flowRate <= 1800) return 'Excellent - optimal flows';
@@ -371,6 +386,12 @@ function getPaddlingRating(flowRate: number, riverName: string): string {
   }
   if (riverName.toLowerCase().includes('fall river')) {
     return 'No boats - protected fly fishing water';
+  }
+  // Lower Deschutes near Madras - drift boat paradise
+  if (riverName.toLowerCase().includes('madras')) {
+    if (flowRate >= 3000 && flowRate <= 5500) return 'Prime drift boat conditions';
+    if (flowRate > 6000) return 'High water - Class III+ rapids';
+    return 'Floatable - check rapids';
   }
   if (flowRate < 600) return 'Low - watch for rocks';
   if (flowRate > 2500) return 'High - experienced only';
@@ -431,6 +452,17 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Data unavailable',
+      lastUpdated: new Date(),
+    },
+    {
+      name: 'Deschutes River',
+      location: 'Near Madras',
+      flowRate: 4200,
+      flowTrend: 'stable',
+      temperature: 52,
+      status: 'good',
+      fishingRating: 'Data unavailable',
+      paddlingRating: 'Prime drift boat conditions',
       lastUpdated: new Date(),
     },
     {
