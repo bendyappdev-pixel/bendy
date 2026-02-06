@@ -14,7 +14,7 @@ export default function DayEventsPanel({ date, events, onClose }: DayEventsPanel
     <>
       {/* Mobile: Bottom sheet overlay */}
       <div
-        className="fixed inset-0 bg-black/30 z-40 md:hidden"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
         onClick={onClose}
       />
 
@@ -23,7 +23,7 @@ export default function DayEventsPanel({ date, events, onClose }: DayEventsPanel
         className={`
           fixed md:relative
           bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto
-          bg-snow rounded-t-2xl md:rounded-2xl shadow-lg
+          bg-navy-800 border border-white/10 rounded-t-2xl md:rounded-2xl shadow-lg
           z-50 md:z-auto
           max-h-[70vh] md:max-h-none
           overflow-hidden
@@ -31,16 +31,16 @@ export default function DayEventsPanel({ date, events, onClose }: DayEventsPanel
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <h3 className="text-lg font-semibold text-white">
             {formatFullDate(date)}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-sage/20 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             aria-label="Close panel"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
@@ -55,7 +55,7 @@ export default function DayEventsPanel({ date, events, onClose }: DayEventsPanel
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500">No events on this day.</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 Try selecting another date or adjusting your filters.
               </p>
             </div>

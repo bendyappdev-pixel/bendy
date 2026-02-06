@@ -17,7 +17,7 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-mountain to-mountain/80 rounded-2xl p-4 text-white">
+      <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl p-4 text-white">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white/20 rounded-xl animate-pulse" />
           <div className="space-y-2">
@@ -31,7 +31,7 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
 
   if (error || !weather) {
     return (
-      <div className="bg-gray-100 rounded-2xl p-4 text-center">
+      <div className="bg-navy-700/50 rounded-2xl p-4 text-center border border-white/10">
         <p className="text-gray-500 text-sm">{error || 'Weather unavailable'}</p>
       </div>
     );
@@ -42,10 +42,10 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
 
   if (compact) {
     return (
-      <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
+      <div className="inline-flex items-center gap-2 bg-navy-700/50 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
         <span className="text-xl">{weatherInfo.icon}</span>
-        <span className="font-semibold text-gray-900">{current.temperature}°F</span>
-        <span className="text-gray-500 text-sm hidden sm:inline">
+        <span className="font-semibold text-white">{current.temperature}°F</span>
+        <span className="text-gray-400 text-sm hidden sm:inline">
           {weatherInfo.description}
         </span>
       </div>
@@ -53,7 +53,7 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-mountain via-mountain/90 to-forest/80 rounded-2xl overflow-hidden text-white shadow-lg">
+    <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-blue-600 rounded-2xl overflow-hidden text-white shadow-lg">
       {/* Current Weather */}
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">

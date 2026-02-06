@@ -16,17 +16,17 @@ export default function MapPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-forest rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-pine-600 to-pine-700 rounded-xl flex items-center justify-center">
               <Map className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Explore Bend</h1>
-              <p className="text-gray-600">Parks, trails, breweries, family fun, and more</p>
+              <h1 className="text-3xl font-bold text-white">Explore Bend</h1>
+              <p className="text-gray-400">Parks, trails, breweries, family fun, and more</p>
             </div>
           </div>
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-sunset-500 text-white rounded-xl font-medium hover:bg-sunset-400 transition-colors"
           >
             <Users className="w-5 h-5" />
             Report Conditions
@@ -42,8 +42,8 @@ export default function MapPage() {
             onClick={() => setCrowdTab('current')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               crowdTab === 'current'
-                ? 'bg-forest text-white'
-                : 'bg-white text-gray-700 hover:bg-sage/20'
+                ? 'bg-sunset-500 text-white'
+                : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -53,8 +53,8 @@ export default function MapPage() {
             onClick={() => setCrowdTab('history')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               crowdTab === 'history'
-                ? 'bg-forest text-white'
-                : 'bg-white text-gray-700 hover:bg-sage/20'
+                ? 'bg-sunset-500 text-white'
+                : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
             }`}
           >
             <History className="w-4 h-4" />
@@ -73,22 +73,22 @@ export default function MapPage() {
       {/* Map */}
       <InteractiveMap />
 
-      {/* Contextual Banner Ad */}
+      {/* Contextual Banner Ad (hidden when no ads) */}
       <div className="mt-8">
         <ContextualBanner />
       </div>
 
       {/* Legend */}
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-        <LegendItem emoji="🌲" label="Parks" color="bg-forest" />
+        <LegendItem emoji="🌲" label="Parks" color="bg-pine-600" />
         <LegendItem emoji="🐕" label="Dog Parks" color="bg-amber-500" />
-        <LegendItem emoji="🥾" label="Trailheads" color="bg-earth" />
-        <LegendItem emoji="⛷️" label="Ski Areas" color="bg-mountain" />
+        <LegendItem emoji="🥾" label="Trailheads" color="bg-amber-700" />
+        <LegendItem emoji="⛷️" label="Ski Areas" color="bg-blue-500" />
         <LegendItem emoji="🍺" label="Breweries" color="bg-amber-600" />
-        <LegendItem emoji="🍽️" label="Restaurants" color="bg-red-600" />
-        <LegendItem emoji="🎵" label="Venues" color="bg-purple-600" />
-        <LegendItem emoji="🏊" label="Recreation" color="bg-cyan-600" />
-        <LegendItem emoji="👨‍👩‍👧‍👦" label="Family Fun" color="bg-purple-500" />
+        <LegendItem emoji="🍽️" label="Restaurants" color="bg-red-500" />
+        <LegendItem emoji="🎵" label="Venues" color="bg-purple-500" />
+        <LegendItem emoji="🏊" label="Recreation" color="bg-cyan-500" />
+        <LegendItem emoji="👨‍👩‍👧‍👦" label="Family Fun" color="bg-purple-400" />
         <LegendItem emoji="🏛️" label="Museums" color="bg-indigo-500" />
       </div>
 
@@ -100,7 +100,7 @@ export default function MapPage() {
             href="https://www.bendparksandrec.org"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-mountain hover:underline"
+            className="text-sunset-400 hover:underline"
           >
             Bend Park and Recreation District
           </a>
@@ -109,9 +109,9 @@ export default function MapPage() {
       </div>
 
       {/* Tips */}
-      <div className="mt-8 bg-sand rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Map Tips</h3>
-        <ul className="text-gray-600 space-y-2 text-sm">
+      <div className="mt-8 card p-6">
+        <h3 className="text-lg font-semibold text-white mb-3">Map Tips</h3>
+        <ul className="text-gray-400 space-y-2 text-sm">
           <li>• Click the filter buttons above the map to show/hide location types</li>
           <li>• Click on any marker to see details about that location</li>
           <li>• Use the navigation controls or pinch-to-zoom on mobile</li>
@@ -123,21 +123,21 @@ export default function MapPage() {
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowReportModal(false)}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-xl font-bold text-gray-900">Report Conditions</h2>
+          <div className="relative bg-navy-800 border border-white/10 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-navy-800 border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-xl font-bold text-white">Report Conditions</h2>
               <button
                 onClick={() => setShowReportModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
             <div className="p-6">
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-400 mb-6">
                 Help others plan their visit by sharing current crowd conditions at popular spots.
               </p>
               <CrowdReportForm onSuccess={() => setShowReportModal(false)} />
@@ -155,7 +155,7 @@ function LegendItem({ emoji, label, color }: { emoji: string; label: string; col
       <div className={`w-8 h-8 ${color} rounded-full flex items-center justify-center text-sm`}>
         {emoji}
       </div>
-      <span className="text-sm text-gray-700">{label}</span>
+      <span className="text-sm text-gray-300">{label}</span>
     </div>
   );
 }

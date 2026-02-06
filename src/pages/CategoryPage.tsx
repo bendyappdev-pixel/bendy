@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Mountain,
@@ -110,7 +110,7 @@ const categoryInfo: Record<string, {
   title: string;
   description: string;
   icon: typeof Mountain;
-  color: string;
+  gradient: string;
   types: Location['type'][];
   subcategories?: Subcategory[];
 }> = {
@@ -118,7 +118,7 @@ const categoryInfo: Record<string, {
     title: 'Outdoor Activities',
     description: 'Hiking, skiing, mountain biking, and all the adventures that make Bend an outdoor paradise.',
     icon: Mountain,
-    color: 'bg-forest',
+    gradient: 'from-pine-600 to-pine-700',
     types: ['park', 'trailhead', 'ski', 'recreation', 'dog-park'],
     subcategories: outdoorSubcategories,
   },
@@ -126,14 +126,14 @@ const categoryInfo: Record<string, {
     title: 'Food & Drink',
     description: 'From craft breweries to local restaurants, explore Bend\'s vibrant food scene.',
     icon: UtensilsCrossed,
-    color: 'bg-earth',
+    gradient: 'from-sunset-300 to-sunset-500',
     types: ['brewery', 'restaurant'],
   },
   kids: {
     title: 'Bendy Kids',
     description: 'Family-friendly fun in Bend and Sunriver! Museums, play spaces, water parks, and outdoor adventures for all ages.',
     icon: Baby,
-    color: 'bg-purple-500',
+    gradient: 'from-blue-500 to-blue-600',
     types: ['family', 'museum'],
     subcategories: kidsSubcategories,
   },
@@ -154,14 +154,23 @@ const wildernessAreas = [
 
 export default function CategoryPage() {
   const { category } = useParams<{ category: string }>();
+  const [searchParams] = useSearchParams();
+  const filterParam = searchParams.get('filter');
   const info = category ? categoryInfo[category] : null;
-  const [activeSubcategory, setActiveSubcategory] = useState('all');
+  const [activeSubcategory, setActiveSubcategory] = useState(filterParam || 'all');
+
+  // Update active subcategory when URL param changes
+  useEffect(() => {
+    if (filterParam && info?.subcategories?.some(s => s.id === filterParam)) {
+      setActiveSubcategory(filterParam);
+    }
+  }, [filterParam, info]);
 
   if (!info) {
     return (
       <div className="container-app py-16 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-        <Link to="/" className="text-forest hover:underline">
+        <h1 className="text-2xl font-bold text-white mb-4">Category Not Found</h1>
+        <Link to="/" className="text-sunset-400 hover:underline">
           Return Home
         </Link>
       </div>
@@ -186,7 +195,7 @@ export default function CategoryPage() {
       {/* Back Link */}
       <Link
         to="/"
-        className="inline-flex items-center gap-2 text-gray-600 hover:text-forest mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-gray-400 hover:text-sunset-400 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Home
@@ -194,12 +203,12 @@ export default function CategoryPage() {
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <div className={`w-14 h-14 ${info.color} rounded-xl flex items-center justify-center`}>
+        <div className={`w-14 h-14 bg-gradient-to-br ${info.gradient} rounded-xl flex items-center justify-center`}>
           <Icon className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{info.title}</h1>
-          <p className="text-gray-600">{info.description}</p>
+          <h1 className="text-3xl font-bold text-white">{info.title}</h1>
+          <p className="text-gray-400">{info.description}</p>
         </div>
       </div>
 
@@ -215,8 +224,8 @@ export default function CategoryPage() {
                   onClick={() => setActiveSubcategory(subcat.id)}
                   className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
                     activeSubcategory === subcat.id
-                      ? 'bg-forest text-white'
-                      : 'bg-white text-gray-700 hover:bg-sage/20 shadow-sm'
+                      ? 'bg-sunset-500 text-white'
+                      : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
                   }`}
                 >
                   <SubIcon className="w-4 h-4" />
@@ -230,12 +239,12 @@ export default function CategoryPage() {
 
       {/* Wilderness Permits Section - Only show for outdoor category */}
       {category === 'outdoor' && (
-        <div className="mb-10 bg-mountain/10 rounded-2xl p-6 border border-mountain/20">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <Mountain className="w-5 h-5 text-mountain" />
+        <div className="mb-10 card p-6 border-blue-500/30">
+          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <Mountain className="w-5 h-5 text-blue-400" />
             Wilderness Permits
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-400 mb-4">
             Planning to explore the wilderness areas near Bend? Permits are required for many trails.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -245,18 +254,18 @@ export default function CategoryPage() {
                 href={area.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group"
+                className="bg-navy-700/50 rounded-xl p-4 hover:bg-navy-700 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-mountain transition-colors">
+                    <h3 className="font-semibold text-white group-hover:text-sunset-400 transition-colors">
                       {area.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">{area.description}</p>
+                    <p className="text-sm text-gray-400 mt-1">{area.description}</p>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-mountain flex-shrink-0 mt-1" />
+                  <ExternalLink className="w-4 h-4 text-sunset-400 flex-shrink-0 mt-1" />
                 </div>
-                <div className="mt-3 text-sm text-mountain font-medium">
+                <div className="mt-3 text-sm text-sunset-400 font-medium">
                   Get Permit on Recreation.gov →
                 </div>
               </a>
@@ -273,18 +282,18 @@ export default function CategoryPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-sand rounded-2xl">
+        <div className="text-center py-12 card">
           <p className="text-gray-500">No locations found in this category yet.</p>
         </div>
       )}
 
       {/* CTA */}
-      <div className="mt-12 bg-forest text-white rounded-2xl p-8 text-center">
-        <h3 className="text-2xl font-bold mb-3">Explore on the Map</h3>
-        <p className="text-sage mb-6 max-w-lg mx-auto">
+      <div className="mt-12 bg-gradient-to-r from-pine-700 to-pine-600 rounded-2xl p-8 text-center">
+        <h3 className="text-2xl font-bold text-white mb-3">Explore on the Map</h3>
+        <p className="text-white/80 mb-6 max-w-lg mx-auto">
           See all locations on our interactive map and discover even more places to explore.
         </p>
-        <Link to="/map" className="btn-primary bg-white text-forest hover:bg-white/90 inline-flex">
+        <Link to="/map" className="inline-flex items-center gap-2 bg-white text-pine-700 hover:bg-white/90 font-semibold px-6 py-3 rounded-xl transition-colors">
           Open Map
         </Link>
       </div>
@@ -294,15 +303,15 @@ export default function CategoryPage() {
 
 function LocationCard({ location }: { location: Location }) {
   const difficultyColors = {
-    easy: 'bg-green-100 text-green-700',
-    moderate: 'bg-amber-100 text-amber-700',
-    hard: 'bg-red-100 text-red-700',
+    easy: 'bg-green-500/20 text-green-400',
+    moderate: 'bg-amber-500/20 text-amber-400',
+    hard: 'bg-red-500/20 text-red-400',
   };
 
   return (
     <article className="card p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{location.name}</h3>
-      <p className="text-gray-600 text-sm mb-4">{location.description}</p>
+      <h3 className="text-lg font-semibold text-white mb-2">{location.name}</h3>
+      <p className="text-gray-400 text-sm mb-4">{location.description}</p>
 
       {location.difficulty && (
         <span
@@ -315,13 +324,13 @@ function LocationCard({ location }: { location: Location }) {
       )}
 
       {location.amenities && location.amenities.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-white/10">
           <p className="text-xs text-gray-500 mb-2">Amenities</p>
           <div className="flex flex-wrap gap-1">
             {location.amenities.map((amenity) => (
               <span
                 key={amenity}
-                className="px-2 py-1 bg-sage/20 text-forest rounded text-xs"
+                className="px-2 py-1 bg-pine-700/30 text-pine-400 rounded text-xs"
               >
                 {amenity}
               </span>
@@ -335,7 +344,7 @@ function LocationCard({ location }: { location: Location }) {
           href={location.website}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block mt-4 text-sm text-mountain hover:underline"
+          className="inline-block mt-4 text-sm text-sunset-400 hover:underline"
         >
           Visit Website →
         </a>

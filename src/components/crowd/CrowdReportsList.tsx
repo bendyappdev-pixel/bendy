@@ -43,7 +43,7 @@ export default function CrowdReportsList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="w-8 h-8 border-4 border-forest border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sunset-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -58,10 +58,10 @@ export default function CrowdReportsList({
 
   if (displayReports.length === 0) {
     return (
-      <div className="text-center py-8 bg-sand rounded-xl">
-        <Users className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-500">No recent crowd reports</p>
-        <p className="text-sm text-gray-400 mt-1">
+      <div className="text-center py-8 bg-navy-700/50 rounded-xl border border-white/10">
+        <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+        <p className="text-gray-400">No recent crowd reports</p>
+        <p className="text-sm text-gray-500 mt-1">
           Be the first to share conditions!
         </p>
       </div>
@@ -71,8 +71,8 @@ export default function CrowdReportsList({
   return (
     <div className="space-y-4">
       {showTitle && (
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Users className="w-5 h-5 text-forest" />
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Users className="w-5 h-5 text-pine-400" />
           Current Conditions
         </h3>
       )}
@@ -106,33 +106,40 @@ function CrowdReportCard({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
-          style={{ backgroundColor: `${config.color}20` }}
-        >
-          {config.emoji}
-        </div>
-        <div className="flex-1 min-w-0">
-          {showLocation && (
-            <p className="font-medium text-gray-900 truncate">
-              {report.locationName}
-            </p>
-          )}
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span style={{ color: config.color }} className="font-medium">
-              {config.label}
-            </span>
-            <span>·</span>
-            <span>{formatTimeAgo(report.timestamp)}</span>
+      <div className="p-3 bg-navy-700/50 rounded-xl border border-white/10">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+            style={{ backgroundColor: `${config.color}20` }}
+          >
+            {config.emoji}
+          </div>
+          <div className="flex-1 min-w-0">
+            {showLocation && (
+              <p className="font-medium text-white truncate">
+                {report.locationName}
+              </p>
+            )}
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span style={{ color: config.color }} className="font-medium">
+                {config.label}
+              </span>
+              <span>·</span>
+              <span>{formatTimeAgo(report.timestamp)}</span>
+            </div>
           </div>
         </div>
+        {report.comment && (
+          <p className="text-gray-400 text-sm mt-2 ml-[52px] leading-relaxed">
+            "{report.comment}"
+          </p>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+    <div className="card p-4">
       <div className="flex items-start gap-3">
         <div
           className="w-12 h-12 rounded-full flex items-center justify-center text-xl flex-shrink-0"
@@ -143,8 +150,8 @@ function CrowdReportCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             {showLocation && (
-              <div className="flex items-center gap-1.5 text-gray-900 font-medium">
-                <MapPin className="w-4 h-4 text-forest" />
+              <div className="flex items-center gap-1.5 text-white font-medium">
+                <MapPin className="w-4 h-4 text-sunset-400" />
                 <span className="truncate">{report.locationName}</span>
               </div>
             )}
@@ -167,7 +174,7 @@ function CrowdReportCard({
           </div>
 
           {report.comment && (
-            <p className="text-gray-600 text-sm mt-2 leading-relaxed">
+            <p className="text-gray-400 text-sm mt-2 leading-relaxed">
               "{report.comment}"
             </p>
           )}

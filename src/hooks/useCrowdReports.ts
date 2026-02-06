@@ -17,15 +17,25 @@ const REPORT_DURATION_HOURS = 4;
 const RATE_LIMIT_KEY = 'bendy_crowd_report_limits';
 
 export const popularSpots = [
+  // Trails
+  { id: 'phils-trail', name: "Phil's Trail" },
+  { id: 'tumalo-falls', name: 'Tumalo Falls' },
+  { id: 'south-sister', name: 'South Sister' },
+  { id: 'broken-top', name: 'Broken Top' },
+  { id: 'deschutes-river-trail', name: 'Deschutes River Trail' },
+  { id: 'shevlin-park', name: 'Shevlin Park' },
+  { id: 'pilot-butte', name: 'Pilot Butte' },
+  { id: 'smith-rock', name: 'Smith Rock' },
+  { id: 'mt-bachelor-summit', name: 'Mt. Bachelor' },
+  { id: 'todd-lake', name: 'Todd Lake' },
+  { id: 'green-lakes', name: 'Green Lakes' },
+  { id: 'benham-falls', name: 'Benham Falls' },
+  { id: 'paulina-peak', name: 'Paulina Peak' },
+  { id: 'tam-mcarthur-rim', name: 'Tam McArthur Rim' },
+  // Lakes & Other
   { id: 'elk-lake', name: 'Elk Lake' },
   { id: 'sparks-lake', name: 'Sparks Lake' },
-  { id: 'tumalo-falls', name: 'Tumalo Falls' },
-  { id: 'phils-trail', name: "Phil's Trail" },
   { id: 'downtown-bend', name: 'Downtown Bend' },
-  { id: 'deschutes-river-trail', name: 'Deschutes River Trail' },
-  { id: 'smith-rock', name: 'Smith Rock' },
-  { id: 'mt-bachelor', name: 'Mt. Bachelor' },
-  { id: 'todd-lake', name: 'Todd Lake' },
   { id: 'lava-river-cave', name: 'Lava River Cave' },
 ];
 

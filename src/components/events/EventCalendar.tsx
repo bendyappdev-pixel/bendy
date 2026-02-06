@@ -46,31 +46,31 @@ export default function EventCalendar({
   };
 
   return (
-    <div className="bg-snow rounded-2xl shadow-sm p-4 md:p-6">
+    <div className="card p-4 md:p-6">
       {/* Header with navigation */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
-            className="p-2 rounded-lg hover:bg-sage/20 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             aria-label="Previous month"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-gray-400" />
           </button>
-          <h2 className="text-lg font-semibold text-gray-900 min-w-[140px] text-center">
+          <h2 className="text-lg font-semibold text-white min-w-[140px] text-center">
             {formatMonthYear(currentMonth)}
           </h2>
           <button
             onClick={handleNextMonth}
-            className="p-2 rounded-lg hover:bg-sage/20 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             aria-label="Next month"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         <button
           onClick={handleToday}
-          className="px-3 py-1.5 text-sm font-medium text-forest bg-white border border-forest/20 rounded-lg hover:bg-forest/5 transition-colors"
+          className="px-3 py-1.5 text-sm font-medium text-sunset-400 bg-sunset-500/10 border border-sunset-500/30 rounded-lg hover:bg-sunset-500/20 transition-colors"
         >
           Today
         </button>

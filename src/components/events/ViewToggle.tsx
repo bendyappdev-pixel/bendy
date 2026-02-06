@@ -9,13 +9,13 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
-    <div className="inline-flex rounded-xl bg-white shadow-sm">
+    <div className="inline-flex rounded-xl bg-navy-800 border border-white/10">
       <button
         onClick={() => onViewChange('list')}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
           view === 'list'
-            ? 'bg-forest text-white'
-            : 'text-gray-700 hover:bg-sage/20'
+            ? 'bg-sunset-500 text-white'
+            : 'text-gray-300 hover:bg-white/10'
         }`}
       >
         <List className="w-4 h-4" />
@@ -25,8 +25,8 @@ export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange('calendar')}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
           view === 'calendar'
-            ? 'bg-forest text-white'
-            : 'text-gray-700 hover:bg-sage/20'
+            ? 'bg-sunset-500 text-white'
+            : 'text-gray-300 hover:bg-white/10'
         }`}
       >
         <CalendarDays className="w-4 h-4" />

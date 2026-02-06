@@ -7,16 +7,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        forest: '#2D5016',
-        sage: '#87A878',
-        mountain: '#4A6FA5',
-        earth: '#8B7355',
-        sand: '#F5F0E8',
-        snow: '#FAFAFA',
+        // New dark palette
+        navy: {
+          900: '#0f172a',
+          800: '#1e293b',
+          700: '#334155',
+          600: '#475569',
+        },
+        sunset: {
+          500: '#f97316',
+          400: '#fb923c',
+          300: '#fbbf24',
+        },
+        pine: {
+          700: '#065f46',
+          600: '#047857',
+          500: '#059669',
+          400: '#10b981',
+        },
+        // Keep legacy colors for gradual migration
+        forest: '#065f46',
+        sage: '#10b981',
+        mountain: '#3b82f6',
+        earth: '#a16207',
+        sand: '#1e293b',
+        snow: '#1e293b',
       },
       fontFamily: {
         heading: ['Inter', 'system-ui', 'sans-serif'],
-        body: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       animation: {
         'slide-up': 'slideUp 0.3s ease-out',

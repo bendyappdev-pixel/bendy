@@ -41,7 +41,7 @@ export default function CrowdReportHistory({
           <select
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(e.target.value)}
-            className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+            className="flex-1 px-4 py-2 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
           >
             <option value="">Select a location...</option>
             {popularSpots.map((spot) => (
@@ -55,7 +55,7 @@ export default function CrowdReportHistory({
         <select
           value={daysBack}
           onChange={(e) => setDaysBack(Number(e.target.value))}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+          className="px-4 py-2 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
         >
           <option value={1}>Today</option>
           <option value={3}>Last 3 days</option>

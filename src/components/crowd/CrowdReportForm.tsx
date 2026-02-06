@@ -64,7 +64,7 @@ export default function CrowdReportForm({
       <div>
         <label
           htmlFor="location"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-300 mb-2"
         >
           Location
         </label>
@@ -75,7 +75,7 @@ export default function CrowdReportForm({
             setLocationId(e.target.value);
             setResult(null);
           }}
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+          className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
         >
           <option value="">Select a location...</option>
           {popularSpots.map((spot) => (
@@ -88,7 +88,7 @@ export default function CrowdReportForm({
 
       {/* Crowd Level Buttons */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           How crowded is it?
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -103,7 +103,7 @@ export default function CrowdReportForm({
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
                   isSelected
                     ? 'ring-2 ring-offset-2 ring-forest'
-                    : 'hover:bg-gray-50'
+                    : 'hover:opacity-80'
                 } ${config.bgColor}`}
                 style={{
                   backgroundColor: isSelected ? config.color : undefined,
@@ -111,7 +111,7 @@ export default function CrowdReportForm({
                 }}
               >
                 <span>{config.emoji}</span>
-                <span className="text-sm">{config.label}</span>
+                <span className={`text-sm ${isSelected ? '' : 'text-gray-800'}`}>{config.label}</span>
               </button>
             );
           })}
@@ -122,7 +122,7 @@ export default function CrowdReportForm({
       <div>
         <label
           htmlFor="comment"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-300 mb-2"
         >
           Add a note (optional)
         </label>
@@ -132,7 +132,7 @@ export default function CrowdReportForm({
           onChange={(e) => setComment(e.target.value.slice(0, 150))}
           placeholder="e.g., Parking lot half full, trails are muddy..."
           rows={2}
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors resize-none"
+          className="w-full px-4 py-3 bg-white text-gray-900 placeholder-gray-500 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors resize-none"
         />
         <p className="text-xs text-gray-500 mt-1 text-right">
           {comment.length}/150

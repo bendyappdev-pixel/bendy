@@ -57,9 +57,9 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
   // Fallback gradient background
   if (!hasImages) {
     return (
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-mountain via-forest to-forest" />
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-800 via-navy-900 to-navy-900" />
 
         {/* Content */}
         {children}
@@ -69,7 +69,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative min-h-[70vh] flex items-center justify-center overflow-hidden"
+      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -93,27 +93,27 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
         </div>
       ))}
 
-      {/* Dark Gradient Overlay for Text Readability */}
+      {/* Dark Gradient Overlay for Text Readability - Navy theme */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 50%, rgba(45,80,22,0.8) 100%)',
+          background: 'linear-gradient(to bottom, rgba(15,23,42,0.4) 0%, rgba(15,23,42,0.6) 50%, rgba(15,23,42,0.95) 100%)',
         }}
       />
 
       {/* Content */}
       {children}
 
-      {/* Image Indicators (optional - shows which image is active) */}
+      {/* Image Indicators */}
       {heroImages.length > 1 && (
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {heroImages.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`w-2 h-2 rounded-full transition-all ${
                 index === currentIndex
-                  ? 'bg-white w-6'
+                  ? 'bg-sunset-400 w-6'
                   : 'bg-white/50 hover:bg-white/70'
               }`}
               aria-label={`Go to image ${index + 1}`}

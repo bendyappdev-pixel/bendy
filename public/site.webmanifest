@@ -4,8 +4,8 @@
   "description": "Discover the best of Bend, Oregon. Events, outdoor adventures, local breweries, and family fun.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5F0E8",
-  "theme_color": "#2D5016",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "/favicon.svg",

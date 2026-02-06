@@ -15,10 +15,30 @@ export default function EventsPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [filter, setFilter] = useState('all');
 
-  // Filter events based on selected category
-  const filteredEvents = filter === 'all'
+  // Filter events based on selected category and sort by date (upcoming first)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const filteredEvents = (filter === 'all'
     ? events
-    : events.filter((event) => event.category === filter);
+    : events.filter((event) => event.category === filter))
+    // Sort by date - upcoming events first, then by date ascending
+    .sort((a, b) => {
+      const dateA = a.date.getTime();
+      const dateB = b.date.getTime();
+      const todayTime = today.getTime();
+
+      // Check if events are upcoming or past
+      const aIsUpcoming = dateA >= todayTime || (a.endDate && a.endDate.getTime() >= todayTime);
+      const bIsUpcoming = dateB >= todayTime || (b.endDate && b.endDate.getTime() >= todayTime);
+
+      // Upcoming events come before past events
+      if (aIsUpcoming && !bIsUpcoming) return -1;
+      if (!aIsUpcoming && bIsUpcoming) return 1;
+
+      // Within same group (both upcoming or both past), sort by date ascending
+      return dateA - dateB;
+    });
 
   // Get events for the selected date (respecting filters)
   const selectedDayEvents = selectedDate
@@ -38,17 +58,17 @@ export default function EventsPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-mountain rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-sunset-500 to-sunset-400 rounded-xl flex items-center justify-center">
             <Calendar className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Events</h1>
-            <p className="text-gray-600">Festivals, markets, and local happenings</p>
+            <h1 className="text-3xl font-bold text-white">Events</h1>
+            <p className="text-gray-400">Festivals, markets, and local happenings</p>
           </div>
         </div>
       </div>
 
-      {/* Sponsored Event - Featured at top */}
+      {/* Sponsored Event - Featured at top (hidden when no ads) */}
       <div className="mb-8">
         <SponsoredEvent />
       </div>
@@ -66,8 +86,8 @@ export default function EventsPage() {
             onClick={() => setFilter(cat.value)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               filter === cat.value
-                ? 'bg-forest text-white'
-                : 'bg-white text-gray-700 hover:bg-sage/20'
+                ? 'bg-sunset-500 text-white'
+                : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
             }`}
           >
             {cat.label}
@@ -83,13 +103,12 @@ export default function EventsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => (
                 <div key={event.id}>
-                  {/* Importing EventCard directly to avoid double filtering */}
                   <EventCard event={event} />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-12 card">
               <p className="text-gray-500">No events found in this category.</p>
             </div>
           )}
@@ -131,14 +150,14 @@ export default function EventsPage() {
         </div>
       )}
 
-      {/* In-Feed Banner Ad */}
+      {/* In-Feed Banner Ad (hidden when no ads) */}
       <div className="my-8">
         <InFeedBanner />
       </div>
 
       {/* Event Sources */}
-      <div className="mt-8 bg-sand rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Find More Events</h3>
+      <div className="mt-8 card p-6">
+        <h3 className="text-lg font-semibold text-white mb-3">Find More Events</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {eventSources.map((source) => (
             <a
@@ -146,12 +165,12 @@ export default function EventsPage() {
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start gap-3 p-4 bg-white rounded-xl hover:shadow-md transition-shadow"
+              className="flex items-start gap-3 p-4 bg-navy-700/50 rounded-xl hover:bg-navy-700 transition-colors group"
             >
-              <ExternalLink className="w-5 h-5 text-mountain flex-shrink-0 mt-0.5" />
+              <ExternalLink className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900">{source.name}</p>
-                <p className="text-sm text-gray-600">{source.description}</p>
+                <p className="font-medium text-white group-hover:text-sunset-400 transition-colors">{source.name}</p>
+                <p className="text-sm text-gray-400">{source.description}</p>
               </div>
             </a>
           ))}
@@ -159,11 +178,11 @@ export default function EventsPage() {
       </div>
 
       {/* Info Card */}
-      <div className="mt-8 bg-sage/20 rounded-2xl p-6 md:p-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-3">
+      <div className="mt-8 card p-6 md:p-8 border-sunset-500/30">
+        <h3 className="text-xl font-semibold text-white mb-3">
           Submit an Event
         </h3>
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-400 mb-4">
           Know of an event happening in Bend that should be listed here? We'd love to hear about it!
           Community events, concerts, outdoor activities, and more are welcome.
         </p>

@@ -39,12 +39,12 @@ export default function CalendarDay({
         transition-colors cursor-pointer
         ${
           isSelected
-            ? 'bg-forest text-white'
+            ? 'bg-sunset-500 text-white'
             : isToday
-            ? 'bg-forest/10 text-forest font-semibold'
+            ? 'bg-sunset-500/20 text-sunset-400 font-semibold ring-1 ring-sunset-500/50'
             : isCurrentMonth
-            ? 'hover:bg-sage/20 text-gray-900'
-            : 'text-gray-400 hover:bg-sage/10'
+            ? 'hover:bg-white/10 text-white'
+            : 'text-gray-600 hover:bg-white/5'
         }
       `}
     >
