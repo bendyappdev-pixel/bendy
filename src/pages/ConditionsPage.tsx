@@ -356,7 +356,7 @@ export default function ConditionsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                       <div className="flex items-center gap-1 text-gray-400">
                         <Fish className="w-3 h-3" />
                         <span className="truncate">{river.fishingRating}</span>
@@ -366,6 +366,34 @@ export default function ConditionsPage() {
                         <span className="truncate">{river.paddlingRating}</span>
                       </div>
                     </div>
+                    {river.regulations && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-navy-600">
+                        {river.regulations.barblesRequired && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+                            <span className="relative">
+                              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+                                <path d="M8 12c0-2 1.5-4 4-4"/>
+                              </svg>
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <span className="w-4 h-0.5 bg-amber-400 rotate-45 rounded-full"></span>
+                              </span>
+                            </span>
+                            Barbless
+                          </span>
+                        )}
+                        {river.regulations.fliesOnly && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs">
+                            🪶 Flies Only
+                          </span>
+                        )}
+                        {river.regulations.catchAndRelease && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs">
+                            ↩️ C&R
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

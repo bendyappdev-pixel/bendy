@@ -12,6 +12,12 @@ export interface MountainConditions {
   lastUpdated: Date;
 }
 
+export interface RiverRegulations {
+  barblesRequired: boolean;
+  fliesOnly: boolean;
+  catchAndRelease: boolean;
+}
+
 export interface RiverConditions {
   name: string;
   location: string;
@@ -21,6 +27,7 @@ export interface RiverConditions {
   status: ConditionStatus;
   fishingRating: string;
   paddlingRating: string;
+  regulations?: RiverRegulations;
   lastUpdated: Date;
 }
 

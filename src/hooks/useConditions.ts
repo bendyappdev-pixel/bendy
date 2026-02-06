@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   MountainConditions,
   RiverConditions,
+  RiverRegulations,
   AirQuality,
   RoadCondition,
   ConditionStatus,
@@ -129,6 +130,7 @@ export function useRiverConditions() {
           ...r,
           temperature: r.temperature || 50, // Default if no temp sensor
           flowTrend: 'stable' as const, // Would need historical data for trend
+          regulations: getRiverRegulations(r.name || '', r.location || ''),
         }));
 
       setRivers(riversArray.length > 0 ? riversArray : getFallbackRiverData());
@@ -452,6 +454,7 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Data unavailable',
+      regulations: { barblesRequired: false, fliesOnly: false, catchAndRelease: false },
       lastUpdated: new Date(),
     },
     {
@@ -463,6 +466,7 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Prime drift boat conditions',
+      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: false },
       lastUpdated: new Date(),
     },
     {
@@ -474,6 +478,7 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Fly fishing only - not for paddling',
+      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: true },
       lastUpdated: new Date(),
     },
     {
@@ -485,6 +490,7 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'Fly fishing only - not for paddling',
+      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: true },
       lastUpdated: new Date(),
     },
     {
@@ -496,6 +502,7 @@ function getFallbackRiverData(): RiverConditions[] {
       status: 'good',
       fishingRating: 'Data unavailable',
       paddlingRating: 'No boats - protected fly fishing water',
+      regulations: { barblesRequired: true, fliesOnly: true, catchAndRelease: true },
       lastUpdated: new Date(),
     },
   ];
@@ -510,5 +517,63 @@ function getFallbackAirQuality(): AirQuality {
     status: 'good',
     forecast: 'Check airnow.gov for current conditions',
     lastUpdated: new Date(),
+  };
+}
+
+// ODFW fishing regulations by river (update annually)
+function getRiverRegulations(riverName: string, location: string): RiverRegulations {
+  const name = riverName.toLowerCase();
+  const loc = location.toLowerCase();
+
+  // Crooked River below Bowman Dam - barbless, flies/lures only
+  if (name.includes('crooked')) {
+    return {
+      barblesRequired: true,
+      fliesOnly: false, // Flies and lures allowed
+      catchAndRelease: true,
+    };
+  }
+
+  // Fall River - barbless, flies only, catch & release
+  if (name.includes('fall river')) {
+    return {
+      barblesRequired: true,
+      fliesOnly: true,
+      catchAndRelease: true,
+    };
+  }
+
+  // Metolius River - barbless, catch & release
+  if (name.includes('metolius')) {
+    return {
+      barblesRequired: true,
+      fliesOnly: false,
+      catchAndRelease: true,
+    };
+  }
+
+  // Deschutes River - varies by section
+  if (name.includes('deschutes')) {
+    // Lower Deschutes (Madras) - barbless for wild fish
+    if (loc.includes('madras')) {
+      return {
+        barblesRequired: true, // Required for wild steelhead/trout
+        fliesOnly: false,
+        catchAndRelease: false, // Hatchery fish can be kept
+      };
+    }
+    // Upper Deschutes (Bend, Wickiup) - standard regulations
+    return {
+      barblesRequired: false,
+      fliesOnly: false,
+      catchAndRelease: false,
+    };
+  }
+
+  // Default - standard regulations
+  return {
+    barblesRequired: false,
+    fliesOnly: false,
+    catchAndRelease: false,
   };
 }
