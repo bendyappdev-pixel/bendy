@@ -3,6 +3,13 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ]
+  },
   "hosting": {
     "public": "dist",
     "ignore": [
@@ -11,6 +18,14 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/api/mt-bachelor",
+        "function": "getMtBachelorConditions"
+      },
+      {
+        "source": "/api/roads",
+        "function": "getRoadConditions"
+      },
       {
         "source": "**",
         "destination": "/index.html"

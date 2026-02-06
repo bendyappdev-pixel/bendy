@@ -196,39 +196,99 @@ export function useAirQuality() {
   return { airQuality, loading, error, refresh: fetchAirQuality };
 }
 
-// Mt. Bachelor - would need backend proxy, using mock for now
+// Mt. Bachelor - fetches from our Firebase Function proxy
 export function useMountainConditions() {
   const [conditions, setConditions] = useState<MountainConditions>(mockMountainConditions);
-  const [loading] = useState(false);
-  const [error] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // In the future, this would fetch from a backend proxy
-  // that scrapes mtbachelor.com/conditions
-  useEffect(() => {
-    setConditions({
-      ...mockMountainConditions,
-      lastUpdated: new Date(),
-    });
+  const fetchConditions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/mt-bachelor');
+      if (!response.ok) throw new Error('Failed to fetch Mt. Bachelor conditions');
+
+      const data = await response.json();
+
+      setConditions({
+        snowDepthBase: data.snowDepthBase,
+        snowDepthSummit: data.snowDepthSummit,
+        newSnow24h: data.newSnow24h,
+        newSnow48h: data.newSnow48h,
+        liftsOpen: data.liftsOpen,
+        liftsTotal: data.liftsTotal,
+        terrainOpen: data.terrainOpen,
+        conditions: data.conditions,
+        lastUpdated: new Date(data.lastUpdated),
+      });
+    } catch (err) {
+      console.error('Error fetching Mt. Bachelor conditions:', err);
+      setError('Unable to fetch live conditions');
+      // Keep mock data as fallback
+      setConditions({
+        ...mockMountainConditions,
+        lastUpdated: new Date(),
+      });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { conditions, loading, error, refresh: () => {} };
+  useEffect(() => {
+    fetchConditions();
+    // Refresh every hour
+    const interval = setInterval(fetchConditions, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchConditions]);
+
+  return { conditions, loading, error, refresh: fetchConditions };
 }
 
-// Road conditions - would need backend proxy, using mock for now
+// Road conditions - fetches from our Firebase Function proxy
 export function useRoadConditions() {
   const [roads, setRoads] = useState<RoadCondition[]>(mockRoadConditions);
-  const [loading] = useState(false);
-  const [error] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // In the future, this would fetch from TripCheck API
-  useEffect(() => {
-    setRoads(mockRoadConditions.map(road => ({
-      ...road,
-      lastUpdated: new Date(),
-    })));
+  const fetchRoads = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/roads');
+      if (!response.ok) throw new Error('Failed to fetch road conditions');
+
+      const data = await response.json();
+
+      if (data.roads && Array.isArray(data.roads)) {
+        setRoads(data.roads.map((road: RoadCondition & { lastUpdated: string }) => ({
+          ...road,
+          lastUpdated: new Date(road.lastUpdated),
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching road conditions:', err);
+      setError('Unable to fetch live road conditions');
+      // Keep mock data as fallback
+      setRoads(mockRoadConditions.map(road => ({
+        ...road,
+        lastUpdated: new Date(),
+      })));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { roads, loading, error, refresh: () => {} };
+  useEffect(() => {
+    fetchRoads();
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchRoads, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchRoads]);
+
+  return { roads, loading, error, refresh: fetchRoads };
 }
 
 // Helper functions
