@@ -38,21 +38,26 @@ export default function CrowdReportForm({
     setSubmitting(true);
     setResult(null);
 
-    const response = await submitReport(
-      locationId,
-      selectedSpot.name,
-      crowdLevel,
-      comment
-    );
+    try {
+      const response = await submitReport(
+        locationId,
+        selectedSpot.name,
+        crowdLevel,
+        comment
+      );
 
-    setResult(response);
-    setSubmitting(false);
+      setResult(response);
 
-    if (response.success) {
-      setCrowdLevel(null);
-      setComment('');
-      setLocationId('');
-      onSuccess?.();
+      if (response.success) {
+        setCrowdLevel(null);
+        setComment('');
+        setLocationId('');
+        setTimeout(() => onSuccess?.(), 1500);
+      }
+    } catch {
+      setResult({ success: false, message: 'Failed to submit report. Please try again.' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
