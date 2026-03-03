@@ -9,8 +9,10 @@ import {
 } from '../types/conditions';
 import {
   mockMountainConditions,
+  mockHoodooConditions,
   mockRoadConditions,
 } from '../data/conditions';
+import { appCheckFetch } from '../utils/appCheckFetch';
 
 // USGS Site IDs for Central Oregon rivers
 const USGS_SITES = {
@@ -213,7 +215,7 @@ export function useMountainConditions() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/mt-bachelor');
+      const response = await appCheckFetch('/api/mt-bachelor');
       if (!response.ok) throw new Error('Failed to fetch Mt. Bachelor conditions');
 
       const data = await response.json();
@@ -252,6 +254,56 @@ export function useMountainConditions() {
   return { conditions, loading, error, refresh: fetchConditions };
 }
 
+// Hoodoo Ski Area - fetches from our Firebase Function proxy
+export function useHoodooConditions() {
+  const [conditions, setConditions] = useState<MountainConditions>(mockHoodooConditions);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchConditions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await appCheckFetch('/api/hoodoo');
+      if (!response.ok) throw new Error('Failed to fetch Hoodoo conditions');
+
+      const data = await response.json();
+
+      setConditions({
+        snowDepthBase: data.snowDepthBase,
+        snowDepthSummit: data.snowDepthSummit,
+        newSnow24h: data.newSnow24h,
+        newSnow48h: data.newSnow48h,
+        liftsOpen: data.liftsOpen,
+        liftsTotal: data.liftsTotal,
+        terrainOpen: data.terrainOpen,
+        conditions: data.conditions,
+        lastUpdated: new Date(data.lastUpdated),
+      });
+    } catch (err) {
+      console.error('Error fetching Hoodoo conditions:', err);
+      setError('Unable to fetch live conditions');
+      // Keep mock data as fallback
+      setConditions({
+        ...mockHoodooConditions,
+        lastUpdated: new Date(),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConditions();
+    // Refresh every hour
+    const interval = setInterval(fetchConditions, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchConditions]);
+
+  return { conditions, loading, error, refresh: fetchConditions };
+}
+
 // Road conditions - fetches from our Firebase Function proxy
 export function useRoadConditions() {
   const [roads, setRoads] = useState<RoadCondition[]>(mockRoadConditions);
@@ -263,7 +315,7 @@ export function useRoadConditions() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/roads');
+      const response = await appCheckFetch('/api/roads');
       if (!response.ok) throw new Error('Failed to fetch road conditions');
 
       const data = await response.json();

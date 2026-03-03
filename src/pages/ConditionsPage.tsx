@@ -34,6 +34,7 @@ import {
   useRiverConditions,
   useAirQuality,
   useMountainConditions,
+  useHoodooConditions,
   useRoadConditions,
 } from '../hooks/useConditions';
 
@@ -109,6 +110,7 @@ export default function ConditionsPage() {
   const { rivers, loading: riversLoading, refresh: refreshRivers } = useRiverConditions();
   const { airQuality, loading: aqLoading, refresh: refreshAQ } = useAirQuality();
   const { conditions: mountain, loading: mtLoading } = useMountainConditions();
+  const { conditions: hoodoo, loading: hoodooLoading } = useHoodooConditions();
   const { roads, loading: roadsLoading } = useRoadConditions();
 
   useEffect(() => {
@@ -251,6 +253,69 @@ export default function ConditionsPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Conditions</span>
                     <span className="text-blue-400 font-medium">{mountain.conditions}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Hoodoo Ski Area Card */}
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Snowflake className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Hoodoo Ski Area</h2>
+                  <LastUpdated date={hoodoo.lastUpdated} />
+                </div>
+              </div>
+              <a
+                href="https://www.skihoodoo.com/conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+
+            {hoodooLoading ? (
+              <LoadingCard />
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-navy-700/50 rounded-xl p-4">
+                    <p className="text-xs text-gray-500 mb-1">Base Depth</p>
+                    <p className="text-2xl font-bold text-white">{hoodoo.snowDepthBase}"</p>
+                  </div>
+                  <div className="bg-navy-700/50 rounded-xl p-4">
+                    <p className="text-xs text-gray-500 mb-1">Summit Depth</p>
+                    <p className="text-2xl font-bold text-white">{hoodoo.snowDepthSummit}"</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">New Snow (24h)</span>
+                    <span className="text-white font-medium">{hoodoo.newSnow24h}"</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">New Snow (48h)</span>
+                    <span className="text-white font-medium">{hoodoo.newSnow48h}"</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Lifts Open</span>
+                    <span className="text-white font-medium">{hoodoo.liftsOpen} of {hoodoo.liftsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Terrain Open</span>
+                    <span className="text-white font-medium">{hoodoo.terrainOpen}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Conditions</span>
+                    <span className="text-blue-400 font-medium">{hoodoo.conditions}</span>
                   </div>
                 </div>
               </>

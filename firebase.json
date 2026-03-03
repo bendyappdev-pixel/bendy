@@ -23,6 +23,10 @@
         "function": "getMtBachelorConditions"
       },
       {
+        "source": "/api/hoodoo",
+        "function": "getHoodooConditions"
+      },
+      {
         "source": "/api/roads",
         "function": "getRoadConditions"
       },

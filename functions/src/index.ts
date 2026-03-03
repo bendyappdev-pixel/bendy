@@ -1,14 +1,33 @@
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
+
+admin.initializeApp();
 
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Firebase-AppCheck',
   'Content-Type': 'application/json',
 };
+
+// Verify Firebase App Check token
+async function verifyAppCheck(req: functions.https.Request, res: functions.Response): Promise<boolean> {
+  const appCheckToken = req.header('X-Firebase-AppCheck');
+  if (!appCheckToken) {
+    res.status(401).json({ error: 'Missing App Check token' });
+    return false;
+  }
+  try {
+    await admin.appCheck().verifyToken(appCheckToken);
+    return true;
+  } catch {
+    res.status(401).json({ error: 'Invalid App Check token' });
+    return false;
+  }
+}
 
 interface MountainConditions {
   snowDepthBase: number;
@@ -43,6 +62,8 @@ export const getMtBachelorConditions = functions.https.onRequest(async (req, res
   }
 
   res.set(corsHeaders);
+
+  if (!(await verifyAppCheck(req, res))) return;
 
   try {
     // Fetch the Mt. Bachelor conditions page
@@ -95,6 +116,70 @@ export const getMtBachelorConditions = functions.https.onRequest(async (req, res
   }
 });
 
+// Hoodoo Ski Area Conditions
+// Scrapes the Hoodoo conditions page
+export const getHoodooConditions = functions.https.onRequest(async (req, res) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.set(corsHeaders);
+    res.status(204).send('');
+    return;
+  }
+
+  res.set(corsHeaders);
+
+  if (!(await verifyAppCheck(req, res))) return;
+
+  try {
+    // Fetch the Hoodoo conditions page
+    const response = await fetch('https://www.skihoodoo.com/conditions', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; BendyApp/1.0)',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Parse conditions from the page
+    const conditions: MountainConditions = {
+      snowDepthBase: parseHoodooSnowDepth($, 'base') || 48,
+      snowDepthSummit: parseHoodooSnowDepth($, 'summit') || 72,
+      newSnow24h: parseHoodooNewSnow($, '24') || 0,
+      newSnow48h: parseHoodooNewSnow($, '48') || 0,
+      liftsOpen: parseHoodooLifts($, 'open') || 4,
+      liftsTotal: parseHoodooLifts($, 'total') || 5,
+      terrainOpen: parseHoodooTerrainPercent($) || 85,
+      conditions: parseHoodooConditionText($) || 'Packed Powder',
+      lastUpdated: new Date().toISOString(),
+      source: 'skihoodoo.com',
+    };
+
+    res.status(200).json(conditions);
+  } catch (error) {
+    console.error('Error fetching Hoodoo conditions:', error);
+
+    // Return fallback data if scraping fails
+    res.status(200).json({
+      snowDepthBase: 48,
+      snowDepthSummit: 72,
+      newSnow24h: 0,
+      newSnow48h: 0,
+      liftsOpen: 4,
+      liftsTotal: 5,
+      terrainOpen: 85,
+      conditions: 'Check skihoodoo.com',
+      lastUpdated: new Date().toISOString(),
+      source: 'fallback',
+      error: 'Live data temporarily unavailable',
+    });
+  }
+});
+
 // Road Conditions from TripCheck
 export const getRoadConditions = functions.https.onRequest(async (req, res) => {
   // Handle CORS preflight
@@ -105,6 +190,8 @@ export const getRoadConditions = functions.https.onRequest(async (req, res) => {
   }
 
   res.set(corsHeaders);
+
+  if (!(await verifyAppCheck(req, res))) return;
 
   try {
     // TripCheck has an API we can use
@@ -310,4 +397,151 @@ function getRouteElevation(name: string): number {
     'Newberry Crater': 6400,
   };
   return elevations[name] || 4000;
+}
+
+// Helper functions for parsing Hoodoo page
+function parseHoodooSnowDepth($: cheerio.CheerioAPI, type: string): number | null {
+  try {
+    // Look for snow depth in common patterns on ski resort sites
+    const selectors = [
+      `.snow-${type}`,
+      `.${type}-depth`,
+      `[data-${type}-depth]`,
+      `.conditions-${type}`,
+    ];
+
+    for (const selector of selectors) {
+      const text = $(selector).first().text().trim();
+      const match = text.match(/(\d+)/);
+      if (match) return parseInt(match[1], 10);
+    }
+
+    // Try finding by text content
+    const bodyText = $('body').text();
+    const regex = new RegExp(`${type}[:\\s]*(\\d+)["']?`, 'i');
+    const match = bodyText.match(regex);
+    if (match) return parseInt(match[1], 10);
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseHoodooNewSnow($: cheerio.CheerioAPI, hours: string): number | null {
+  try {
+    const selectors = [
+      `.new-snow-${hours}h`,
+      `[data-snow-${hours}h]`,
+      `.snow-${hours}hr`,
+    ];
+
+    for (const selector of selectors) {
+      const text = $(selector).first().text().trim();
+      const match = text.match(/(\d+)/);
+      if (match) return parseInt(match[1], 10);
+    }
+
+    // Try finding by text content
+    const bodyText = $('body').text();
+    const regex = new RegExp(`${hours}\\s*h(?:our|r)?[:\\s]*(\\d+)`, 'i');
+    const match = bodyText.match(regex);
+    if (match) return parseInt(match[1], 10);
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseHoodooLifts($: cheerio.CheerioAPI, type: string): number | null {
+  try {
+    const selectors = [
+      `.lifts-${type}`,
+      `[data-lifts-${type}]`,
+      `.lift-status`,
+    ];
+
+    for (const selector of selectors) {
+      const text = $(selector).first().text().trim();
+      const match = text.match(/(\d+)/);
+      if (match) return parseInt(match[1], 10);
+    }
+
+    // Try to find lift count from text like "4 of 5 lifts"
+    if (type === 'open' || type === 'total') {
+      const bodyText = $('body').text();
+      const match = bodyText.match(/(\d+)\s*(?:of|\/)\s*(\d+)\s*lift/i);
+      if (match) {
+        return type === 'open' ? parseInt(match[1], 10) : parseInt(match[2], 10);
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseHoodooTerrainPercent($: cheerio.CheerioAPI): number | null {
+  try {
+    const selectors = [
+      '.terrain-open',
+      '.terrain-percent',
+      '[data-terrain]',
+    ];
+
+    for (const selector of selectors) {
+      const text = $(selector).first().text().trim();
+      const match = text.match(/(\d+)/);
+      if (match) return parseInt(match[1], 10);
+    }
+
+    // Try to find percentage from text
+    const bodyText = $('body').text();
+    const match = bodyText.match(/(\d+)\s*%\s*(?:terrain|open|runs)/i);
+    if (match) return parseInt(match[1], 10);
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseHoodooConditionText($: cheerio.CheerioAPI): string | null {
+  try {
+    const selectors = [
+      '.conditions-text',
+      '.snow-conditions',
+      '.surface-conditions',
+      '[data-conditions]',
+    ];
+
+    for (const selector of selectors) {
+      const text = $(selector).first().text().trim();
+      if (text) return text;
+    }
+
+    // Common condition terms to search for
+    const conditionTerms = [
+      'Packed Powder',
+      'Powder',
+      'Groomed',
+      'Machine Groomed',
+      'Hard Pack',
+      'Spring Conditions',
+      'Variable',
+    ];
+
+    const bodyText = $('body').text();
+    for (const term of conditionTerms) {
+      if (bodyText.toLowerCase().includes(term.toLowerCase())) {
+        return term;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }

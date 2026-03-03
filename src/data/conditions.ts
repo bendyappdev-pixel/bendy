@@ -20,6 +20,18 @@ export const mockMountainConditions: MountainConditions = {
   lastUpdated: new Date(),
 };
 
+export const mockHoodooConditions: MountainConditions = {
+  snowDepthBase: 48,
+  snowDepthSummit: 72,
+  newSnow24h: 3,
+  newSnow48h: 8,
+  liftsOpen: 4,
+  liftsTotal: 5,
+  terrainOpen: 85,
+  conditions: 'Packed Powder',
+  lastUpdated: new Date(),
+};
+
 export const mockRiverConditions: RiverConditions[] = [
   {
     name: 'Deschutes River',
