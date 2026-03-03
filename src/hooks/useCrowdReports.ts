@@ -137,6 +137,7 @@ export function useCrowdReports() {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + REPORT_DURATION_HOURS * 60 * 60 * 1000);
 
+        console.log('[CrowdReport] Starting addDoc...', { locationId, locationName, crowdLevel });
         await addDoc(collection(db, COLLECTION_NAME), {
           locationId,
           locationName,
@@ -145,6 +146,7 @@ export function useCrowdReports() {
           timestamp: serverTimestamp(),
           expiresAt: Timestamp.fromDate(expiresAt),
         });
+        console.log('[CrowdReport] addDoc completed successfully');
 
         setRateLimit(locationId);
 
@@ -153,7 +155,7 @@ export function useCrowdReports() {
           message: 'Thanks! Your report helps locals and visitors.',
         };
       } catch (err) {
-        console.error('Error submitting crowd report:', err);
+        console.error('[CrowdReport] addDoc failed:', err);
         return {
           success: false,
           message: 'Failed to submit report. Please try again.',
