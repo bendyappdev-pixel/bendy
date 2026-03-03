@@ -2,10 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRoadConditions = exports.getHoodooConditions = exports.getMtBachelorConditions = void 0;
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+// import * as admin from 'firebase-admin';
 const node_fetch_1 = require("node-fetch");
 const cheerio = require("cheerio");
-admin.initializeApp();
+// TODO: Re-enable once App Check is properly configured
+// admin.initializeApp();
 // CORS headers for browser requests
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -13,22 +14,6 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Content-Type, X-Firebase-AppCheck',
     'Content-Type': 'application/json',
 };
-// Verify Firebase App Check token
-async function verifyAppCheck(req, res) {
-    const appCheckToken = req.header('X-Firebase-AppCheck');
-    if (!appCheckToken) {
-        res.status(401).json({ error: 'Missing App Check token' });
-        return false;
-    }
-    try {
-        await admin.appCheck().verifyToken(appCheckToken);
-        return true;
-    }
-    catch (_a) {
-        res.status(401).json({ error: 'Invalid App Check token' });
-        return false;
-    }
-}
 // Mt. Bachelor Conditions
 // Scrapes the Mt. Bachelor conditions page
 exports.getMtBachelorConditions = functions.https.onRequest(async (req, res) => {
@@ -39,8 +24,7 @@ exports.getMtBachelorConditions = functions.https.onRequest(async (req, res) => 
         return;
     }
     res.set(corsHeaders);
-    if (!(await verifyAppCheck(req, res)))
-        return;
+    // if (!(await verifyAppCheck(req, res))) return;
     try {
         // Fetch the Mt. Bachelor conditions page
         const response = await (0, node_fetch_1.default)('https://www.mtbachelor.com/the-mountain/conditions', {
@@ -97,8 +81,7 @@ exports.getHoodooConditions = functions.https.onRequest(async (req, res) => {
         return;
     }
     res.set(corsHeaders);
-    if (!(await verifyAppCheck(req, res)))
-        return;
+    // if (!(await verifyAppCheck(req, res))) return;
     try {
         // Fetch the Hoodoo conditions page
         const response = await (0, node_fetch_1.default)('https://www.skihoodoo.com/conditions', {
@@ -153,8 +136,7 @@ exports.getRoadConditions = functions.https.onRequest(async (req, res) => {
         return;
     }
     res.set(corsHeaders);
-    if (!(await verifyAppCheck(req, res)))
-        return;
+    // if (!(await verifyAppCheck(req, res))) return;
     try {
         // TripCheck has an API we can use
         // Fetching conditions for key passes near Bend
