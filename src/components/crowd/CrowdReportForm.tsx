@@ -39,14 +39,12 @@ export default function CrowdReportForm({
     setResult(null);
 
     try {
-      console.log('[CrowdReportForm] Calling submitReport...');
       const response = await submitReport(
         locationId,
         selectedSpot.name,
         crowdLevel,
         comment
       );
-      console.log('[CrowdReportForm] submitReport returned:', response);
 
       setResult(response);
 
@@ -56,11 +54,9 @@ export default function CrowdReportForm({
         setLocationId('');
         setTimeout(() => onSuccess?.(), 1500);
       }
-    } catch (err) {
-      console.error('[CrowdReportForm] submitReport threw:', err);
+    } catch {
       setResult({ success: false, message: 'Failed to submit report. Please try again.' });
     } finally {
-      console.log('[CrowdReportForm] finally — setting submitting=false');
       setSubmitting(false);
     }
   };

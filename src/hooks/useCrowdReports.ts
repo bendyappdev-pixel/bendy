@@ -137,8 +137,7 @@ export function useCrowdReports() {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + REPORT_DURATION_HOURS * 60 * 60 * 1000);
 
-        console.log('[CrowdReport] Starting addDoc...', { locationId, locationName, crowdLevel });
-        await addDoc(collection(db, COLLECTION_NAME), {
+        const writePromise = addDoc(collection(db, COLLECTION_NAME), {
           locationId,
           locationName,
           crowdLevel,
@@ -146,7 +145,22 @@ export function useCrowdReports() {
           timestamp: serverTimestamp(),
           expiresAt: Timestamp.fromDate(expiresAt),
         });
-        console.log('[CrowdReport] addDoc completed successfully');
+
+        // Race against a timeout — addDoc can hang if App Check token
+        // acquisition stalls. Firestore will sync the write in the background.
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 5000)
+        );
+
+        try {
+          await Promise.race([writePromise, timeout]);
+        } catch (err) {
+          if (err instanceof Error && err.message === 'timeout') {
+            console.warn('[CrowdReport] addDoc timed out — write will sync in background');
+          } else {
+            throw err;
+          }
+        }
 
         setRateLimit(locationId);
 
