@@ -3,14 +3,32 @@ import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firesto
 import { db } from '../config/firebase';
 
 export default function FirestoreTestPage() {
-  const [result, setResult] = useState<string>('');
+  const [results, setResults] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleTestWrite = async () => {
+  const runTest = async (label: string, data: Record<string, unknown>) => {
     setLoading(true);
-    setResult('Writing to Firestore...');
+    setResults((prev) => [...prev, `\n--- ${label} ---\nPayload: ${JSON.stringify(data, null, 2)}\nWriting...`]);
 
-    const testData = {
+    try {
+      const docRef = await addDoc(collection(db, 'crowdReports'), data);
+      setResults((prev) => [...prev, `SUCCESS! ID: ${docRef.id}`]);
+    } catch (error: unknown) {
+      console.error(`[${label}] Full error:`, error);
+      if (error instanceof Error) {
+        const fe = error as Error & { code?: string };
+        setResults((prev) => [...prev, `FAILED! Code: ${fe.code ?? 'N/A'}\nMessage: ${fe.message}`]);
+      } else {
+        setResults((prev) => [...prev, `FAILED: ${String(error)}`]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRunAll = async () => {
+    setResults([]);
+    const base = {
       locationId: 'elk-lake',
       locationName: 'Elk Lake',
       crowdLevel: 'moderate',
@@ -18,45 +36,40 @@ export default function FirestoreTestPage() {
       expiresAt: Timestamp.fromDate(new Date(Date.now() + 4 * 60 * 60 * 1000)),
     };
 
-    try {
-      const docRef = await addDoc(collection(db, 'crowdReports'), testData);
-      const msg = `SUCCESS! Document written with ID: ${docRef.id}`;
-      console.log(msg);
-      setResult(msg);
-    } catch (error: unknown) {
-      console.error('Full error object:', error);
-      if (error instanceof Error) {
-        const firebaseError = error as Error & { code?: string };
-        console.error('Error code:', firebaseError.code);
-        console.error('Error message:', firebaseError.message);
-        setResult(
-          `FAILED!\n\nCode: ${firebaseError.code ?? 'N/A'}\nMessage: ${firebaseError.message}\n\nFull error:\n${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`
-        );
-      } else {
-        setResult(`FAILED with non-Error: ${String(error)}`);
-      }
-    } finally {
-      setLoading(false);
-    }
+    // Test 1: No comment (matches original test page)
+    await runTest('Test 1: No comment field', { ...base });
+
+    // Test 2: comment: null (matches what the form sends for empty comment)
+    await runTest('Test 2: comment: null', { ...base, timestamp: serverTimestamp(), comment: null });
+
+    // Test 3: comment with a string (matches form with user text)
+    await runTest('Test 3: comment: "Test"', { ...base, timestamp: serverTimestamp(), comment: 'Test' });
+
+    // Test 4: Non-whitelisted location (e.g. south-sister)
+    await runTest('Test 4: non-whitelisted location', {
+      ...base,
+      timestamp: serverTimestamp(),
+      locationId: 'south-sister',
+      locationName: 'South Sister',
+    });
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-bold mb-4">Firestore Debug Test</h1>
       <p className="text-gray-600 mb-6">
-        Writes a hardcoded valid doc to <code>crowdReports</code> using location{' '}
-        <code>elk-lake</code>. Check the on-screen result and browser console.
+        Runs 4 tests to isolate which field breaks Firestore rules.
       </p>
       <button
-        onClick={handleTestWrite}
+        onClick={handleRunAll}
         disabled={loading}
         className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? 'Writing...' : 'Test Firestore Write'}
+        {loading ? 'Running...' : 'Run All Tests'}
       </button>
-      {result && (
+      {results.length > 0 && (
         <pre className="mt-6 p-4 bg-gray-100 rounded-lg text-sm whitespace-pre-wrap break-words">
-          {result}
+          {results.join('\n')}
         </pre>
       )}
     </div>
