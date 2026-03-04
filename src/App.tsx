@@ -12,7 +12,6 @@ import CampingPage from './pages/CampingPage';
 import TrailsPage from './pages/TrailsPage';
 import TrailDetailPage from './pages/TrailDetailPage';
 import ConditionsPage from './pages/ConditionsPage';
-import FirestoreTestPage from './pages/FirestoreTestPage';
 
 export default function App() {
   return (
@@ -30,7 +29,6 @@ export default function App() {
           <Route path="/trails" element={<TrailsPage />} />
           <Route path="/trails/:slug" element={<TrailDetailPage />} />
           <Route path="/conditions" element={<ConditionsPage />} />
-          <Route path="/test-firestore" element={<FirestoreTestPage />} />
           <Route path="/category/:category" element={<CategoryPage />} />
         </Routes>
       </main>

@@ -137,14 +137,19 @@ export function useCrowdReports() {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + REPORT_DURATION_HOURS * 60 * 60 * 1000);
 
-        await addDoc(collection(db, COLLECTION_NAME), {
+        const reportData: Record<string, unknown> = {
           locationId,
           locationName,
           crowdLevel,
-          comment: comment?.trim() || null,
           timestamp: serverTimestamp(),
           expiresAt: Timestamp.fromDate(expiresAt),
-        });
+        };
+        const trimmed = comment?.trim();
+        if (trimmed) {
+          reportData.comment = trimmed;
+        }
+
+        await addDoc(collection(db, COLLECTION_NAME), reportData);
 
         setRateLimit(locationId);
 

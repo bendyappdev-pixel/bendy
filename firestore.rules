@@ -26,8 +26,11 @@ service cloud.firestore {
 
     function isValidLocation(locationId) {
       return locationId in [
-        'elk-lake', 'sparks-lake', 'tumalo-falls', 'phils-trail', 'downtown-bend',
-        'deschutes-river-trail', 'smith-rock', 'mt-bachelor', 'todd-lake', 'lava-river-cave'
+        'phils-trail', 'tumalo-falls', 'south-sister', 'broken-top',
+        'deschutes-river-trail', 'shevlin-park', 'pilot-butte', 'smith-rock',
+        'mt-bachelor-summit', 'todd-lake', 'green-lakes', 'benham-falls',
+        'paulina-peak', 'tam-mcarthur-rim', 'elk-lake', 'sparks-lake',
+        'downtown-bend', 'lava-river-cave'
       ];
     }
 
