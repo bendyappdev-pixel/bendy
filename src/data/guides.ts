@@ -173,7 +173,7 @@ export const guides: Guide[] = [
     tagline: 'Kid-approved adventures that parents will love too',
     description:
       "Create unforgettable family memories with this carefully crafted day of Central Oregon adventures. From easy river trails to fascinating museums, every stop is designed to keep kids engaged and parents happy.",
-    heroImage: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=1920&q=80',
+    heroImage: '/images/family-fun-day.jpg',
     duration: 'Full Day (8-9 hours)',
     difficulty: 'easy',
     seasons: ['spring', 'summer', 'fall', 'winter'],
