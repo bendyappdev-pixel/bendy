@@ -9,7 +9,7 @@ export const guides: Guide[] = [
     tagline: 'Perfect light, epic landscapes, and the best coffee stops in between',
     description:
       "Chase the light across Central Oregon's most photogenic locations. From the legendary reflections at Sparks Lake to the dramatic basalt formations of Smith Rock, this full-day adventure is designed to put you in the right place at the right time for unforgettable shots.",
-    heroImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80',
+    heroImage: '/images/golden-hour-tour.jpg',
     duration: 'Full Day (10-12 hours)',
     difficulty: 'moderate',
     seasons: ['summer', 'fall'],
@@ -321,7 +321,7 @@ export const guides: Guide[] = [
     tagline: 'Romance meets adrenaline in Central Oregon',
     description:
       "Ditch the ordinary date night for an unforgettable adventure. This winter/spring-focused guide combines outdoor thrills with cozy moments, perfect for couples who'd rather summit a peak than sit through a movie.",
-    heroImage: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=1920&q=80',
+    heroImage: '/images/couples-escape.jpg',
     duration: 'Full Day (10-12 hours)',
     difficulty: 'challenging',
     seasons: ['winter', 'spring'],
@@ -500,7 +500,7 @@ export const guides: Guide[] = [
     tagline: 'Chase cascades from the high desert to the forests',
     description:
       "Discover the surprising abundance of waterfalls in Central Oregon. From thundering Tumalo Falls to the hidden gems of the Deschutes National Forest, this driving route connects the region's most spectacular cascades.",
-    heroImage: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=1920&q=80',
+    heroImage: '/images/waterfall-quest.jpg',
     duration: 'Full Day (9-10 hours)',
     difficulty: 'moderate',
     seasons: ['spring', 'summer', 'fall'],
