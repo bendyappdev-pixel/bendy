@@ -66,3 +66,27 @@ export interface ParkingConditions {
   status: ConditionStatus;
   trend: 'filling' | 'emptying' | 'stable';
 }
+
+export interface PollenTypeInfo {
+  code: string; // GRASS, TREE, WEED
+  displayName: string;
+  inSeason: boolean;
+  indexValue: number; // 0-5 Universal Pollen Index
+  category: string; // None, Very Low, Low, Moderate, High, Very High
+  healthRecommendations: string[];
+}
+
+export interface PlantInfo {
+  code: string;
+  displayName: string;
+  inSeason: boolean;
+  indexValue: number;
+  category: string;
+}
+
+export interface PollenData {
+  pollenTypes: PollenTypeInfo[];
+  plants: PlantInfo[];
+  overallStatus: ConditionStatus;
+  lastUpdated: Date;
+}

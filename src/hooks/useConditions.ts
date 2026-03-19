@@ -6,6 +6,9 @@ import {
   AirQuality,
   RoadCondition,
   ConditionStatus,
+  PollenData,
+  PollenTypeInfo,
+  PlantInfo,
 } from '../types/conditions';
 import {
   mockMountainConditions,
@@ -202,6 +205,136 @@ export function useAirQuality() {
   }, [fetchAirQuality]);
 
   return { airQuality, loading, error, refresh: fetchAirQuality };
+}
+
+// Google Pollen API response types
+interface GooglePollenResponse {
+  dailyInfo: Array<{
+    date: { year: number; month: number; day: number };
+    pollenTypeInfo: Array<{
+      code: string;
+      displayName: string;
+      inSeason: boolean;
+      indexInfo?: {
+        value: number;
+        category: string;
+        indexDescription: string;
+        color?: { red?: number; green?: number; blue?: number };
+      };
+      healthRecommendations?: string[];
+    }>;
+    plantInfo: Array<{
+      code: string;
+      displayName: string;
+      inSeason: boolean;
+      indexInfo?: {
+        value: number;
+        category: string;
+        indexDescription: string;
+        color?: { red?: number; green?: number; blue?: number };
+      };
+      plantDescription?: {
+        type: string;
+        family: string;
+        season: string;
+        crossReaction: string;
+      };
+    }>;
+  }>;
+}
+
+// Fetch pollen data from Google Pollen API
+export function usePollenData() {
+  const [pollenData, setPollenData] = useState<PollenData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPollenData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const apiKey = import.meta.env.VITE_GOOGLE_POLLEN_API_KEY;
+      if (!apiKey) {
+        throw new Error('Google Pollen API key not configured');
+      }
+
+      const url = `https://pollen.googleapis.com/v1/forecast:lookup?key=${apiKey}&location.latitude=${BEND_COORDS.lat}&location.longitude=${BEND_COORDS.lng}&days=1&plantsDescription=false`;
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch pollen data');
+
+      const data: GooglePollenResponse = await response.json();
+      const today = data.dailyInfo?.[0];
+
+      if (!today) {
+        throw new Error('No pollen data available');
+      }
+
+      const pollenTypes: PollenTypeInfo[] = (today.pollenTypeInfo || []).map(pt => ({
+        code: pt.code,
+        displayName: pt.displayName,
+        inSeason: pt.inSeason,
+        indexValue: pt.indexInfo?.value ?? 0,
+        category: pt.indexInfo?.category ?? 'None',
+        healthRecommendations: pt.healthRecommendations ?? [],
+      }));
+
+      const plants: PlantInfo[] = (today.plantInfo || [])
+        .filter(p => p.inSeason && p.indexInfo && p.indexInfo.value > 0)
+        .sort((a, b) => (b.indexInfo?.value ?? 0) - (a.indexInfo?.value ?? 0))
+        .map(p => ({
+          code: p.code,
+          displayName: p.displayName,
+          inSeason: p.inSeason,
+          indexValue: p.indexInfo?.value ?? 0,
+          category: p.indexInfo?.category ?? 'None',
+        }));
+
+      const maxIndex = Math.max(...pollenTypes.map(pt => pt.indexValue), 0);
+
+      setPollenData({
+        pollenTypes,
+        plants,
+        overallStatus: getPollenStatus(maxIndex),
+        lastUpdated: new Date(),
+      });
+    } catch (err) {
+      console.error('Error fetching pollen data:', err);
+      setError('Unable to fetch live pollen data');
+      setPollenData(getFallbackPollenData());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPollenData();
+    // Refresh every 3 hours (pollen data changes slowly)
+    const interval = setInterval(fetchPollenData, 3 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchPollenData]);
+
+  return { pollenData, loading, error, refresh: fetchPollenData };
+}
+
+function getPollenStatus(maxIndex: number): ConditionStatus {
+  if (maxIndex <= 1) return 'good';
+  if (maxIndex <= 3) return 'moderate';
+  return 'poor';
+}
+
+function getFallbackPollenData(): PollenData {
+  return {
+    pollenTypes: [
+      { code: 'TREE', displayName: 'Tree', inSeason: true, indexValue: 0, category: 'None', healthRecommendations: [] },
+      { code: 'GRASS', displayName: 'Grass', inSeason: false, indexValue: 0, category: 'None', healthRecommendations: [] },
+      { code: 'WEED', displayName: 'Weed', inSeason: false, indexValue: 0, category: 'None', healthRecommendations: [] },
+    ],
+    plants: [],
+    overallStatus: 'good',
+    lastUpdated: new Date(),
+  };
 }
 
 // Mt. Bachelor - fetches from our Firebase Function proxy

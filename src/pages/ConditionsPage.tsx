@@ -24,6 +24,9 @@ import {
   ExternalLink,
   Loader2,
   Radio,
+  TreePine,
+  Flower2,
+  Sprout,
 } from 'lucide-react';
 import {
   mockParkingConditions,
@@ -33,6 +36,7 @@ import { ConditionStatus } from '../types/conditions';
 import {
   useRiverConditions,
   useAirQuality,
+  usePollenData,
   useMountainConditions,
   useHoodooConditions,
   useRoadConditions,
@@ -109,6 +113,7 @@ export default function ConditionsPage() {
   // Real data hooks
   const { rivers, loading: riversLoading, refresh: refreshRivers } = useRiverConditions();
   const { airQuality, loading: aqLoading, refresh: refreshAQ } = useAirQuality();
+  const { pollenData, loading: pollenLoading, refresh: refreshPollen } = usePollenData();
   const { conditions: mountain, loading: mtLoading } = useMountainConditions();
   const { conditions: hoodoo, loading: hoodooLoading } = useHoodooConditions();
   const { roads, loading: roadsLoading } = useRoadConditions();
@@ -129,6 +134,7 @@ export default function ConditionsPage() {
   const handleRefresh = () => {
     refreshRivers();
     refreshAQ();
+    refreshPollen();
   };
 
   return (
@@ -364,6 +370,104 @@ export default function ConditionsPage() {
               </>
             ) : (
               <p className="text-gray-400">Unable to load air quality data</p>
+            )}
+          </div>
+
+          {/* Allergy / Pollen Card - LIVE DATA */}
+          <div className={`card p-6 border ${statusBgColors[pollenData?.overallStatus || 'good']}`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                  <Flower2 className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-white">Allergies & Pollen</h2>
+                    <LiveBadge />
+                  </div>
+                  {pollenData && <LastUpdated date={pollenData.lastUpdated} />}
+                </div>
+              </div>
+              <StatusDot status={pollenData?.overallStatus || 'good'} />
+            </div>
+
+            {pollenLoading ? (
+              <LoadingCard />
+            ) : pollenData ? (
+              <>
+                {/* Pollen Type Breakdown */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {pollenData.pollenTypes.map((pt) => {
+                    const TypeIcon = pt.code === 'TREE' ? TreePine : pt.code === 'GRASS' ? Sprout : Flower2;
+                    return (
+                      <div key={pt.code} className="bg-navy-700/50 rounded-xl p-3 text-center">
+                        <TypeIcon className={`w-5 h-5 mx-auto mb-1.5 ${
+                          !pt.inSeason ? 'text-gray-600' :
+                          pt.indexValue <= 1 ? 'text-green-400' :
+                          pt.indexValue <= 3 ? 'text-yellow-400' : 'text-orange-400'
+                        }`} />
+                        <p className="text-xs text-gray-500 mb-0.5">{pt.displayName}</p>
+                        <p className={`text-sm font-semibold ${
+                          !pt.inSeason ? 'text-gray-600' :
+                          pt.indexValue <= 1 ? 'text-green-400' :
+                          pt.indexValue <= 3 ? 'text-yellow-400' : 'text-orange-400'
+                        }`}>
+                          {pt.inSeason ? pt.category : 'Off Season'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Top Allergens */}
+                {pollenData.plants.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">Top Allergens Today</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {pollenData.plants.slice(0, 5).map((plant) => (
+                        <span
+                          key={plant.code}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            plant.indexValue <= 1 ? 'bg-green-500/20 text-green-400' :
+                            plant.indexValue <= 2 ? 'bg-yellow-500/20 text-yellow-400' :
+                            plant.indexValue <= 3 ? 'bg-orange-500/20 text-orange-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}
+                        >
+                          {plant.displayName}
+                          <span className="opacity-70">{plant.indexValue}/5</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Health Recommendation */}
+                {(() => {
+                  const recommendation = pollenData.pollenTypes
+                    .flatMap(pt => pt.healthRecommendations)
+                    .find(r => r);
+                  return recommendation ? (
+                    <div className="bg-navy-700/30 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">Health Tip</p>
+                      <p className="text-sm text-gray-300">{recommendation}</p>
+                    </div>
+                  ) : (
+                    <div className="bg-navy-700/30 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">Health Tip</p>
+                      <p className="text-sm text-gray-300">
+                        {pollenData.overallStatus === 'good'
+                          ? 'Low pollen levels - great day to be outdoors!'
+                          : pollenData.overallStatus === 'moderate'
+                          ? 'Moderate pollen - allergy sufferers may want to take medication before heading out.'
+                          : 'High pollen levels - consider limiting outdoor time if you have allergies.'}
+                      </p>
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <p className="text-gray-400">Unable to load pollen data</p>
             )}
           </div>
 
@@ -626,7 +730,7 @@ export default function ConditionsPage() {
         {/* Footer Note */}
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
-            Data sources: USGS Water Services, Open-Meteo Air Quality API, Mt. Bachelor, TripCheck
+            Data sources: USGS Water Services, Open-Meteo Air Quality API, Google Pollen API, Mt. Bachelor, TripCheck
           </p>
           <p className="text-gray-600 text-xs mt-2">
             River and air quality data updates automatically. Always verify conditions before heading out.
