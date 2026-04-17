@@ -84,9 +84,9 @@ export default function EventsPage() {
           <button
             key={cat.value}
             onClick={() => setFilter(cat.value)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 active:translate-y-px ${
               filter === cat.value
-                ? 'bg-sunset-500 text-white'
+                ? 'bg-sunset-500 text-white shadow-sm shadow-sunset-500/20'
                 : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
             }`}
           >

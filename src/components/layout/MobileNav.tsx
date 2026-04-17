@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
 
@@ -18,6 +19,16 @@ function PineTreeIcon({ className }: { className?: string }) {
 
 export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
   const location = useLocation();
+  const [visible, setVisible] = useState(false);
+
+  // Animate in after mount
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -25,12 +36,18 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
+          visible ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="absolute right-0 top-0 bottom-0 w-72 bg-navy-800 shadow-xl border-l border-white/10">
+      {/* Drawer — slide in from right */}
+      <div
+        className={`absolute right-0 top-0 bottom-0 w-72 bg-navy-800 shadow-xl border-l border-white/10 transition-transform duration-300 ease-out ${
+          visible ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PineTreeIcon className="w-7 h-7 text-pine-500" />
@@ -46,16 +63,21 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
         </div>
 
         <nav className="p-4 space-y-2">
-          {links.map((link) => (
+          {links.map((link, i) => (
             <Link
               key={link.href}
               to={link.href}
               onClick={onClose}
-              className={`block px-4 py-3 rounded-xl text-lg font-medium transition-colors ${
+              className={`block px-4 py-3 rounded-xl text-lg font-medium transition-all duration-200 ${
                 location.pathname === link.href
                   ? 'bg-sunset-500 text-white'
                   : 'text-gray-300 hover:bg-white/10 hover:text-sunset-400'
               }`}
+              style={{
+                transitionDelay: visible ? `${i * 30}ms` : '0ms',
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateX(0)' : 'translateX(12px)',
+              }}
             >
               {link.name}
             </Link>

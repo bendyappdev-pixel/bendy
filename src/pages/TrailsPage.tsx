@@ -305,7 +305,7 @@ export default function TrailsPage() {
       {/* Hero Section */}
       <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=1920"
+          src="/images/trails/trails-hero.jpg"
           alt="Trail in Central Oregon"
           className="w-full h-full object-cover"
         />

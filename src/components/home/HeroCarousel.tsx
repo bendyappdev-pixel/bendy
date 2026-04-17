@@ -57,7 +57,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
   // Fallback gradient background
   if (!hasImages) {
     return (
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90dvh] flex items-center overflow-hidden">
         {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-navy-800 via-navy-900 to-navy-900" />
 
@@ -69,7 +69,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
+      className="relative min-h-[90dvh] flex items-center overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

@@ -16,6 +16,7 @@ export interface Campground {
   direction: string; // 'N', 'SW', 'NW', etc.
   elevation?: number; // feet
   description: string;
+  heroImage?: string;
   amenities: string[];
   reservationUrl?: string;
   reservationSystem: ReservationSystem;
@@ -34,6 +35,7 @@ export interface DispersedSite {
   distance: number;
   direction: string;
   description: string;
+  heroImage?: string;
   access: AccessType;
   season: string;
   amenities: string[];

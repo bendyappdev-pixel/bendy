@@ -58,7 +58,21 @@ function CampgroundCard({ campground }: { campground: Campground }) {
   const isFree = campground.cost.toLowerCase().includes('free');
 
   return (
-    <div className="card p-5 hover:border-sunset-500/50 transition-all duration-300">
+    <div className="card overflow-hidden hover:border-sunset-500/50 transition-all duration-300">
+      {/* Hero Image */}
+      {campground.heroImage && (
+        <div className="relative h-36 overflow-hidden">
+          <img
+            src={campground.heroImage}
+            alt={campground.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 to-transparent" />
+        </div>
+      )}
+
+      <div className="p-5">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="w-8 h-8 rounded-lg bg-pine-700/30 flex items-center justify-center">
@@ -139,6 +153,7 @@ function CampgroundCard({ campground }: { campground: Campground }) {
           Directions
         </a>
       </div>
+      </div>
     </div>
   );
 }
@@ -147,7 +162,21 @@ function DispersedCard({ site }: { site: DispersedSite }) {
   const CategoryIcon = categoryIcons[site.category] || Compass;
 
   return (
-    <div className="card p-5 hover:border-sunset-500/50 transition-all duration-300">
+    <div className="card overflow-hidden hover:border-sunset-500/50 transition-all duration-300">
+      {/* Hero Image */}
+      {site.heroImage && (
+        <div className="relative h-36 overflow-hidden">
+          <img
+            src={site.heroImage}
+            alt={site.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 to-transparent" />
+        </div>
+      )}
+
+      <div className="p-5">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="w-8 h-8 rounded-lg bg-sunset-500/20 flex items-center justify-center">
@@ -218,6 +247,7 @@ function DispersedCard({ site }: { site: DispersedSite }) {
           Directions
         </a>
       </div>
+      </div>
     </div>
   );
 }
@@ -273,7 +303,7 @@ export default function CampingPage() {
       {/* Hero Section */}
       <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1920"
+          src="/images/camping/camping-hero.jpg"
           alt="Camping in Central Oregon"
           className="w-full h-full object-cover"
         />

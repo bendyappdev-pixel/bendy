@@ -1,15 +1,27 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Hero from '../components/home/Hero';
 import CategoryCard from '../components/home/CategoryCard';
 import { categories } from '../data/categories';
 import { MapPin, Compass, Sun, Users, Cloud, Calendar, ArrowRight, Clock, Mountain } from 'lucide-react';
 import { PartnerBanner } from '../components/ads';
-import { CrowdReportsList } from '../components/crowd';
+import { CrowdReportsList, CrowdReportForm } from '../components/crowd';
 import { WeatherWidget } from '../components/weather';
 import { events } from '../data/events';
 import { guides } from '../data/guides';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '../components/ui/dialog';
+import { X } from 'lucide-react';
 
 export default function HomePage() {
+  const [showReportModal, setShowReportModal] = useState(false);
+
   return (
     <div>
       <Hero />
@@ -45,13 +57,13 @@ export default function HomePage() {
                   <Users className="w-5 h-5" />
                   <h3 className="font-semibold">Crowd Reports</h3>
                 </div>
-                <Link
-                  to="/map"
+                <button
+                  onClick={() => setShowReportModal(true)}
                   className="text-white/80 hover:text-white text-sm flex items-center gap-1 transition-colors"
                 >
                   Report
                   <ArrowRight className="w-3 h-3" />
-                </Link>
+                </button>
               </div>
             </div>
             <div className="p-4">
@@ -144,16 +156,16 @@ export default function HomePage() {
       {/* Categories Section */}
       <section className="py-16 bg-navy-800/30">
         <div className="container-app">
-          <div className="text-center mb-12">
+          <div className="mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Explore Bend
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="text-gray-400 max-w-2xl">
               From world-class skiing to craft breweries, discover what makes Bend one of the best outdoor towns in America.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {categories.map((category) => (
               <CategoryCard key={category.id} category={category} />
             ))}
@@ -162,35 +174,29 @@ export default function HomePage() {
       </section>
 
       {/* Quick Stats */}
-      <section className="bg-gradient-to-r from-pine-700 to-pine-600 py-16 relative overflow-hidden">
-        {/* Decorative background */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
-        </div>
-
-        <div className="container-app relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="group">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-colors">
-                <Sun className="w-10 h-10 text-white" />
+      <section className="border-y border-white/10 py-12">
+        <div className="container-app">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            <div className="flex items-center gap-4 px-6 py-4 md:border-r md:border-white/10">
+              <Sun className="w-6 h-6 text-sunset-400 shrink-0" />
+              <div>
+                <div className="text-3xl font-bold text-white tracking-tight">300+</div>
+                <div className="text-sm text-gray-500">Days of Sunshine</div>
               </div>
-              <div className="text-5xl font-extrabold text-white mb-2">300+</div>
-              <div className="text-white/80 text-lg">Days of Sunshine</div>
             </div>
-            <div className="group">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-colors">
-                <Compass className="w-10 h-10 text-white" />
+            <div className="flex items-center gap-4 px-6 py-4 md:border-r md:border-white/10 border-t md:border-t-0 border-white/10">
+              <Compass className="w-6 h-6 text-pine-400 shrink-0" />
+              <div>
+                <div className="text-3xl font-bold text-white tracking-tight">500+</div>
+                <div className="text-sm text-gray-500">Miles of Trails</div>
               </div>
-              <div className="text-5xl font-extrabold text-white mb-2">500+</div>
-              <div className="text-white/80 text-lg">Miles of Trails</div>
             </div>
-            <div className="group">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white/30 transition-colors">
-                <MapPin className="w-10 h-10 text-white" />
+            <div className="flex items-center gap-4 px-6 py-4 border-t md:border-t-0 border-white/10">
+              <MapPin className="w-6 h-6 text-sunset-400 shrink-0" />
+              <div>
+                <div className="text-3xl font-bold text-white tracking-tight">30+</div>
+                <div className="text-sm text-gray-500">Craft Breweries</div>
               </div>
-              <div className="text-5xl font-extrabold text-white mb-2">30+</div>
-              <div className="text-white/80 text-lg">Craft Breweries</div>
             </div>
           </div>
         </div>
@@ -253,7 +259,7 @@ export default function HomePage() {
               </div>
 
               {/* Coordinates */}
-              <p className="text-2xl font-bold gradient-text mb-2">
+              <p className="text-2xl font-bold text-sunset-400 mb-2 tracking-wide" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 44.0582° N, 121.3153° W
               </p>
 
@@ -268,6 +274,24 @@ export default function HomePage() {
 
       {/* Partner Banner (hidden when no ads) */}
       <PartnerBanner />
+
+      {/* Report Conditions Modal — accessible via Radix Dialog */}
+      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Conditions</DialogTitle>
+            <DialogClose className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <X className="w-5 h-5 text-gray-400" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="p-6">
+            <DialogDescription className="mb-6">
+              Help others plan their visit by sharing current crowd conditions at popular spots.
+            </DialogDescription>
+            <CrowdReportForm onSuccess={() => setShowReportModal(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
