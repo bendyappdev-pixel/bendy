@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { CrowdLevel } from '../../types';
-import {
-  useCrowdReports,
-  popularSpots,
-  crowdLevelConfig,
-} from '../../hooks/useCrowdReports';
+import { useCrowdReports, popularSpots } from '../../hooks/useCrowdReports';
+import { crowdMeta } from '../ui/CrowdBadge';
+import { cn } from '../../lib/utils';
 
 interface CrowdReportFormProps {
   onSuccess?: () => void;
   preselectedLocation?: string;
 }
+
+const fieldClass =
+  'w-full border border-hair bg-transparent px-4 py-3 font-mono text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none transition-colors';
 
 export default function CrowdReportForm({
   onSuccess,
@@ -64,13 +65,10 @@ export default function CrowdReportForm({
   const crowdLevels: CrowdLevel[] = ['empty', 'moderate', 'busy', 'packed'];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Location Select */}
       <div>
-        <label
-          htmlFor="location"
-          className="block text-sm font-medium text-gray-300 mb-2"
-        >
+        <label htmlFor="location" className="small-caps mb-2 block text-whisper">
           Location
         </label>
         <select
@@ -80,7 +78,7 @@ export default function CrowdReportForm({
             setLocationId(e.target.value);
             setResult(null);
           }}
-          className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+          className={fieldClass}
         >
           <option value="">Select a location...</option>
           {popularSpots.map((spot) => (
@@ -93,30 +91,38 @@ export default function CrowdReportForm({
 
       {/* Crowd Level Buttons */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          How crowded is it?
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <label className="small-caps mb-2 block text-whisper">How crowded is it?</label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {crowdLevels.map((level) => {
-            const config = crowdLevelConfig[level];
+            const meta = crowdMeta(level);
             const isSelected = crowdLevel === level;
             return (
               <button
                 key={level}
                 type="button"
                 onClick={() => setCrowdLevel(level)}
-                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
+                aria-pressed={isSelected}
+                className={cn(
+                  'flex items-center justify-center gap-2 border px-3 py-3 font-mono text-[11px] uppercase tracking-wide transition-colors',
                   isSelected
-                    ? 'ring-2 ring-offset-2 ring-forest'
-                    : 'hover:opacity-80'
-                } ${config.bgColor}`}
-                style={{
-                  backgroundColor: isSelected ? config.color : undefined,
-                  color: isSelected ? 'white' : undefined,
-                }}
+                    ? 'text-film-white'
+                    : 'border-hair text-whisper hover:border-white/30 hover:text-film-white'
+                )}
+                style={
+                  isSelected
+                    ? { borderColor: meta.color, backgroundColor: `${meta.color}1f` }
+                    : undefined
+                }
               >
-                <span>{config.emoji}</span>
-                <span className={`text-sm ${isSelected ? '' : 'text-gray-800'}`}>{config.label}</span>
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{
+                    background: meta.color,
+                    boxShadow: isSelected ? `0 0 8px ${meta.color}` : undefined,
+                  }}
+                />
+                {meta.label}
               </button>
             );
           })}
@@ -125,10 +131,7 @@ export default function CrowdReportForm({
 
       {/* Optional Comment */}
       <div>
-        <label
-          htmlFor="comment"
-          className="block text-sm font-medium text-gray-300 mb-2"
-        >
+        <label htmlFor="comment" className="small-caps mb-2 block text-whisper">
           Add a note (optional)
         </label>
         <textarea
@@ -137,9 +140,9 @@ export default function CrowdReportForm({
           onChange={(e) => setComment(e.target.value.slice(0, 150))}
           placeholder="e.g., Parking lot half full, trails are muddy..."
           rows={2}
-          className="w-full px-4 py-3 bg-white text-gray-900 placeholder-gray-500 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors resize-none"
+          className={cn(fieldClass, 'resize-none')}
         />
-        <p className="text-xs text-gray-500 mt-1 text-right">
+        <p className="mt-1 text-right font-mono text-[10px] text-whisper">
           {comment.length}/150
         </p>
       </div>
@@ -147,18 +150,17 @@ export default function CrowdReportForm({
       {/* Result Message */}
       {result && (
         <div
-          className={`flex items-center gap-2 p-4 rounded-xl ${
-            result.success
-              ? 'bg-green-50 text-green-700'
-              : 'bg-amber-50 text-amber-700'
-          }`}
+          className={cn(
+            'flex items-center gap-3 border px-4 py-3 font-mono text-[12px] text-mist',
+            result.success ? 'border-hair' : 'border-[var(--ember-50)]'
+          )}
         >
           {result.success ? (
-            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <CheckCircle className="h-4 w-4 shrink-0 text-pine" aria-hidden="true" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-ember" aria-hidden="true" />
           )}
-          <p className="text-sm">{result.message}</p>
+          <p>{result.message}</p>
         </div>
       )}
 
@@ -166,25 +168,24 @@ export default function CrowdReportForm({
       <button
         type="submit"
         disabled={!locationId || !crowdLevel || submitting || !canSubmit}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-forest text-white rounded-xl font-medium hover:bg-forest/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="btn-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-40"
       >
         {submitting ? (
           <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             Submitting...
           </>
         ) : (
           <>
-            <Send className="w-5 h-5" />
+            <Send className="h-4 w-4" aria-hidden="true" />
             Submit Report
           </>
         )}
       </button>
 
       {locationId && !canSubmit && (
-        <p className="text-xs text-center text-gray-500">
-          You recently reported on this location. Please wait before reporting
-          again.
+        <p className="text-center font-mono text-[11px] text-whisper">
+          You recently reported on this location. Please wait before reporting again.
         </p>
       )}
     </form>

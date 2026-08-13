@@ -43,16 +43,19 @@ export default function SceneHeader({
         <div className="small-caps text-ember">
           {scene ? `Scene ${scene} · ${kicker}` : kicker}
         </div>
-        {/* The handoff's scale floors (56px / 48px) are wider than a 390px
-            phone for words like "Itineraries." and push the document into
-            h-scroll. Floors lowered; the upper end of the scale is unchanged,
-            so nothing about the desktop composition moves. */}
+        {/* Both ends of the handoff's scale had to move for real content.
+            The floors (56px / 48px) overflowed a 390px phone on words like
+            "Itineraries."; the ceilings (140px / 110px) overflowed this
+            8-column track on words like "Programme." and bled into the
+            supporting copy beside it — measured at up to 102px of overlap.
+            These values are the largest that keep the longest headline in
+            the product inside its own column. */}
         <Heading
           className={cn(
             'film-display mt-3 text-balance',
             size === 'scene'
-              ? 'text-[clamp(40px,9vw,140px)]'
-              : 'text-[clamp(36px,7vw,110px)]'
+              ? 'text-[clamp(40px,7.5vw,112px)]'
+              : 'text-[clamp(36px,6vw,92px)]'
           )}
         >
           {title}

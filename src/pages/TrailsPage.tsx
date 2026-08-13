@@ -4,41 +4,17 @@ import {
   Mountain,
   Search,
   Footprints,
-  Bike,
   TreePine,
-  Snowflake,
   Dog,
   Baby,
   ChevronDown,
-  MapPin,
-  Clock,
   TrendingUp,
   X,
 } from 'lucide-react';
 import { trails, trailCategories } from '../data/trails';
 import { Trail, TrailDifficulty, TrailActivity, TrailSeason } from '../types/trail';
-
-const activityIcons: Record<TrailActivity, React.ElementType> = {
-  hiking: Footprints,
-  'mountain-biking': Bike,
-  'trail-running': Footprints,
-  'cross-country-skiing': Snowflake,
-  snowshoeing: Snowflake,
-};
-
-const difficultyColors: Record<TrailDifficulty, string> = {
-  easy: 'bg-pine-500/20 text-pine-400 border-pine-500/30',
-  moderate: 'bg-sunset-500/20 text-sunset-400 border-sunset-500/30',
-  difficult: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  expert: 'bg-red-500/20 text-red-400 border-red-500/30',
-};
-
-const difficultyDots: Record<TrailDifficulty, string> = {
-  easy: 'bg-pine-500',
-  moderate: 'bg-sunset-500',
-  difficult: 'bg-orange-500',
-  expert: 'bg-red-500',
-};
+import Reel from '../components/ui/Reel';
+import { cn } from '../lib/utils';
 
 interface Filters {
   search: string;
@@ -50,98 +26,45 @@ interface Filters {
   season: TrailSeason | null;
 }
 
-function TrailCard({ trail }: { trail: Trail }) {
+/**
+ * TrailCard — one trail as a poster-format Reel: a stencil index numeral,
+ * a mono difficulty chip, and a bottom scrim carrying the name and stats.
+ * Everything the old card put in a text block below the photo (description,
+ * activity icons, dog/kid badges) now lives on the trail's own detail page.
+ */
+function TrailCard({ trail, index }: { trail: Trail; index: number }) {
+  const numeral = String(index).padStart(2, '0');
+
   return (
-    <Link
-      to={`/trails/${trail.slug}`}
-      className="card p-0 overflow-hidden hover:border-sunset-500/50 transition-all duration-300 group"
-    >
-      {/* Image */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={trail.heroImage}
-          alt={trail.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-transparent to-transparent" />
-
-        {/* Difficulty Badge */}
-        <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-medium border ${difficultyColors[trail.difficulty]}`}>
-          {trail.difficulty.charAt(0).toUpperCase() + trail.difficulty.slice(1)}
-        </span>
-
-        {/* Distance from Bend */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-sm text-white/90">
-          <MapPin className="w-3.5 h-3.5" />
-          {trail.distanceFromBend} mi {trail.direction}
+    <Link to={`/trails/${trail.slug}`} className="group block">
+      <Reel src={trail.heroImage} alt="" hoverable scrim="bottom" style={{ aspectRatio: '4 / 5' }}>
+        <div
+          className="stencil absolute left-3 top-3 z-10 text-[32px] text-film-white"
+          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}
+          aria-hidden="true"
+        >
+          {numeral}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-5">
-        {/* Title */}
-        <h3 className="font-semibold text-white text-lg mb-1 group-hover:text-sunset-400 transition-colors">
-          {trail.name}
-        </h3>
+        <div className="small-caps absolute right-3 top-3 z-10 border border-hair bg-film-black/70 px-2.5 py-1 text-whisper">
+          {trail.difficulty}
+        </div>
 
-        {/* Stats Row */}
-        <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
-          <span className="flex items-center gap-1">
-            <Footprints className="w-3.5 h-3.5" />
-            {trail.distance} mi
-          </span>
-          <span className="flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            {trail.elevationGain.toLocaleString()} ft
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
+        <div className="relative z-10 flex h-full min-w-0 flex-col justify-end p-4">
+          <h3 className="film-display text-[24px] leading-[0.95] text-film-white transition-colors group-hover:text-ember">
+            {trail.name}
+          </h3>
+          <div className="mt-2 truncate font-mono text-[10px] uppercase tracking-wide text-whisper">
+            {trail.distance} mi · ↑{trail.elevationGain.toLocaleString()} ft ·{' '}
             {trail.estimatedTime}
-          </span>
-        </div>
-
-        {/* Short Description */}
-        <p className="text-sm text-gray-400 line-clamp-2 mb-3">
-          {trail.shortDescription}
-        </p>
-
-        {/* Activity Icons & Features */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {trail.activities.slice(0, 3).map((activity) => {
-              const Icon = activityIcons[activity];
-              return (
-                <span
-                  key={activity}
-                  className="w-7 h-7 rounded-lg bg-navy-700/50 flex items-center justify-center"
-                  title={activity.replace('-', ' ')}
-                >
-                  <Icon className="w-3.5 h-3.5 text-gray-400" />
-                </span>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {trail.isDogFriendly && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-pine-500/10 rounded text-xs text-pine-400">
-                <Dog className="w-3 h-3" />
-                Dogs OK
-              </span>
-            )}
-            {trail.isKidFriendly && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-sunset-500/10 rounded text-xs text-sunset-400">
-                <Baby className="w-3 h-3" />
-                Kid-friendly
-              </span>
-            )}
           </div>
         </div>
-      </div>
+      </Reel>
     </Link>
   );
 }
 
+/** A single square, hairline-bordered filter chip that opens a dropdown list. */
 function FilterDropdown({
   label,
   value,
@@ -156,34 +79,40 @@ function FilterDropdown({
   icon?: React.ElementType;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const active = Boolean(value);
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-          value
-            ? 'bg-sunset-500 text-white'
-            : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-        }`}
+        className={cn(
+          'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+          active
+            ? 'border-ember text-ember'
+            : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
+        )}
       >
-        {Icon && <Icon className="w-4 h-4" />}
+        {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
         {value ? options.find((o) => o.id === value)?.label : label}
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 transition-transform', isOpen && 'rotate-180')}
+          aria-hidden="true"
+        />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 mt-2 z-20 bg-navy-800 border border-white/10 rounded-xl shadow-xl py-2 min-w-[180px]">
+          <div className="absolute left-0 top-full z-20 mt-2 min-w-[190px] border border-hair bg-film-deep py-2">
             <button
               onClick={() => {
                 onChange(null);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                !value ? 'text-sunset-400' : 'text-gray-300 hover:bg-navy-700'
-              }`}
+              className={cn(
+                'small-caps block w-full px-4 py-2.5 text-left transition-colors',
+                !value ? 'text-ember' : 'text-whisper hover:text-film-white'
+              )}
             >
               All
             </button>
@@ -194,9 +123,10 @@ function FilterDropdown({
                   onChange(option.id);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                  value === option.id ? 'text-sunset-400' : 'text-gray-300 hover:bg-navy-700'
-                }`}
+                className={cn(
+                  'small-caps block w-full px-4 py-2.5 text-left transition-colors',
+                  value === option.id ? 'text-ember' : 'text-whisper hover:text-film-white'
+                )}
               >
                 {option.label}
               </button>
@@ -205,6 +135,34 @@ function FilterDropdown({
         </>
       )}
     </div>
+  );
+}
+
+/** A square, hairline-bordered toggle chip. Ember when active. */
+function FeatureToggle({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+        active
+          ? 'border-ember text-ember'
+          : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      {children}
+    </button>
   );
 }
 
@@ -301,44 +259,45 @@ export default function TrailsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
-        <img
-          src="/images/trails/trails-hero.jpg"
-          alt="Trail in Central Oregon"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/70 to-navy-900/30" />
-
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-          <div className="container-app">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-sunset-500 to-sunset-600 rounded-xl flex items-center justify-center">
-                <Mountain className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Trails</h1>
-                <p className="text-gray-300">{trails.length} trails near Bend, Oregon</p>
-              </div>
-            </div>
-          </div>
+    <div>
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <Reel
+        src="/images/trails/trails-hero.jpg"
+        alt="A trail cutting through Central Oregon forest"
+        priority
+        scrim="bottom"
+        className="flex border-b border-hair"
+        style={{ minHeight: 'min(56vh, 520px)' }}
+      >
+        <div className="relative z-10 flex w-full flex-col justify-end px-6 pb-10 pt-24 lg:px-10">
+          <div className="small-caps text-ember">Trails</div>
+          <h1 className="film-display mt-3 text-[clamp(48px,10vw,150px)] text-film-white">
+            Every Route,
+            <br />
+            Cut To Reel.
+          </h1>
+          <p className="small-caps mt-4 text-whisper">
+            {trails.length} trails near Bend, Oregon
+          </p>
         </div>
-      </div>
+      </Reel>
 
       {/* Main Content */}
-      <div className="container-app py-8">
+      <div className="container-app py-10">
         {/* Search & Filters */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search
+              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-whisper"
+              aria-hidden="true"
+            />
             <input
               type="text"
-              placeholder="Search trails..."
+              placeholder="Search trails…"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-12 pr-4 py-3 bg-navy-800 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-sunset-500/50"
+              className="w-full border border-hair bg-film-deep py-3 pl-11 pr-4 font-mono text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none"
             />
           </div>
 
@@ -378,47 +337,39 @@ export default function TrailsPage() {
               icon={TreePine}
             />
 
-            {/* Feature Toggle Buttons */}
-            <button
+            {/* Feature Toggle Chips */}
+            <FeatureToggle
+              active={filters.features.includes('dog-friendly')}
+              icon={Dog}
               onClick={() => {
                 const newFeatures = filters.features.includes('dog-friendly')
                   ? filters.features.filter((f) => f !== 'dog-friendly')
                   : [...filters.features, 'dog-friendly'];
                 setFilters({ ...filters, features: newFeatures });
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                filters.features.includes('dog-friendly')
-                  ? 'bg-pine-600 text-white'
-                  : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-              }`}
             >
-              <Dog className="w-4 h-4" />
               Dog-friendly
-            </button>
-            <button
+            </FeatureToggle>
+            <FeatureToggle
+              active={filters.features.includes('kid-friendly')}
+              icon={Baby}
               onClick={() => {
                 const newFeatures = filters.features.includes('kid-friendly')
                   ? filters.features.filter((f) => f !== 'kid-friendly')
                   : [...filters.features, 'kid-friendly'];
                 setFilters({ ...filters, features: newFeatures });
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                filters.features.includes('kid-friendly')
-                  ? 'bg-pine-600 text-white'
-                  : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-              }`}
             >
-              <Baby className="w-4 h-4" />
               Kid-friendly
-            </button>
+            </FeatureToggle>
 
             {/* Clear Filters */}
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                className="small-caps flex items-center gap-2 px-4 py-2.5 text-whisper transition-colors hover:text-film-white"
               >
-                <X className="w-4 h-4" />
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
                 Clear ({activeFilterCount})
               </button>
             )}
@@ -426,60 +377,51 @@ export default function TrailsPage() {
         </div>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-400">
-            Showing <span className="text-white font-medium">{filteredTrails.length}</span> trails
+        <div className="mt-8 flex items-center justify-between border-t border-hair pt-6">
+          <p className="font-mono text-[12px] text-whisper">
+            Showing <span className="text-film-white">{filteredTrails.length}</span> trails
           </p>
         </div>
 
         {/* Trail Grid */}
         {filteredTrails.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTrails.map((trail) => (
-              <TrailCard key={trail.id} trail={trail} />
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredTrails.map((trail, i) => (
+              <TrailCard key={trail.id} trail={trail} index={i + 1} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <Mountain className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No trails found</h3>
-            <p className="text-gray-400 mb-4">Try adjusting your filters to find more trails.</p>
-            <button onClick={clearFilters} className="btn-primary">
+          <div className="py-16 text-center">
+            <Mountain className="mx-auto mb-4 h-16 w-16 text-whisper" aria-hidden="true" />
+            <h3 className="film-display text-[28px] text-film-white">No trails found</h3>
+            <p className="mt-2 text-mist">Try adjusting your filters to find more trails.</p>
+            <button onClick={clearFilters} className="btn-primary mt-6">
               Clear Filters
             </button>
           </div>
         )}
 
         {/* Trail Tips Section */}
-        <div className="mt-12 card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Trail Tips</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-4 bg-navy-700/50 rounded-xl">
-              <div className="w-10 h-10 bg-sunset-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className={`w-3 h-3 rounded-full ${difficultyDots.easy}`} />
-              </div>
-              <div>
-                <p className="font-medium text-white">Easy Trails</p>
-                <p className="text-sm text-gray-400">Gentle grades, well-maintained, suitable for all fitness levels</p>
-              </div>
+        <div className="mt-16 border-t border-hair pt-10">
+          <h3 className="small-caps text-whisper">Trail Tips</h3>
+          <div className="mt-6 grid grid-cols-1 border-y border-hair md:grid-cols-3">
+            <div className="p-6 md:border-r md:border-hair">
+              <div className="film-display-thin text-[22px] text-film-white">Easy Trails</div>
+              <p className="mt-2 font-mono text-[11px] leading-relaxed text-whisper">
+                Gentle grades, well-maintained, suitable for all fitness levels.
+              </p>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-navy-700/50 rounded-xl">
-              <div className="w-10 h-10 bg-sunset-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className={`w-3 h-3 rounded-full ${difficultyDots.moderate}`} />
-              </div>
-              <div>
-                <p className="font-medium text-white">Moderate Trails</p>
-                <p className="text-sm text-gray-400">Some elevation, uneven terrain, moderate fitness required</p>
-              </div>
+            <div className="border-t border-hair p-6 md:border-t-0 md:border-r">
+              <div className="film-display-thin text-[22px] text-film-white">Moderate Trails</div>
+              <p className="mt-2 font-mono text-[11px] leading-relaxed text-whisper">
+                Some elevation, uneven terrain, moderate fitness required.
+              </p>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-navy-700/50 rounded-xl">
-              <div className="w-10 h-10 bg-sunset-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className={`w-3 h-3 rounded-full ${difficultyDots.expert}`} />
-              </div>
-              <div>
-                <p className="font-medium text-white">Expert Trails</p>
-                <p className="text-sm text-gray-400">Steep climbs, technical terrain, experienced hikers only</p>
-              </div>
+            <div className="border-t border-hair p-6 md:border-t-0">
+              <div className="film-display-thin text-[22px] text-film-white">Expert Trails</div>
+              <p className="mt-2 font-mono text-[11px] leading-relaxed text-whisper">
+                Steep climbs, technical terrain, experienced hikers only.
+              </p>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Event } from '../../types';
 import EventCard from './EventCard';
+import { cn } from '../../lib/utils';
 
 interface EventListProps {
   events: Event[];
@@ -25,33 +26,35 @@ export default function EventList({ events }: EventListProps) {
 
   return (
     <div>
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      {/* Filter chips — square, hairline, ember when active. */}
+      <div className="mb-6 flex flex-wrap gap-2">
         {categories.map((cat) => (
           <button
             key={cat.value}
             onClick={() => setFilter(cat.value)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            aria-pressed={filter === cat.value}
+            className={cn(
+              'small-caps border px-3 py-2 transition-colors',
               filter === cat.value
-                ? 'bg-forest text-white'
-                : 'bg-white text-gray-700 hover:bg-sage/20'
-            }`}
+                ? 'border-ember text-ember'
+                : 'border-hair text-whisper hover:text-film-white'
+            )}
           >
             {cat.label}
           </button>
         ))}
       </div>
 
-      {/* Events Grid */}
+      {/* Events — hairline rows */}
       {filteredEvents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="border-t border-hair">
           {filteredEvents.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No events found in this category.</p>
+        <div className="py-12 text-center">
+          <p className="small-caps text-whisper">No events found in this category.</p>
         </div>
       )}
     </div>

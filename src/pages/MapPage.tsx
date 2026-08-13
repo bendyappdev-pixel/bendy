@@ -1,161 +1,163 @@
 import { useState } from 'react';
-import { Map, Users, X, History } from 'lucide-react';
+import { Users, X, History } from 'lucide-react';
 import InteractiveMap from '../components/map/InteractiveMap';
+import SceneHeader from '../components/ui/SceneHeader';
+import { CrowdLegend } from '../components/ui/CrowdBadge';
 import { ContextualBanner } from '../components/ads';
 import { CrowdReportForm, CrowdReportsList, CrowdReportHistory } from '../components/crowd';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '../components/ui/dialog';
+import { useCrowdReports, formatTimeAgo } from '../hooks/useCrowdReports';
+import { cn } from '../lib/utils';
 
 type CrowdTab = 'current' | 'history';
 
 export default function MapPage() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [crowdTab, setCrowdTab] = useState<CrowdTab>('current');
+  const { reports } = useCrowdReports();
+  const latest = reports[0];
 
   return (
     <div className="container-app py-8 md:py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-pine-600 to-pine-700 rounded-xl flex items-center justify-center">
-              <Map className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Explore Bend</h1>
-              <p className="text-gray-400">Parks, trails, breweries, family fun, and more</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-sunset-500 text-white rounded-xl font-medium hover:bg-sunset-400 transition-colors"
-          >
-            <Users className="w-5 h-5" />
-            Report Conditions
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div className="mb-10 border-b border-hair pb-8">
+        <SceneHeader
+          as="h1"
+          kicker="Live from the Field"
+          title="Every Pin On The Map."
+          meta={
+            <>
+              Bend & Central Oregon
+              <br />
+              Parks · trails · breweries · family fun
+            </>
+          }
+        >
+          <p className="max-w-md leading-relaxed text-mist md:ml-auto">
+            Real-time crowd, weather and trail conditions, layered onto the geography
+            that shapes Bend. Click a peak. Drop a pin. File a report.
+          </p>
+          <button onClick={() => setShowReportModal(true)} className="btn-primary mt-5">
+            <Users className="h-4 w-4" aria-hidden="true" />
+            Report conditions
           </button>
-        </div>
+        </SceneHeader>
       </div>
 
-      {/* Crowd Reports Section */}
-      <div className="mb-8">
-        {/* Tab Toggle */}
-        <div className="flex items-center gap-2 mb-4">
+      {/* ── Plain-language crowd readout ─────────────────────────── */}
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="film-display-thin text-[clamp(24px,3vw,30px)] text-film-white">
+            How busy is it right now?
+          </div>
+          <div className="mt-1 font-mono text-[11px] text-whisper">
+            {latest
+              ? `Reported by locals · latest ${formatTimeAgo(latest.timestamp)}`
+              : 'Reported by locals · Bend & Central Oregon'}
+          </div>
+        </div>
+        <CrowdLegend />
+      </div>
+
+      {/* ── Map ──────────────────────────────────────────────────── */}
+      <div className="border border-hair">
+        <InteractiveMap height="h-[420px] md:h-[560px]" showCrowdPins />
+      </div>
+
+      {/* ── Crowd reports ────────────────────────────────────────── */}
+      <div className="mt-10">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setCrowdTab('current')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            aria-pressed={crowdTab === 'current'}
+            className={cn(
+              'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
               crowdTab === 'current'
-                ? 'bg-sunset-500 text-white'
-                : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-            }`}
+                ? 'border-ember text-ember'
+                : 'border-hair text-whisper hover:text-film-white'
+            )}
           >
-            <Users className="w-4 h-4" />
+            <Users className="h-3.5 w-3.5" aria-hidden="true" />
             Current
           </button>
           <button
             onClick={() => setCrowdTab('history')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            aria-pressed={crowdTab === 'history'}
+            className={cn(
+              'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
               crowdTab === 'history'
-                ? 'bg-sunset-500 text-white'
-                : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-            }`}
+                ? 'border-ember text-ember'
+                : 'border-hair text-whisper hover:text-film-white'
+            )}
           >
-            <History className="w-4 h-4" />
+            <History className="h-3.5 w-3.5" aria-hidden="true" />
             History
           </button>
         </div>
 
-        {/* Tab Content */}
-        {crowdTab === 'current' ? (
-          <CrowdReportsList limit={5} compact showTitle={false} />
-        ) : (
-          <CrowdReportHistory />
-        )}
+        <div className="mt-6">
+          {crowdTab === 'current' ? (
+            <CrowdReportsList limit={5} compact showTitle={false} />
+          ) : (
+            <CrowdReportHistory />
+          )}
+        </div>
       </div>
 
-      {/* Map */}
-      <InteractiveMap />
-
       {/* Contextual Banner Ad (hidden when no ads) */}
-      <div className="mt-8">
+      <div className="mt-10">
         <ContextualBanner />
       </div>
 
-      {/* Legend */}
-      <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-        <LegendItem emoji="🌲" label="Parks" color="bg-pine-600" />
-        <LegendItem emoji="🐕" label="Dog Parks" color="bg-amber-500" />
-        <LegendItem emoji="🥾" label="Trailheads" color="bg-amber-700" />
-        <LegendItem emoji="⛷️" label="Ski Areas" color="bg-blue-500" />
-        <LegendItem emoji="🍺" label="Breweries" color="bg-amber-600" />
-        <LegendItem emoji="🍽️" label="Restaurants" color="bg-red-500" />
-        <LegendItem emoji="🎵" label="Venues" color="bg-purple-500" />
-        <LegendItem emoji="🏊" label="Recreation" color="bg-cyan-500" />
-        <LegendItem emoji="👨‍👩‍👧‍👦" label="Family Fun" color="bg-purple-400" />
-        <LegendItem emoji="🏛️" label="Museums" color="bg-indigo-500" />
+      {/* ── BPRD attribution ─────────────────────────────────────── */}
+      <div className="mt-10 border-t border-hair pt-6 text-center font-mono text-[11px] text-whisper">
+        Park and recreation data from{' '}
+        <a
+          href="https://www.bendparksandrec.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-ember"
+        >
+          Bend Park and Recreation District
+        </a>{' '}
+        — 84 parks, 80+ miles of trails
       </div>
 
-      {/* BPRD Attribution */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          Park and recreation data from{' '}
-          <a
-            href="https://www.bendparksandrec.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sunset-400 hover:underline"
-          >
-            Bend Park and Recreation District
-          </a>
-          {' '}— 84 parks, 80+ miles of trails
-        </p>
-      </div>
-
-      {/* Tips */}
-      <div className="mt-8 card p-6">
-        <h3 className="text-lg font-semibold text-white mb-3">Map Tips</h3>
-        <ul className="text-gray-400 space-y-2 text-sm">
-          <li>• Click the filter buttons above the map to show/hide location types</li>
-          <li>• Click on any marker to see details about that location</li>
-          <li>• Use the navigation controls or pinch-to-zoom on mobile</li>
-          <li>• Click the location button to center the map on your current location</li>
+      {/* ── Map tips ─────────────────────────────────────────────── */}
+      <div className="mt-8 border border-hair p-6 md:p-8">
+        <h3 className="small-caps text-whisper">Map tips</h3>
+        <ul className="mt-4 space-y-2.5 font-mono text-[11px] leading-relaxed text-mist">
+          <li>— Click the filter chips above the map to show or hide location types</li>
+          <li>— Click any marker to see details about that location</li>
+          <li>— Use the navigation controls or pinch-to-zoom on mobile</li>
+          <li>— Click the location button to centre the map on your position</li>
         </ul>
       </div>
 
-      {/* Report Conditions Modal */}
-      {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowReportModal(false)}
-          />
-          <div className="relative bg-navy-800 border border-white/10 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-navy-800 border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-xl font-bold text-white">Report Conditions</h2>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-400 mb-6">
-                Help others plan their visit by sharing current crowd conditions at popular spots.
-              </p>
-              <CrowdReportForm onSuccess={() => setShowReportModal(false)} />
-            </div>
+      {/* ── Report Conditions Modal ──────────────────────────────── */}
+      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Conditions</DialogTitle>
+            <DialogClose className="p-2 transition-colors hover:bg-white/10">
+              <X className="h-5 w-5 text-mist" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="p-6">
+            <DialogDescription className="mb-6">
+              Help others plan their visit by sharing current crowd conditions at popular spots.
+            </DialogDescription>
+            <CrowdReportForm onSuccess={() => setShowReportModal(false)} />
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LegendItem({ emoji, label, color }: { emoji: string; label: string; color: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`w-8 h-8 ${color} rounded-full flex items-center justify-center text-sm`}>
-        {emoji}
-      </div>
-      <span className="text-sm text-gray-300">{label}</span>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

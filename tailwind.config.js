@@ -3,11 +3,11 @@
 // BENDY — CINEMATIC FACELIFT
 // Drop-in replacement for tailwind.config.js
 //
-// The old navy/sunset/pine palette is REMOVED. Legacy aliases (forest, sage,
-// mountain, earth, sand, snow) are kept ONLY so the build doesn't break during
-// migration — they now point at the new film palette and should be deleted
-// once no component references them. Run this to find stragglers:
-//   grep -rn "navy-\|sunset-\|pine-\|bg-forest\|bg-sage\|bg-mountain\|bg-earth\|bg-sand\|bg-snow" src/
+// The old navy/sunset/pine palette is REMOVED, along with the temporary
+// legacy aliases (navy, sunset, forest, sage, mountain, earth, sand, snow and
+// the `heading` font alias) that existed only to keep the build green during
+// migration. Nothing in src/ references them. Re-check with:
+//   grep -rnE "navy-|sunset-|pine-[0-9]|bg-forest|bg-sage|bg-mountain|bg-earth|bg-sand|bg-snow" src/
 // ─────────────────────────────────────────────────────────────────────────────
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
@@ -41,16 +41,6 @@ export default {
           mod:    '#e3b34c', // "Some people"
           packed: '#d8623a', // "Crowded"
         },
-
-        // ── LEGACY — delete after migration ────────────────────────────
-        navy:   { 900: '#070605', 800: '#0d0b08', 700: '#15110c', 600: '#2a241c' },
-        sunset: { 500: '#e07a3a', 400: '#e8905a', 300: '#c9a06b' },
-        forest: '#5b7a4f',
-        sage:   '#7fb262',
-        mountain: '#5a7d92',
-        earth:  '#c9a06b',
-        sand:   '#0d0b08',
-        snow:   '#0d0b08',
       },
 
       // ── Text opacity tiers ───────────────────────────────────────────
@@ -75,9 +65,6 @@ export default {
         serif:   ['"Instrument Serif"', 'Georgia', 'serif'],
         // All data: timecodes, coordinates, labels, kickers, stats.
         mono:    ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-
-        // LEGACY aliases — delete after migration
-        heading: ['"Big Shoulders Display"', 'Anton', 'system-ui', 'sans-serif'],
       },
 
       letterSpacing: {

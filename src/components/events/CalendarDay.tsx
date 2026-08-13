@@ -1,4 +1,5 @@
 import { Event } from '../../types';
+import { cn } from '../../lib/utils';
 
 interface CalendarDayProps {
   date: Date;
@@ -9,16 +10,6 @@ interface CalendarDayProps {
   onClick: () => void;
 }
 
-// Category colors for event dots
-const categoryDotColors: Record<Event['category'], string> = {
-  music: 'bg-purple-500',
-  outdoor: 'bg-green-500',
-  food: 'bg-amber-500',
-  arts: 'bg-pink-500',
-  sports: 'bg-blue-500',
-  community: 'bg-teal-500',
-};
-
 export default function CalendarDay({
   date,
   events,
@@ -27,43 +18,35 @@ export default function CalendarDay({
   isCurrentMonth,
   onClick,
 }: CalendarDayProps) {
-  // Get unique categories for the day (max 3 dots)
-  const uniqueCategories = [...new Set(events.map((e) => e.category))].slice(0, 3);
+  const hasEvents = events.length > 0;
 
   return (
     <button
       onClick={onClick}
-      className={`
-        relative flex flex-col items-center justify-center
-        min-h-[48px] md:min-h-[64px] p-1 rounded-lg
-        transition-colors cursor-pointer
-        ${
-          isSelected
-            ? 'bg-sunset-500 text-white'
-            : isToday
-            ? 'bg-sunset-500/20 text-sunset-400 font-semibold ring-1 ring-sunset-500/50'
-            : isCurrentMonth
-            ? 'hover:bg-white/10 text-white'
-            : 'text-gray-600 hover:bg-white/5'
-        }
-      `}
+      aria-pressed={isSelected}
+      className={cn(
+        'row-hover relative flex aspect-square min-h-[40px] flex-col items-center justify-center gap-1 border border-hair font-mono transition-colors md:min-h-[64px]',
+        isSelected
+          ? 'border-ember bg-[var(--ember-50)] text-film-white'
+          : isCurrentMonth
+          ? 'text-film-white'
+          : 'text-whisper',
+        isToday && !isSelected && 'border-ember text-ember'
+      )}
     >
-      <span className={`text-sm md:text-base ${isSelected ? 'font-semibold' : ''}`}>
+      <span className={cn('text-[12px] md:text-[14px]', isSelected && 'font-medium')}>
         {date.getDate()}
       </span>
 
-      {/* Event indicators */}
-      {events.length > 0 && (
-        <div className="flex gap-0.5 mt-1">
-          {uniqueCategories.map((category) => (
-            <span
-              key={category}
-              className={`w-1.5 h-1.5 rounded-full ${
-                isSelected ? 'bg-white' : categoryDotColors[category]
-              }`}
-            />
-          ))}
-        </div>
+      {/* Ember dot marks any day carrying events. */}
+      {hasEvents && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'h-1.5 w-1.5 rounded-full',
+            isSelected ? 'bg-film-white' : 'bg-ember'
+          )}
+        />
       )}
     </button>
   );

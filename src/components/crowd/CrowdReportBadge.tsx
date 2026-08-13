@@ -1,5 +1,6 @@
 import { CrowdReport } from '../../types';
-import { crowdLevelConfig, formatTimeAgo } from '../../hooks/useCrowdReports';
+import { formatTimeAgo } from '../../hooks/useCrowdReports';
+import CrowdBadge, { crowdMeta } from '../ui/CrowdBadge';
 
 interface CrowdReportBadgeProps {
   report: CrowdReport;
@@ -10,37 +11,22 @@ export default function CrowdReportBadge({
   report,
   size = 'md',
 }: CrowdReportBadgeProps) {
-  const config = crowdLevelConfig[report.crowdLevel];
+  const timeAgo = formatTimeAgo(report.timestamp);
 
   if (size === 'sm') {
+    const meta = crowdMeta(report.crowdLevel);
     return (
-      <div
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: `${config.color}20`,
-          color: config.color,
-        }}
-        title={`${config.label} - ${formatTimeAgo(report.timestamp)}`}
-      >
-        {config.emoji} {config.label}
-      </div>
+      <span title={`${meta.label} · ${timeAgo}`}>
+        <CrowdBadge level={report.crowdLevel} className="text-[10px]" />
+      </span>
     );
   }
 
   return (
-    <div
-      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
-      style={{
-        backgroundColor: `${config.color}20`,
-        color: config.color,
-      }}
-    >
-      {config.emoji}
-      <span>{config.label}</span>
-      <span className="text-gray-400">·</span>
-      <span className="text-gray-500 font-normal">
-        {formatTimeAgo(report.timestamp)}
-      </span>
-    </div>
+    <span className="inline-flex items-center gap-2">
+      <CrowdBadge level={report.crowdLevel} verbose />
+      <span className="text-whisper">·</span>
+      <span className="font-mono text-[11px] text-whisper">{timeAgo}</span>
+    </span>
   );
 }

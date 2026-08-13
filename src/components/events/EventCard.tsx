@@ -1,20 +1,12 @@
-import { Calendar, MapPin, Tag, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Event } from '../../types';
 import AddToCalendar from './AddToCalendar';
+import { cn } from '../../lib/utils';
 
 interface EventCardProps {
   event: Event;
   compact?: boolean;
 }
-
-const categoryColors: Record<Event['category'], string> = {
-  music: 'bg-purple-500/20 text-purple-400',
-  outdoor: 'bg-green-500/20 text-green-400',
-  food: 'bg-amber-500/20 text-amber-400',
-  arts: 'bg-pink-500/20 text-pink-400',
-  sports: 'bg-blue-500/20 text-blue-400',
-  community: 'bg-teal-500/20 text-teal-400',
-};
 
 const categoryLabels: Record<Event['category'], string> = {
   music: 'Live Music',
@@ -25,130 +17,105 @@ const categoryLabels: Record<Event['category'], string> = {
   community: 'Community',
 };
 
-function formatDate(date: Date, endDate?: Date): string {
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: 'numeric',
-  };
-  const start = date.toLocaleDateString('en-US', options);
-  if (endDate) {
-    const end = endDate.toLocaleDateString('en-US', options);
-    return `${start} - ${end}`;
-  }
-  return start;
-}
-
+/**
+ * EventCard — a hairline row, not a card. Deliberately mirrors the
+ * MarqueeRow treatment on the homepage's "Now Showing" scene: a large
+ * film-display date numeral, the title in film-display-thin, and mono
+ * venue / category / price columns. `compact` (used inside DayEventsPanel's
+ * narrow sidebar) drops the dedicated venue/category/price columns and
+ * folds that detail into a single mono meta line under the title instead.
+ */
 export default function EventCard({ event, compact = false }: EventCardProps) {
-  if (compact) {
-    return (
-      <article className="card overflow-hidden hover:border-white/20 transition-all">
-        <div className="p-4">
-          {/* Category Badge */}
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-              categoryColors[event.category]
-            }`}
-          >
-            <Tag className="w-2.5 h-2.5" />
-            {categoryLabels[event.category]}
-          </span>
-
-          {/* Title */}
-          <h3 className="text-base font-semibold text-white mt-2 mb-1 font-heading">
-            {event.title}
-          </h3>
-
-          {/* Description */}
-          <p className="text-gray-400 text-sm mb-3 line-clamp-1">
-            {event.description}
-          </p>
-
-          {/* Details */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-sunset-400" />
-              <span>{event.location}</span>
-            </div>
-            {event.price && (
-              <span className="text-sunset-400 font-semibold">{event.price}</span>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-white/10">
-            <AddToCalendar event={event} compact />
-            {event.ticketUrl && (
-              <a
-                href={event.ticketUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-sunset-400 hover:underline"
-              >
-                Get Tickets
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-          </div>
-        </div>
-      </article>
-    );
-  }
+  // Event dates are parsed from ISO strings ("2026-04-16") as UTC midnight.
+  // Reading them back with UTC accessors keeps the displayed day-of-month
+  // and weekday matching the source string; local getters would shift the
+  // date by a day for anyone west of UTC.
+  const day = String(event.date.getUTCDate()).padStart(2, '0');
+  const monthWeekday = event.date.toLocaleDateString('en-US', {
+    month: 'short',
+    weekday: 'short',
+    timeZone: 'UTC',
+  });
 
   return (
-    <article className="card overflow-hidden hover:border-white/20 hover:shadow-lg hover:shadow-black/20 transition-all">
-      <div className="p-5">
-        {/* Category Badge */}
+    <article
+      className={cn(
+        'row-hover grid grid-cols-12 items-start gap-x-3 gap-y-2 border-b border-hair',
+        compact ? 'py-4' : 'py-5'
+      )}
+    >
+      {/* Date */}
+      <div className="col-span-3 flex items-baseline gap-2 md:col-span-2">
         <span
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-            categoryColors[event.category]
-          }`}
+          className={cn(
+            'film-display leading-none text-film-white',
+            compact ? 'text-[28px]' : 'text-[40px]'
+          )}
         >
-          <Tag className="w-3 h-3" />
-          {categoryLabels[event.category]}
+          {day}
         </span>
+        <span className="font-mono text-[10px] uppercase text-whisper">{monthWeekday}</span>
+      </div>
 
-        {/* Title */}
-        <h3 className="text-lg font-semibold text-white mt-3 mb-2 font-heading">
+      {/* Title + mobile / compact meta */}
+      <div className={cn('col-span-9', compact ? 'md:col-span-10' : 'md:col-span-4')}>
+        <h3
+          className={cn(
+            'film-display-thin text-film-white',
+            compact ? 'text-[18px]' : 'text-[22px]'
+          )}
+        >
           {event.title}
         </h3>
-
-        {/* Description */}
-        <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-          {event.description}
-        </p>
-
-        {/* Details */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-gray-400">
-            <Calendar className="w-4 h-4 text-sunset-400" />
-            <span>{formatDate(event.date, event.endDate)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-400">
-            <MapPin className="w-4 h-4 text-sunset-400" />
-            <span>{event.location}</span>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-          <div className="flex items-center gap-4">
-            {event.price && (
-              <span className="text-sunset-400 font-semibold">{event.price}</span>
-            )}
-            <AddToCalendar event={event} />
-          </div>
-          {event.ticketUrl && (
-            <a
-              href={event.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-sunset-400 hover:underline"
-            >
-              Get Tickets
-              <ExternalLink className="w-3 h-3" />
-            </a>
+        {!compact && (
+          <p className="mt-1 line-clamp-1 font-mono text-[11px] text-mist">{event.description}</p>
+        )}
+        <div
+          className={cn(
+            'mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.04em] text-whisper',
+            !compact && 'md:hidden'
           )}
+        >
+          <span>{event.location}</span>
+          <span>{categoryLabels[event.category]}</span>
+          {event.price && <span className="text-ember">{event.price}</span>}
         </div>
+      </div>
+
+      {/* Venue / category / price columns — desktop, non-compact only */}
+      {!compact && (
+        <>
+          <div className="col-span-2 hidden font-mono text-[11px] text-mist md:block">
+            {event.location}
+          </div>
+          <div className="col-span-1 hidden font-mono text-[11px] capitalize text-whisper md:block">
+            {event.category}
+          </div>
+          <div className="col-span-1 hidden font-mono text-[11px] text-mist md:block">
+            {event.price ?? '—'}
+          </div>
+        </>
+      )}
+
+      {/* Actions */}
+      <div
+        className={cn(
+          'col-span-12 flex flex-wrap items-center gap-4',
+          compact ? 'md:col-span-12' : 'md:col-span-2 md:flex-col md:items-end md:gap-2'
+        )}
+      >
+        <AddToCalendar event={event} compact />
+        {event.ticketUrl && (
+          <a
+            href={event.ticketUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.08em] text-ember"
+          >
+            Get tickets
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </div>
     </article>
   );

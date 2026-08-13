@@ -81,7 +81,10 @@ export default function SequenceCard({
             >
               №{numeral}
             </div>
-            <h3 className="film-display mt-5 text-[clamp(32px,6vw,80px)] leading-[0.95] text-film-white">
+            {/* Capped at 72px, not the handoff's 80px: real guide titles run
+                to "The Photographer's Golden Hour Tour", which overflowed the
+                max-w-3xl block at 80px. */}
+            <h3 className="film-display mt-5 text-[clamp(32px,5.5vw,72px)] leading-[0.95] text-film-white">
               {guide.title}
             </h3>
             <p className="serif-i mt-6 max-w-2xl text-[clamp(18px,2vw,26px)] leading-snug text-mist">

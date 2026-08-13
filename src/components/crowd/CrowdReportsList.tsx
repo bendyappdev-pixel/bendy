@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Clock, MapPin, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { CrowdReport } from '../../types';
-import {
-  useCrowdReports,
-  formatTimeAgo,
-  crowdLevelConfig,
-} from '../../hooks/useCrowdReports';
+import { useCrowdReports, formatTimeAgo } from '../../hooks/useCrowdReports';
+import { crowdMeta } from '../ui/CrowdBadge';
 
 interface CrowdReportsListProps {
   limit?: number;
@@ -42,26 +39,26 @@ export default function CrowdReportsList({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="w-8 h-8 border-4 border-sunset-500 border-t-transparent rounded-full animate-spin" />
+      <div className="border border-hair py-8 text-center">
+        <p className="font-mono text-[12px] text-whisper">Reading the reports…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p>{error}</p>
+      <div className="border border-hair py-8 text-center">
+        <p className="font-mono text-[12px] text-whisper">{error}</p>
       </div>
     );
   }
 
   if (displayReports.length === 0) {
     return (
-      <div className="text-center py-8 bg-navy-700/50 rounded-xl border border-white/10">
-        <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400">No recent crowd reports</p>
-        <p className="text-sm text-gray-500 mt-1">
+      <div className="border border-hair py-8 text-center">
+        <Users className="mx-auto mb-3 h-8 w-8 text-whisper" aria-hidden="true" />
+        <p className="font-mono text-[12px] text-mist">No recent crowd reports</p>
+        <p className="mt-1 font-mono text-[11px] text-whisper">
           Be the first to share conditions!
         </p>
       </div>
@@ -71,13 +68,13 @@ export default function CrowdReportsList({
   return (
     <div className="space-y-4">
       {showTitle && (
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Users className="w-5 h-5 text-pine-400" />
+        <h3 className="small-caps flex items-center gap-2 text-whisper">
+          <Users className="h-3.5 w-3.5 text-ember" aria-hidden="true" />
           Current Conditions
         </h3>
       )}
 
-      <div className={compact ? 'space-y-2' : 'space-y-3'}>
+      <div className="divide-y divide-white/10 border-t border-hair">
         {displayReports.map((report) => (
           <CrowdReportCard
             key={report.id}
@@ -102,83 +99,34 @@ function CrowdReportCard({
   compact = false,
   showLocation = true,
 }: CrowdReportCardProps) {
-  const config = crowdLevelConfig[report.crowdLevel];
-
-  if (compact) {
-    return (
-      <div className="p-3 bg-navy-700/50 rounded-xl border border-white/10">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
-            style={{ backgroundColor: `${config.color}20` }}
-          >
-            {config.emoji}
-          </div>
-          <div className="flex-1 min-w-0">
-            {showLocation && (
-              <p className="font-medium text-white truncate">
-                {report.locationName}
-              </p>
-            )}
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span style={{ color: config.color }} className="font-medium">
-                {config.label}
-              </span>
-              <span>·</span>
-              <span>{formatTimeAgo(report.timestamp)}</span>
-            </div>
-          </div>
-        </div>
-        {report.comment && (
-          <p className="text-gray-400 text-sm mt-2 ml-[52px] leading-relaxed">
-            "{report.comment}"
-          </p>
-        )}
-      </div>
-    );
-  }
+  const meta = crowdMeta(report.crowdLevel);
 
   return (
-    <div className="card p-4">
-      <div className="flex items-start gap-3">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-xl flex-shrink-0"
-          style={{ backgroundColor: `${config.color}20` }}
-        >
-          {config.emoji}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            {showLocation && (
-              <div className="flex items-center gap-1.5 text-white font-medium">
-                <MapPin className="w-4 h-4 text-sunset-400" />
-                <span className="truncate">{report.locationName}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1 text-sm text-gray-500 flex-shrink-0">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{formatTimeAgo(report.timestamp)}</span>
-            </div>
+    <div className={`flex items-center gap-3 ${compact ? 'py-3' : 'py-4'}`}>
+      <span
+        aria-hidden="true"
+        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+        style={{ background: meta.color, boxShadow: `0 0 8px ${meta.color}` }}
+      />
+      <div className="min-w-0 flex-1">
+        {showLocation && (
+          <div
+            className={`film-display-thin truncate text-film-white ${
+              compact ? 'text-[16px]' : 'text-[20px]'
+            }`}
+          >
+            {report.locationName}
           </div>
-
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium"
-              style={{
-                backgroundColor: `${config.color}20`,
-                color: config.color,
-              }}
-            >
-              {config.emoji} {config.label}
-            </span>
+        )}
+        {report.comment && (
+          <div className="mt-0.5 truncate font-mono text-[11px] text-whisper">
+            “{report.comment}”
           </div>
-
-          {report.comment && (
-            <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-              "{report.comment}"
-            </p>
-          )}
-        </div>
+        )}
+      </div>
+      <div className="shrink-0 text-right font-mono text-[10px]">
+        <div style={{ color: meta.color }}>{meta.label}</div>
+        <div className="text-whisper">{formatTimeAgo(report.timestamp)}</div>
       </div>
     </div>
   );

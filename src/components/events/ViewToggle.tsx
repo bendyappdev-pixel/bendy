@@ -1,4 +1,5 @@
 import { List, CalendarDays } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 export type ViewMode = 'list' | 'calendar';
 
@@ -9,27 +10,31 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
-    <div className="inline-flex rounded-xl bg-navy-800 border border-white/10">
+    <div className="inline-flex border border-hair" role="group" aria-label="Events view">
       <button
         onClick={() => onViewChange('list')}
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+        aria-pressed={view === 'list'}
+        className={cn(
+          'small-caps flex items-center gap-2 border-r border-hair px-4 py-2.5 transition-colors',
           view === 'list'
-            ? 'bg-sunset-500 text-white'
-            : 'text-gray-300 hover:bg-white/10'
-        }`}
+            ? 'bg-[var(--ember-50)] text-film-white'
+            : 'text-whisper hover:text-film-white'
+        )}
       >
-        <List className="w-4 h-4" />
+        <List className="h-3.5 w-3.5" />
         List
       </button>
       <button
         onClick={() => onViewChange('calendar')}
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+        aria-pressed={view === 'calendar'}
+        className={cn(
+          'small-caps flex items-center gap-2 px-4 py-2.5 transition-colors',
           view === 'calendar'
-            ? 'bg-sunset-500 text-white'
-            : 'text-gray-300 hover:bg-white/10'
-        }`}
+            ? 'bg-[var(--ember-50)] text-film-white'
+            : 'text-whisper hover:text-film-white'
+        )}
       >
-        <CalendarDays className="w-4 h-4" />
+        <CalendarDays className="h-3.5 w-3.5" />
         Calendar
       </button>
     </div>

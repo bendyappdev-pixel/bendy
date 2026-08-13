@@ -3,7 +3,6 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Mountain,
-  UtensilsCrossed,
   Snowflake,
   Bike,
   TreePine,
@@ -17,7 +16,10 @@ import {
   Sun,
 } from 'lucide-react';
 import { locations } from '../data/locations';
+import { categories } from '../data/categories';
 import { Location } from '../types';
+import Reel from '../components/ui/Reel';
+import { cn } from '../lib/utils';
 
 interface Subcategory {
   id: string;
@@ -109,34 +111,52 @@ const kidsSubcategories: Subcategory[] = [
 const categoryInfo: Record<string, {
   title: string;
   description: string;
-  icon: typeof Mountain;
-  gradient: string;
   types: Location['type'][];
   subcategories?: Subcategory[];
 }> = {
   outdoor: {
     title: 'Outdoor Activities',
     description: 'Hiking, skiing, mountain biking, and all the adventures that make Bend an outdoor paradise.',
-    icon: Mountain,
-    gradient: 'from-pine-600 to-pine-700',
     types: ['park', 'trailhead', 'ski', 'recreation', 'dog-park'],
     subcategories: outdoorSubcategories,
   },
   food: {
     title: 'Food & Drink',
     description: 'From craft breweries to local restaurants, explore Bend\'s vibrant food scene.',
-    icon: UtensilsCrossed,
-    gradient: 'from-sunset-300 to-sunset-500',
     types: ['brewery', 'restaurant'],
   },
   kids: {
     title: 'Bendy Kids',
     description: 'Family-friendly fun in Bend and Sunriver! Museums, play spaces, water parks, and outdoor adventures for all ages.',
-    icon: Baby,
-    gradient: 'from-blue-500 to-blue-600',
     types: ['family', 'museum'],
     subcategories: kidsSubcategories,
   },
+};
+
+/* Chapter photography, matching the bands the homepage uses for the same
+   chapters (Scene 04 · Locations) — one continuous set of stock across the
+   product rather than a second unrelated shoot per category. */
+const heroImages: Record<string, string | undefined> = {
+  outdoor: '/images/trails/broken-top.jpg',
+  food: undefined,
+  kids: '/images/family-fun-day.jpg',
+};
+
+/* Chapter accents, keyed off the same `category.color` field the homepage's
+   CategoryCard reads — see FACELIFT_BRIEF.md. */
+const categoryAccentMap: Record<string, string> = {
+  'bg-mountain': 'var(--ember)', // Events
+  'bg-forest': 'var(--pine)', // Outdoor
+  'bg-earth': 'var(--gold)', // Food & Drink
+  'bg-purple-500': 'var(--lake)', // Bendy Kids
+};
+
+/* Difficulty accent — same three-colour logic SequenceCard uses for guide
+   difficulty, applied to Location['difficulty'] instead. */
+const difficultyAccent: Record<NonNullable<Location['difficulty']>, string> = {
+  easy: 'var(--pine)',
+  moderate: 'var(--gold)',
+  hard: 'var(--ember)',
 };
 
 const wildernessAreas = [
@@ -169,15 +189,15 @@ export default function CategoryPage() {
   if (!info) {
     return (
       <div className="container-app py-16 text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Category Not Found</h1>
-        <Link to="/" className="text-sunset-400 hover:underline">
+        <h1 className="film-display text-[clamp(32px,6vw,64px)] text-film-white">
+          Category Not Found
+        </h1>
+        <Link to="/" className="small-caps mt-4 inline-block text-ember">
           Return Home
         </Link>
       </div>
     );
   }
-
-  const Icon = info.icon;
 
   // Get base locations for this category
   let filteredLocations = locations.filter((loc) => info.types.includes(loc.type));
@@ -190,45 +210,73 @@ export default function CategoryPage() {
     }
   }
 
-  return (
-    <div className="container-app py-8 md:py-12">
-      {/* Back Link */}
-      <Link
-        to="/"
-        className="inline-flex items-center gap-2 text-gray-400 hover:text-sunset-400 mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Home
-      </Link>
+  const chapterIndex = categories.findIndex((c) => c.id === category) + 1;
+  const chapterTotal = categories.length;
+  const numeral = String(chapterIndex || 1).padStart(2, '0');
+  const categoryEntry = categories.find((c) => c.id === category);
+  const accent = categoryAccentMap[categoryEntry?.color ?? ''] ?? 'var(--ember)';
 
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className={`w-14 h-14 bg-gradient-to-br ${info.gradient} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-7 h-7 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-white">{info.title}</h1>
-          <p className="text-gray-400">{info.description}</p>
-        </div>
+  return (
+    <div className="pb-16">
+      <div className="container-app pt-6">
+        <Link
+          to="/"
+          className="small-caps inline-flex items-center gap-2 text-whisper transition-colors hover:text-film-white"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to home
+        </Link>
       </div>
 
-      {/* Subcategory Quick Links */}
-      {info.subcategories && (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-3">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <div className="container-app mt-6">
+        <Reel
+          src={heroImages[category ?? '']}
+          scrim="both"
+          leak={chapterIndex % 2 === 1}
+          priority
+          label={`CH${numeral}_${info.title.replace(/\W+/g, '-').toUpperCase()}_BROLL.MOV`}
+          timecode={`CHAPTER ${numeral} / ${String(chapterTotal).padStart(2, '0')}`}
+          style={{ minHeight: 'min(56vh, 460px)' }}
+        >
+          <div className="relative z-10 flex h-full min-w-0 flex-col justify-end px-6 pb-10 pt-24 lg:px-16">
+            <div
+              className="stencil text-[clamp(64px,14vw,180px)] leading-none opacity-70"
+              style={{ color: accent }}
+              aria-hidden="true"
+            >
+              {numeral}
+            </div>
+            <h1 className="film-display mt-4 text-[clamp(40px,8vw,110px)] text-film-white">
+              {info.title}
+            </h1>
+            <p className="serif-i mt-4 max-w-2xl text-[clamp(18px,2vw,24px)] leading-snug text-mist">
+              {info.description}
+            </p>
+          </div>
+        </Reel>
+      </div>
+
+      <div className="container-app mt-10">
+        {/* Subcategory Quick Links */}
+        {info.subcategories && (
+          <div className="flex flex-wrap gap-2">
             {info.subcategories.map((subcat) => {
               const SubIcon = subcat.icon;
+              const active = activeSubcategory === subcat.id;
               return (
                 <button
                   key={subcat.id}
                   onClick={() => setActiveSubcategory(subcat.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
-                    activeSubcategory === subcat.id
-                      ? 'bg-sunset-500 text-white'
-                      : 'bg-navy-800 text-gray-300 hover:bg-navy-700 border border-white/10'
-                  }`}
+                  aria-pressed={active}
+                  className={cn(
+                    'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+                    active
+                      ? 'border-ember text-ember'
+                      : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
+                  )}
                 >
-                  <SubIcon className="w-4 h-4" />
+                  <SubIcon className="h-3.5 w-3.5" aria-hidden="true" />
                   {subcat.label}
                 </button>
               );
@@ -237,128 +285,130 @@ export default function CategoryPage() {
             {category === 'outdoor' && (
               <Link
                 to="/trails"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors bg-pine-600 text-white hover:bg-pine-500"
+                className="small-caps flex items-center gap-2 border border-ember px-4 py-2.5 text-ember transition-colors hover:bg-ember hover:text-film-white"
               >
-                <Mountain className="w-4 h-4" />
+                <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
                 Explore Trails
               </Link>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Wilderness Permits Section - Only show for outdoor category */}
-      {category === 'outdoor' && (
-        <div className="mb-10 card p-6 border-blue-500/30">
-          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-            <Mountain className="w-5 h-5 text-blue-400" />
-            Wilderness Permits
-          </h2>
-          <p className="text-gray-400 mb-4">
-            Planning to explore the wilderness areas near Bend? Permits are required for many trails.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {wildernessAreas.map((area) => (
-              <a
-                key={area.name}
-                href={area.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-navy-700/50 rounded-xl p-4 hover:bg-navy-700 transition-colors group"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-semibold text-white group-hover:text-sunset-400 transition-colors">
-                      {area.name}
-                    </h3>
-                    <p className="text-sm text-gray-400 mt-1">{area.description}</p>
+        {/* Wilderness Permits Section - Only show for outdoor category */}
+        {category === 'outdoor' && (
+          <div className="mt-8 border border-hair p-6 md:p-8">
+            <h2 className="film-display-thin flex items-center gap-2 text-[22px] text-film-white">
+              <Mountain className="h-5 w-5 text-lake" aria-hidden="true" />
+              Wilderness Permits
+            </h2>
+            <p className="mt-2 max-w-2xl text-mist">
+              Planning to explore the wilderness areas near Bend? Permits are required for many trails.
+            </p>
+            <div className="mt-6 border-t border-hair">
+              {wildernessAreas.map((area) => (
+                <a
+                  key={area.name}
+                  href={area.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="row-hover flex items-start justify-between gap-4 border-b border-hair py-5 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <h3 className="film-display-thin text-[18px] text-film-white">{area.name}</h3>
+                    <p className="mt-1 max-w-lg font-mono text-[11px] leading-relaxed text-whisper">
+                      {area.description}
+                    </p>
+                    <div className="small-caps mt-3 text-ember">Get Permit on Recreation.gov →</div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-sunset-400 flex-shrink-0 mt-1" />
-                </div>
-                <div className="mt-3 text-sm text-sunset-400 font-medium">
-                  Get Permit on Recreation.gov →
-                </div>
-              </a>
-            ))}
+                  <ExternalLink className="mt-1 h-4 w-4 flex-shrink-0 text-ember" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Locations Grid */}
-      {filteredLocations.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredLocations.map((location) => (
-            <LocationCard key={location.id} location={location} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 card">
-          <p className="text-gray-500">No locations found in this category yet.</p>
-        </div>
-      )}
+        {/* ── Listings ─────────────────────────────────────────────── */}
+        <div className="mt-10">
+          <div className="small-caps flex items-center justify-between border-b border-hair pb-3 text-whisper">
+            <span>Listings</span>
+            <span>{filteredLocations.length} places</span>
+          </div>
 
-      {/* CTA */}
-      <div className="mt-12 bg-gradient-to-r from-pine-700 to-pine-600 rounded-2xl p-8 text-center">
-        <h3 className="text-2xl font-bold text-white mb-3">Explore on the Map</h3>
-        <p className="text-white/80 mb-6 max-w-lg mx-auto">
-          See all locations on our interactive map and discover even more places to explore.
-        </p>
-        <Link to="/map" className="inline-flex items-center gap-2 bg-white text-pine-700 hover:bg-white/90 font-semibold px-6 py-3 rounded-xl transition-colors">
-          Open Map
-        </Link>
+          {filteredLocations.length > 0 ? (
+            <div>
+              {filteredLocations.map((location) => (
+                <LocationRow key={location.id} location={location} />
+              ))}
+            </div>
+          ) : (
+            <div className="border-b border-hair py-12 text-center">
+              <p className="small-caps text-whisper">No locations found in this category yet.</p>
+            </div>
+          )}
+        </div>
+
+        {/* ── CTA ──────────────────────────────────────────────────── */}
+        <div className="mt-16 border-t border-hair pt-12 text-center">
+          <h3 className="film-display text-[clamp(28px,5vw,56px)] text-film-white">
+            Explore On The Map.
+          </h3>
+          <p className="mx-auto mt-3 max-w-lg leading-relaxed text-mist">
+            See all locations on our interactive map and discover even more places to explore.
+          </p>
+          <Link to="/map" className="btn-primary mt-6">
+            Open Map <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-function LocationCard({ location }: { location: Location }) {
-  const difficultyColors = {
-    easy: 'bg-green-500/20 text-green-400',
-    moderate: 'bg-amber-500/20 text-amber-400',
-    hard: 'bg-red-500/20 text-red-400',
-  };
-
+function LocationRow({ location }: { location: Location }) {
   return (
-    <article className="card p-6">
-      <h3 className="text-lg font-semibold text-white mb-2">{location.name}</h3>
-      <p className="text-gray-400 text-sm mb-4">{location.description}</p>
+    <div className="flex flex-col gap-3 border-b border-hair py-6 md:flex-row md:items-start md:gap-8">
+      <div className="min-w-0 md:w-64 md:shrink-0">
+        <h3 className="film-display-thin text-[22px] leading-[0.95] text-film-white">
+          {location.name}
+        </h3>
+        {location.difficulty && (
+          <div
+            className="small-caps mt-2"
+            style={{ color: difficultyAccent[location.difficulty] }}
+          >
+            {location.difficulty}
+          </div>
+        )}
+      </div>
 
-      {location.difficulty && (
-        <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-3 ${
-            difficultyColors[location.difficulty]
-          }`}
-        >
-          {location.difficulty.charAt(0).toUpperCase() + location.difficulty.slice(1)}
-        </span>
-      )}
+      <p className="min-w-0 flex-1 text-[14px] leading-relaxed text-mist">
+        {location.description}
+      </p>
 
-      {location.amenities && location.amenities.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-white/10">
-          <p className="text-xs text-gray-500 mb-2">Amenities</p>
-          <div className="flex flex-wrap gap-1">
+      <div className="min-w-0 md:w-64 md:shrink-0">
+        {location.amenities && location.amenities.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 md:justify-end">
             {location.amenities.map((amenity) => (
               <span
                 key={amenity}
-                className="px-2 py-1 bg-pine-700/30 text-pine-400 rounded text-xs"
+                className="border border-hair px-2 py-0.5 font-mono text-[10px] uppercase text-whisper"
               >
                 {amenity}
               </span>
             ))}
           </div>
-        </div>
-      )}
-
-      {location.website && (
-        <a
-          href={location.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-4 text-sm text-sunset-400 hover:underline"
-        >
-          Visit Website →
-        </a>
-      )}
-    </article>
+        )}
+        {location.website && (
+          <a
+            href={location.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="small-caps mt-2 inline-block text-ember md:block md:text-right"
+          >
+            Visit site →
+          </a>
+        )}
+      </div>
+    </div>
   );
 }

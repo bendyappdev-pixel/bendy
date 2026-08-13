@@ -12,6 +12,7 @@ import CampingPage from './pages/CampingPage';
 import TrailsPage from './pages/TrailsPage';
 import TrailDetailPage from './pages/TrailDetailPage';
 import ConditionsPage from './pages/ConditionsPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -30,6 +31,9 @@ export default function App() {
           <Route path="/trails/:slug" element={<TrailDetailPage />} />
           <Route path="/conditions" element={<ConditionsPage />} />
           <Route path="/category/:category" element={<CategoryPage />} />
+          {/* Catch-all. Without this an unrecognised URL rendered the shell
+              around an empty <main> with no explanation and no way back. */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />

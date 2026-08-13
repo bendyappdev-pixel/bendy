@@ -15,7 +15,7 @@ export default function InFeedBanner() {
       href={inFeedBanner.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block card overflow-hidden hover:shadow-lg transition-shadow group"
+      className="group block overflow-hidden border border-hair"
     >
       <div className="flex flex-col md:flex-row">
         {/* Image */}
@@ -23,22 +23,20 @@ export default function InFeedBanner() {
           <img
             src={inFeedBanner.image}
             alt={inFeedBanner.title}
-            className="w-full h-40 md:h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105 md:h-full"
           />
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-5 flex flex-col justify-center">
-          <span className="text-xs text-gray-400 mb-2">Sponsored</span>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-forest transition-colors">
+        <div className="flex flex-1 flex-col justify-center p-5">
+          <span className="small-caps mb-2 text-whisper">Sponsored</span>
+          <h3 className="film-display-thin text-[20px] text-film-white">
             {inFeedBanner.title}
           </h3>
-          <p className="text-gray-600 text-sm mb-4">{inFeedBanner.description}</p>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">By {inFeedBanner.sponsor}</span>
-            <span className="inline-flex items-center px-4 py-2 bg-forest text-white rounded-lg text-sm font-medium group-hover:bg-forest/90 transition-colors">
-              {inFeedBanner.ctaText}
-            </span>
+          <p className="mt-2 font-mono text-[12px] text-mist">{inFeedBanner.description}</p>
+          <div className="mt-4 flex items-center justify-between">
+            <span className="font-mono text-[11px] text-whisper">By {inFeedBanner.sponsor}</span>
+            <span className="btn-secondary">{inFeedBanner.ctaText}</span>
           </div>
         </div>
       </div>

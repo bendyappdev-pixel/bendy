@@ -211,32 +211,17 @@ export function formatTimeAgo(date: Date): string {
   return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
 
-export const crowdLevelConfig: Record<
-  CrowdLevel,
-  { label: string; emoji: string; color: string; bgColor: string }
-> = {
-  empty: {
-    label: 'Empty',
-    emoji: '🟢',
-    color: '#22c55e',
-    bgColor: 'bg-green-100',
-  },
-  moderate: {
-    label: 'Moderate',
-    emoji: '🟡',
-    color: '#eab308',
-    bgColor: 'bg-yellow-100',
-  },
-  busy: {
-    label: 'Busy',
-    emoji: '🟠',
-    color: '#f97316',
-    bgColor: 'bg-orange-100',
-  },
-  packed: {
-    label: 'Packed',
-    emoji: '🔴',
-    color: '#ef4444',
-    bgColor: 'bg-red-100',
-  },
+/**
+ * @deprecated Superseded by `crowdMeta` / `CrowdBadge` in
+ * `components/ui/CrowdBadge`, which is the single source of truth for how
+ * busy-ness is coloured and worded. This config carried emoji glyphs and
+ * light-theme Tailwind classes that the cinematic design system bans; it is
+ * kept only so any out-of-tree consumer keeps compiling. Nothing in src/
+ * reads it — delete it once you are sure of that.
+ */
+export const crowdLevelConfig: Record<CrowdLevel, { label: string; color: string }> = {
+  empty: { label: 'Quiet', color: '#7fb262' },
+  moderate: { label: 'Some people', color: '#e3b34c' },
+  busy: { label: 'Busy', color: '#d8623a' },
+  packed: { label: 'Crowded', color: '#d8623a' },
 };

@@ -1,38 +1,33 @@
-import { useState, useEffect } from 'react';
+/**
+ * ConditionsPage — the almanac language taken all the way. Eight scenes, one
+ * per live data source, each a numbered SceneHeader over a hairline-divided
+ * grid of mono/display readouts. No cards, no filled backgrounds, no emoji —
+ * every status is read off the shared crowd-token palette via `conditionMeta`
+ * below, the same way `crowdMeta` does it for CrowdBadge.
+ *
+ *   —   Masthead              quick-glance readout (unnumbered, like Hero)
+ *   01  Mt. Bachelor           mountain snow report
+ *   02  Hoodoo Ski Area        mountain snow report
+ *   03  Air Quality            Open-Meteo AQI
+ *   04  Pollen & Allergies     Google Pollen API
+ *   05  River Flows            USGS gauges
+ *   06  Sun & Light            sunrise / sunset / golden hour
+ *   07  Road Conditions        mountain pass status
+ *   08  Downtown Parking       estimated availability
+ */
+
+import { ReactNode, useEffect, useState } from 'react';
+import { TrendingDown, TrendingUp, Minus, RefreshCw, TreePine, Sprout, Flower2 } from 'lucide-react';
+
+import { mockParkingConditions, calculateSunTimes } from '../data/conditions';
 import {
-  Snowflake,
-  Waves,
-  Wind,
-  Car,
-  Sun,
-  ParkingCircle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Thermometer,
-  Droplets,
-  Fish,
-  Compass,
-  Sunrise,
-  Sunset,
-  Camera,
-  RefreshCw,
-  ExternalLink,
-  Loader2,
-  Radio,
-  TreePine,
-  Flower2,
-  Sprout,
-} from 'lucide-react';
-import {
-  mockParkingConditions,
-  calculateSunTimes,
-} from '../data/conditions';
-import { ConditionStatus } from '../types/conditions';
+  AirQuality,
+  ConditionStatus,
+  MountainConditions,
+  PollenData,
+  RiverConditions,
+  RoadCondition,
+} from '../types/conditions';
 import {
   useRiverConditions,
   useAirQuality,
@@ -41,62 +36,29 @@ import {
   useHoodooConditions,
   useRoadConditions,
 } from '../hooks/useConditions';
+import SceneHeader from '../components/ui/SceneHeader';
+import { cn } from '../lib/utils';
 
-const statusColors: Record<ConditionStatus, string> = {
-  good: 'bg-green-500',
-  moderate: 'bg-yellow-500',
-  poor: 'bg-orange-500',
-  closed: 'bg-red-500',
+/* ═══════════════════════════════════════════════════════════════════
+   SHARED HELPERS — the single source of truth for status colour +
+   plain-language wording. Never colour a status ad hoc; go through
+   conditionMeta, the same pattern CrowdBadge uses for crowd levels.
+   ═══════════════════════════════════════════════════════════════════ */
+
+interface ConditionMeta {
+  label: string;
+  color: string;
+}
+
+const CONDITION_META: Record<ConditionStatus, ConditionMeta> = {
+  good: { label: 'Good', color: 'var(--crowd-empty)' },
+  moderate: { label: 'Moderate', color: 'var(--crowd-mod)' },
+  poor: { label: 'Poor', color: 'var(--crowd-packed)' },
+  closed: { label: 'Closed', color: 'var(--crowd-packed)' },
 };
 
-const statusBgColors: Record<ConditionStatus, string> = {
-  good: 'bg-green-500/10 border-green-500/30',
-  moderate: 'bg-yellow-500/10 border-yellow-500/30',
-  poor: 'bg-orange-500/10 border-orange-500/30',
-  closed: 'bg-red-500/10 border-red-500/30',
-};
-
-function StatusDot({ status }: { status: ConditionStatus }) {
-  return (
-    <span className={`w-2.5 h-2.5 rounded-full ${statusColors[status]} animate-pulse`} />
-  );
-}
-
-function LiveBadge() {
-  return (
-    <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 rounded-full text-xs text-green-400">
-      <Radio className="w-3 h-3 animate-pulse" />
-      Live
-    </span>
-  );
-}
-
-function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'stable' | 'filling' | 'emptying' }) {
-  if (trend === 'rising' || trend === 'filling') {
-    return <TrendingUp className="w-4 h-4 text-yellow-400" />;
-  }
-  if (trend === 'falling' || trend === 'emptying') {
-    return <TrendingDown className="w-4 h-4 text-green-400" />;
-  }
-  return <Minus className="w-4 h-4 text-gray-400" />;
-}
-
-function LastUpdated({ date }: { date: Date }) {
-  const timeAgo = getTimeAgo(date);
-  return (
-    <span className="flex items-center gap-1 text-xs text-gray-500">
-      <Clock className="w-3 h-3" />
-      Updated {timeAgo}
-    </span>
-  );
-}
-
-function LoadingCard() {
-  return (
-    <div className="flex items-center justify-center py-8">
-      <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-    </div>
-  );
+function conditionMeta(status: ConditionStatus): ConditionMeta {
+  return CONDITION_META[status] ?? CONDITION_META.moderate;
 }
 
 function getTimeAgo(date: Date): string {
@@ -107,10 +69,107 @@ function getTimeAgo(date: Date): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
+/** Status dot + plain-language label. The condition-status counterpart to CrowdBadge. */
+function ConditionDot({
+  status,
+  label,
+  className,
+}: {
+  status: ConditionStatus;
+  label?: string;
+  className?: string;
+}) {
+  const meta = conditionMeta(status);
+  return (
+    <span className={cn('inline-flex items-center gap-2 font-mono text-[11px]', className)}>
+      <span
+        aria-hidden="true"
+        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+        style={{ background: meta.color, boxShadow: `0 0 8px ${meta.color}` }}
+      />
+      <span style={{ color: meta.color }}>{label ?? meta.label}</span>
+    </span>
+  );
+}
+
+/** A big film-display numeral with a small mono unit label — the readout unit of this page. */
+function DataCell({
+  label,
+  value,
+  unit,
+  valueColor,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  unit?: string;
+  valueColor?: string;
+  className?: string;
+}) {
+  return (
+    <div className="p-6">
+      <div className="small-caps text-whisper">{label}</div>
+      <div
+        className={cn('film-display mt-3 text-[clamp(30px,4vw,52px)]', className)}
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+        {unit && <span className="ml-1.5 font-mono text-[11px] normal-case text-whisper">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** One hairline row: mono label left, film-display-thin value right. */
+function StatRow({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: ReactNode;
+  valueColor?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-hair py-3 last:border-b-0">
+      <span className="small-caps shrink-0 text-whisper">{label}</span>
+      <span
+        className="film-display-thin text-right text-[19px] text-film-white"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** Rising/filling reads as ember (change worth noticing); falling/emptying and stable stay neutral. */
+function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'stable' | 'filling' | 'emptying' }) {
+  if (trend === 'rising' || trend === 'filling') {
+    return <TrendingUp className="h-3.5 w-3.5 text-ember" aria-hidden="true" />;
+  }
+  if (trend === 'falling' || trend === 'emptying') {
+    return <TrendingDown className="h-3.5 w-3.5 text-whisper" aria-hidden="true" />;
+  }
+  return <Minus className="h-3.5 w-3.5 text-whisper" aria-hidden="true" />;
+}
+
+/** Pulsing ember dot marking a scene as pulled live, not mocked. */
+function LiveTag() {
+  return (
+    <span className="small-caps inline-flex items-center gap-2 text-whisper">
+      <span className="live-caret" aria-hidden="true" /> Live
+    </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
 export default function ConditionsPage() {
   const [sunTimes, setSunTimes] = useState(calculateSunTimes());
 
-  // Real data hooks
   const { rivers, loading: riversLoading, refresh: refreshRivers } = useRiverConditions();
   const { airQuality, loading: aqLoading, refresh: refreshAQ } = useAirQuality();
   const { pollenData, loading: pollenLoading, refresh: refreshPollen } = usePollenData();
@@ -138,605 +197,710 @@ export default function ConditionsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-navy-800 to-navy-900 border-b border-white/5">
-        <div className="container-app py-8 md:py-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <Compass className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Live Conditions</h1>
-                <p className="text-gray-400">Real-time updates for Bend & Central Oregon</p>
-              </div>
-            </div>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-navy-700 hover:bg-navy-600 rounded-xl text-gray-300 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-          </div>
+    <div className="min-h-[100dvh]">
+      <Masthead
+        mountain={mountain}
+        mtLoading={mtLoading}
+        airQuality={airQuality}
+        aqLoading={aqLoading}
+        rivers={rivers}
+        riversLoading={riversLoading}
+        sunTimes={sunTimes}
+        onRefresh={handleRefresh}
+      />
 
-          {/* Quick Status Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="flex items-center gap-3 bg-navy-700/50 rounded-xl px-4 py-3">
-              <StatusDot status="good" />
-              <div>
-                <p className="text-xs text-gray-500">Mt. Bachelor</p>
-                <p className="text-sm text-white font-medium">{mountain.liftsOpen}/{mountain.liftsTotal} Lifts</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-navy-700/50 rounded-xl px-4 py-3">
-              <StatusDot status={airQuality?.status || 'good'} />
-              <div>
-                <p className="text-xs text-gray-500">Air Quality</p>
-                <p className="text-sm text-white font-medium">
-                  {aqLoading ? '...' : `AQI ${airQuality?.aqi || '--'}`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-navy-700/50 rounded-xl px-4 py-3">
-              <StatusDot status={rivers[0]?.status || 'good'} />
-              <div>
-                <p className="text-xs text-gray-500">River Flow</p>
-                <p className="text-sm text-white font-medium">
-                  {riversLoading ? '...' : `${rivers[0]?.flowRate || '--'} cfs`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-navy-700/50 rounded-xl px-4 py-3">
-              <Sun className="w-4 h-4 text-sunset-400" />
-              <div>
-                <p className="text-xs text-gray-500">Sunset</p>
-                <p className="text-sm text-white font-medium">{sunTimes.sunset}</p>
-              </div>
-            </div>
+      <MountainScene
+        scene="01"
+        kicker="Mt. Bachelor"
+        href="https://www.mtbachelor.com/conditions"
+        bg="bg-black"
+        conditions={mountain}
+        loading={mtLoading}
+      />
+
+      <MountainScene
+        scene="02"
+        kicker="Hoodoo Ski Area"
+        href="https://www.skihoodoo.com/conditions"
+        bg="bg-film-deep"
+        conditions={hoodoo}
+        loading={hoodooLoading}
+      />
+
+      <AirQualityScene airQuality={airQuality} loading={aqLoading} />
+
+      <PollenScene pollenData={pollenData} loading={pollenLoading} />
+
+      <RiversScene rivers={rivers} loading={riversLoading} />
+
+      <SunScene sunTimes={sunTimes} />
+
+      <RoadsScene roads={roads} loading={roadsLoading} />
+
+      <ParkingScene />
+
+      <FooterNote />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MASTHEAD — unnumbered, like Hero on the homepage.
+   ═══════════════════════════════════════════════════════════════════ */
+
+function Masthead({
+  mountain,
+  mtLoading,
+  airQuality,
+  aqLoading,
+  rivers,
+  riversLoading,
+  sunTimes,
+  onRefresh,
+}: {
+  mountain: MountainConditions;
+  mtLoading: boolean;
+  airQuality: AirQuality | null;
+  aqLoading: boolean;
+  rivers: RiverConditions[];
+  riversLoading: boolean;
+  sunTimes: ReturnType<typeof calculateSunTimes>;
+  onRefresh: () => void;
+}) {
+  const aqMeta = airQuality ? conditionMeta(airQuality.status) : null;
+
+  return (
+    <section className="border-b border-hair bg-film-deep">
+      <div className="container-app py-14">
+        <div className="flex flex-wrap items-end justify-between gap-8">
+          <div className="max-w-2xl">
+            <div className="small-caps text-ember">Live Conditions</div>
+            <h1 className="film-display mt-3 text-[clamp(40px,9vw,140px)] text-balance">
+              Bend, Right Now.
+            </h1>
+            <p className="mt-4 max-w-lg text-[16px] leading-relaxed text-mist">
+              Snowpack, rivers, air and roads — pulled straight from the sources the locals
+              check before they commit to a day.
+            </p>
           </div>
+          <button onClick={onRefresh} className="btn-secondary">
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            Refresh
+          </button>
         </div>
+
+        {/* Flex, not a narrow 12-col grid: the quick-glance numerals need room
+            a col-span-3 track doesn't reliably give them at 390px. */}
+        <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-hair pt-10 md:grid-cols-4">
+          <div className="min-w-0">
+            <dd className="film-display text-[clamp(32px,4vw,56px)] text-film-white">
+              {mtLoading ? '—' : `${mountain.liftsOpen}/${mountain.liftsTotal}`}
+            </dd>
+            <dt className="small-caps mt-2 text-whisper">Bachelor lifts open</dt>
+          </div>
+          <div className="min-w-0">
+            <dd
+              className="film-display text-[clamp(32px,4vw,56px)]"
+              style={{ color: aqMeta ? aqMeta.color : 'var(--film-white)' }}
+            >
+              {aqLoading ? '—' : (airQuality?.aqi ?? '--')}
+            </dd>
+            <dt className="small-caps mt-2 text-whisper">Air quality index</dt>
+          </div>
+          <div className="min-w-0">
+            <dd className="film-display text-[clamp(32px,4vw,56px)] text-film-white">
+              {riversLoading ? '—' : (rivers[0]?.flowRate.toLocaleString() ?? '--')}
+            </dd>
+            <dt className="small-caps mt-2 text-whisper">{rivers[0]?.name ?? 'Deschutes'} · cfs</dt>
+          </div>
+          <div className="min-w-0">
+            <dd className="film-display text-[clamp(32px,4vw,56px)] text-film-white">{sunTimes.sunset}</dd>
+            <dt className="small-caps mt-2 text-whisper">Sunset tonight</dt>
+          </div>
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 01 / 02 · MT. BACHELOR / HOODOO SKI AREA
+   ═══════════════════════════════════════════════════════════════════ */
+
+function MountainScene({
+  scene,
+  kicker,
+  href,
+  bg,
+  conditions,
+  loading,
+}: {
+  scene: string;
+  kicker: string;
+  href: string;
+  bg: string;
+  conditions: MountainConditions;
+  loading: boolean;
+}) {
+  return (
+    <section className={cn('border-b border-hair', bg)}>
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene={scene}
+          kicker={kicker}
+          title={
+            loading ? (
+              'Reading The Mountain.'
+            ) : (
+              <>
+                {conditions.snowDepthBase}&quot; Base.
+                <br />
+                {conditions.conditions}.
+              </>
+            )
+          }
+          meta={
+            <>
+              Updated {getTimeAgo(conditions.lastUpdated)}
+              <br />
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-ember">
+                Full report ↗
+              </a>
+            </>
+          }
+        />
       </div>
 
-      {/* Main Dashboard */}
-      <div className="container-app py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Mt. Bachelor Card */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Snowflake className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Mt. Bachelor</h2>
-                  <LastUpdated date={mountain.lastUpdated} />
-                </div>
-              </div>
-              <a
-                href="https://www.mtbachelor.com/conditions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-
-            {mtLoading ? (
-              <LoadingCard />
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-navy-700/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Base Depth</p>
-                    <p className="text-2xl font-bold text-white">{mountain.snowDepthBase}"</p>
-                  </div>
-                  <div className="bg-navy-700/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Summit Depth</p>
-                    <p className="text-2xl font-bold text-white">{mountain.snowDepthSummit}"</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">New Snow (24h)</span>
-                    <span className="text-white font-medium">{mountain.newSnow24h}"</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">New Snow (48h)</span>
-                    <span className="text-white font-medium">{mountain.newSnow48h}"</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Lifts Open</span>
-                    <span className="text-white font-medium">{mountain.liftsOpen} of {mountain.liftsTotal}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Terrain Open</span>
-                    <span className="text-white font-medium">{mountain.terrainOpen}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Conditions</span>
-                    <span className="text-blue-400 font-medium">{mountain.conditions}</span>
-                  </div>
-                </div>
-              </>
-            )}
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Reading the mountain…
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 divide-x divide-y divide-hair border border-hair md:grid-cols-4">
+            <DataCell label="Base depth" value={conditions.snowDepthBase} unit="in" />
+            <DataCell label="Summit depth" value={conditions.snowDepthSummit} unit="in" />
+            <DataCell label="New snow · 24h" value={conditions.newSnow24h} unit="in" />
+            <DataCell label="New snow · 48h" value={conditions.newSnow48h} unit="in" />
+            <DataCell label="Lifts open" value={`${conditions.liftsOpen}/${conditions.liftsTotal}`} />
+            <DataCell label="Terrain open" value={conditions.terrainOpen} unit="%" />
+            <DataCell
+              label="Conditions"
+              value={conditions.conditions}
+              className="text-[22px] text-ember"
+            />
           </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
-          {/* Hoodoo Ski Area Card */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Snowflake className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Hoodoo Ski Area</h2>
-                  <LastUpdated date={hoodoo.lastUpdated} />
-                </div>
-              </div>
-              <a
-                href="https://www.skihoodoo.com/conditions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 03 · AIR QUALITY
+   ═══════════════════════════════════════════════════════════════════ */
 
-            {hoodooLoading ? (
-              <LoadingCard />
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-navy-700/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Base Depth</p>
-                    <p className="text-2xl font-bold text-white">{hoodoo.snowDepthBase}"</p>
-                  </div>
-                  <div className="bg-navy-700/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Summit Depth</p>
-                    <p className="text-2xl font-bold text-white">{hoodoo.snowDepthSummit}"</p>
-                  </div>
-                </div>
+function AirQualityScene({ airQuality, loading }: { airQuality: AirQuality | null; loading: boolean }) {
+  const meta = airQuality ? conditionMeta(airQuality.status) : conditionMeta('good');
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">New Snow (24h)</span>
-                    <span className="text-white font-medium">{hoodoo.newSnow24h}"</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">New Snow (48h)</span>
-                    <span className="text-white font-medium">{hoodoo.newSnow48h}"</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Lifts Open</span>
-                    <span className="text-white font-medium">{hoodoo.liftsOpen} of {hoodoo.liftsTotal}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Terrain Open</span>
-                    <span className="text-white font-medium">{hoodoo.terrainOpen}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Conditions</span>
-                    <span className="text-blue-400 font-medium">{hoodoo.conditions}</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Air Quality Card - LIVE DATA */}
-          <div className={`card p-6 border ${statusBgColors[airQuality?.status || 'good']}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <Wind className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-white">Air Quality</h2>
-                    <LiveBadge />
-                  </div>
-                  {airQuality && <LastUpdated date={airQuality.lastUpdated} />}
-                </div>
-              </div>
-              <StatusDot status={airQuality?.status || 'good'} />
-            </div>
-
-            {aqLoading ? (
-              <LoadingCard />
+  return (
+    <section className="border-b border-hair bg-black">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="03"
+          kicker="Air Quality"
+          title={
+            loading ? (
+              'Reading The Air.'
             ) : airQuality ? (
               <>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="bg-navy-700/50 rounded-xl p-4 flex-1 text-center">
-                    <p className="text-4xl font-bold text-white">{airQuality.aqi}</p>
-                    <p className={`text-sm font-medium ${
-                      airQuality.status === 'good' ? 'text-green-400' :
-                      airQuality.status === 'moderate' ? 'text-yellow-400' : 'text-orange-400'
-                    }`}>{airQuality.category}</p>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-300">{airQuality.healthMessage}</p>
-                  </div>
-                </div>
-
-                <div className="bg-navy-700/30 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">Forecast</p>
-                  <p className="text-sm text-gray-300">{airQuality.forecast}</p>
-                </div>
+                AQI {airQuality.aqi}.
+                <br />
+                {airQuality.category}.
               </>
             ) : (
-              <p className="text-gray-400">Unable to load air quality data</p>
-            )}
-          </div>
+              'Off The Air.'
+            )
+          }
+          meta={
+            airQuality && (
+              <>
+                <LiveTag />
+                <br />
+                Updated {getTimeAgo(airQuality.lastUpdated)}
+                <br />
+                Open-Meteo Air Quality API
+              </>
+            )
+          }
+        />
+      </div>
 
-          {/* Allergy / Pollen Card - LIVE DATA */}
-          <div className={`card p-6 border ${statusBgColors[pollenData?.overallStatus || 'good']}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                  <Flower2 className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-white">Allergies & Pollen</h2>
-                    <LiveBadge />
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Reading the air…
+          </p>
+        ) : airQuality ? (
+          <div className="grid grid-cols-12 gap-6 border-t border-hair pt-10 lg:gap-12">
+            <div className="col-span-12 lg:col-span-4">
+              <DataCell
+                label="Air quality index"
+                value={airQuality.aqi}
+                valueColor={meta.color}
+                className="text-[clamp(56px,7vw,96px)]"
+              />
+            </div>
+            <div className="col-span-12 min-w-0 lg:col-span-8">
+              <StatRow label="Category" value={airQuality.category} valueColor={meta.color} />
+              <StatRow label="Primary pollutant" value={airQuality.primaryPollutant} />
+              <StatRow label="Forecast" value={airQuality.forecast} />
+              <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-mist">
+                {airQuality.healthMessage}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Unable to load air quality data.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 04 · POLLEN & ALLERGIES
+   ═══════════════════════════════════════════════════════════════════ */
+
+function pollenSeverity(pt: { inSeason: boolean; indexValue: number }): ConditionStatus {
+  if (!pt.inSeason || pt.indexValue <= 1) return 'good';
+  if (pt.indexValue <= 3) return 'moderate';
+  return 'poor';
+}
+
+function PollenScene({ pollenData, loading }: { pollenData: PollenData | null; loading: boolean }) {
+  return (
+    <section className="border-b border-hair bg-film-deep">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="04"
+          kicker="Pollen & Allergies"
+          title={
+            loading
+              ? 'Counting Grains.'
+              : pollenData
+              ? `${
+                  pollenData.overallStatus === 'good'
+                    ? 'Low'
+                    : pollenData.overallStatus === 'moderate'
+                    ? 'Moderate'
+                    : 'High'
+                } Pollen Today.`
+              : 'Off The Grid.'
+          }
+          meta={
+            pollenData && (
+              <>
+                <LiveTag />
+                <br />
+                Updated {getTimeAgo(pollenData.lastUpdated)}
+                <br />
+                Google Pollen API
+              </>
+            )
+          }
+        />
+      </div>
+
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Counting pollen grains…
+          </p>
+        ) : pollenData ? (
+          <div className="border-t border-hair pt-10">
+            <div className="grid grid-cols-3 divide-x divide-hair border border-hair">
+              {pollenData.pollenTypes.map((pt) => {
+                const Icon = pt.code === 'TREE' ? TreePine : pt.code === 'GRASS' ? Sprout : Flower2;
+                const color = conditionMeta(pollenSeverity(pt)).color;
+                return (
+                  <div key={pt.code} className="p-6 text-center">
+                    <Icon className="mx-auto h-5 w-5" style={{ color }} aria-hidden="true" />
+                    <div className="small-caps mt-3 text-whisper">{pt.displayName}</div>
+                    <div className="film-display-thin mt-1.5 text-[18px]" style={{ color }}>
+                      {pt.inSeason ? pt.category : 'Off Season'}
+                    </div>
                   </div>
-                  {pollenData && <LastUpdated date={pollenData.lastUpdated} />}
-                </div>
-              </div>
-              <StatusDot status={pollenData?.overallStatus || 'good'} />
+                );
+              })}
             </div>
 
-            {pollenLoading ? (
-              <LoadingCard />
-            ) : pollenData ? (
-              <>
-                {/* Pollen Type Breakdown */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {pollenData.pollenTypes.map((pt) => {
-                    const TypeIcon = pt.code === 'TREE' ? TreePine : pt.code === 'GRASS' ? Sprout : Flower2;
+            {pollenData.plants.length > 0 && (
+              <div className="mt-8">
+                <div className="small-caps text-whisper">Top allergens today</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {pollenData.plants.slice(0, 5).map((plant) => {
+                    const color = conditionMeta(pollenSeverity(plant)).color;
                     return (
-                      <div key={pt.code} className="bg-navy-700/50 rounded-xl p-3 text-center">
-                        <TypeIcon className={`w-5 h-5 mx-auto mb-1.5 ${
-                          !pt.inSeason ? 'text-gray-600' :
-                          pt.indexValue <= 1 ? 'text-green-400' :
-                          pt.indexValue <= 3 ? 'text-yellow-400' : 'text-orange-400'
-                        }`} />
-                        <p className="text-xs text-gray-500 mb-0.5">{pt.displayName}</p>
-                        <p className={`text-sm font-semibold ${
-                          !pt.inSeason ? 'text-gray-600' :
-                          pt.indexValue <= 1 ? 'text-green-400' :
-                          pt.indexValue <= 3 ? 'text-yellow-400' : 'text-orange-400'
-                        }`}>
-                          {pt.inSeason ? pt.category : 'Off Season'}
-                        </p>
-                      </div>
+                      <span
+                        key={plant.code}
+                        className="flex items-center gap-2 border border-hair px-3 py-1.5 font-mono text-[11px] uppercase"
+                        style={{ color }}
+                      >
+                        {plant.displayName}
+                        <span className="text-whisper">{plant.indexValue}/5</span>
+                      </span>
                     );
                   })}
                 </div>
-
-                {/* Top Allergens */}
-                {pollenData.plants.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Top Allergens Today</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {pollenData.plants.slice(0, 5).map((plant) => (
-                        <span
-                          key={plant.code}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            plant.indexValue <= 1 ? 'bg-green-500/20 text-green-400' :
-                            plant.indexValue <= 2 ? 'bg-yellow-500/20 text-yellow-400' :
-                            plant.indexValue <= 3 ? 'bg-orange-500/20 text-orange-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}
-                        >
-                          {plant.displayName}
-                          <span className="opacity-70">{plant.indexValue}/5</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Health Recommendation */}
-                {(() => {
-                  const recommendation = pollenData.pollenTypes
-                    .flatMap(pt => pt.healthRecommendations)
-                    .find(r => r);
-                  return recommendation ? (
-                    <div className="bg-navy-700/30 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 mb-1">Health Tip</p>
-                      <p className="text-sm text-gray-300">{recommendation}</p>
-                    </div>
-                  ) : (
-                    <div className="bg-navy-700/30 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 mb-1">Health Tip</p>
-                      <p className="text-sm text-gray-300">
-                        {pollenData.overallStatus === 'good'
-                          ? 'Low pollen levels - great day to be outdoors!'
-                          : pollenData.overallStatus === 'moderate'
-                          ? 'Moderate pollen - allergy sufferers may want to take medication before heading out.'
-                          : 'High pollen levels - consider limiting outdoor time if you have allergies.'}
-                      </p>
-                    </div>
-                  );
-                })()}
-              </>
-            ) : (
-              <p className="text-gray-400">Unable to load pollen data</p>
-            )}
-          </div>
-
-          {/* River Conditions Card - LIVE DATA */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                  <Waves className="w-5 h-5 text-cyan-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-white">River Flows</h2>
-                    <LiveBadge />
-                  </div>
-                  {rivers[0] && <LastUpdated date={rivers[0].lastUpdated} />}
-                </div>
               </div>
-              <a
-                href="https://waterdata.usgs.gov/or/nwis/rt"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
+            )}
 
-            {riversLoading ? (
-              <LoadingCard />
-            ) : rivers.length > 0 ? (
-              <div className="space-y-4">
-                {[...rivers].sort((a, b) => a.name.localeCompare(b.name)).map((river, idx) => (
-                  <div key={idx} className="bg-navy-700/50 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="text-white font-medium">{river.name}</p>
-                        <p className="text-xs text-gray-500">{river.location}</p>
+            {(() => {
+              const recommendation = pollenData.pollenTypes
+                .flatMap((pt) => pt.healthRecommendations)
+                .find((r) => r);
+              const fallback =
+                pollenData.overallStatus === 'good'
+                  ? 'Low pollen levels — great day to be outdoors.'
+                  : pollenData.overallStatus === 'moderate'
+                  ? 'Moderate pollen — allergy sufferers may want to take medication before heading out.'
+                  : 'High pollen levels — consider limiting outdoor time if you have allergies.';
+              return (
+                <div className="mt-8 border-t border-hair pt-6">
+                  <div className="small-caps text-whisper">Health tip</div>
+                  <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-mist">
+                    {recommendation ?? fallback}
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Unable to load pollen data.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 05 · RIVER FLOWS
+   ═══════════════════════════════════════════════════════════════════ */
+
+function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: boolean }) {
+  const sorted = [...rivers].sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <section className="border-b border-hair bg-black">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="05"
+          kicker="River Flows"
+          title={loading ? 'Reading The Gauges.' : `${sorted.length} Gauges, Live.`}
+          meta={
+            sorted[0] && (
+              <>
+                <LiveTag />
+                <br />
+                Updated {getTimeAgo(sorted[0].lastUpdated)}
+                <br />
+                USGS Water Services
+              </>
+            )
+          }
+        />
+      </div>
+
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Reading the water gauges…
+          </p>
+        ) : sorted.length > 0 ? (
+          <div className="border-t border-hair">
+            {sorted.map((river, idx) => {
+              const regsText = river.regulations
+                ? [
+                    river.regulations.barblesRequired && 'Barbless',
+                    river.regulations.fliesOnly && 'Flies only',
+                    river.regulations.catchAndRelease && 'Catch & release',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                : '';
+
+              return (
+                // Flex, not a 12-col grid: at this width a col-span-2 track
+                // is far too narrow to hold a flow-rate numeral on mobile.
+                <div
+                  key={idx}
+                  className="flex flex-col gap-6 border-b border-hair py-8 md:flex-row md:items-start"
+                >
+                  <div className="md:w-56 md:shrink-0">
+                    <div className="film-display-thin text-[22px] text-film-white">{river.name}</div>
+                    <div className="mt-1 font-mono text-[11px] uppercase text-whisper">
+                      {river.location}
+                    </div>
+                    <ConditionDot status={river.status} className="mt-3" />
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-10 gap-y-4 md:w-64 md:shrink-0">
+                    <div>
+                      <div className="film-display text-[clamp(28px,4vw,44px)] text-film-white">
+                        {river.flowRate.toLocaleString()}
+                        <span className="ml-1.5 align-middle font-mono text-[11px] normal-case text-whisper">
+                          cfs
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="small-caps mt-1 flex items-center gap-1.5 text-whisper">
                         <TrendIcon trend={river.flowTrend} />
-                        <StatusDot status={river.status} />
+                        {river.flowTrend}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 mb-2">
-                      <div className="flex items-center gap-1">
-                        <Droplets className="w-4 h-4 text-cyan-400" />
-                        <span className="text-lg font-bold text-white">{river.flowRate.toLocaleString()}</span>
-                        <span className="text-xs text-gray-500">cfs</span>
+                    <div>
+                      <div className="film-display text-[clamp(28px,4vw,44px)] text-film-white">
+                        {river.temperature}
+                        <span className="ml-1.5 align-middle font-mono text-[11px] normal-case text-whisper">
+                          °f
+                        </span>
                       </div>
-                      {river.temperature && (
-                        <div className="flex items-center gap-1">
-                          <Thermometer className="w-4 h-4 text-sunset-400" />
-                          <span className="text-white">{river.temperature}°F</span>
-                        </div>
-                      )}
+                      <div className="small-caps mt-1 text-whisper">Water temp</div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                      <div className="flex items-center gap-1 text-gray-400">
-                        <Fish className="w-3 h-3" />
-                        <span className="truncate">{river.fishingRating}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-400">
-                        <Waves className="w-3 h-3" />
-                        <span className="truncate">{river.paddlingRating}</span>
-                      </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1 md:max-w-sm">
+                    <div className="font-mono text-[11px] uppercase leading-relaxed text-mist">
+                      Fishing — {river.fishingRating}
                     </div>
-                    {river.regulations && (
-                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-navy-600">
-                        {river.regulations.barblesRequired && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
-                            <span className="relative">
-                              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
-                                <path d="M8 12c0-2 1.5-4 4-4"/>
-                              </svg>
-                              <span className="absolute inset-0 flex items-center justify-center">
-                                <span className="w-4 h-0.5 bg-amber-400 rotate-45 rounded-full"></span>
-                              </span>
-                            </span>
-                            Barbless
-                          </span>
-                        )}
-                        {river.regulations.fliesOnly && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs">
-                            🪶 Flies Only
-                          </span>
-                        )}
-                        {river.regulations.catchAndRelease && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs">
-                            ↩️ C&R
-                          </span>
-                        )}
+                    <div className="mt-1.5 font-mono text-[11px] uppercase leading-relaxed text-mist">
+                      Paddling — {river.paddlingRating}
+                    </div>
+                    {regsText && (
+                      <div className="mt-2 font-mono text-[10px] uppercase tracking-wide text-whisper">
+                        {regsText}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400">Unable to load river data</p>
-            )}
-
-            <p className="text-xs text-gray-600 mt-3">Data from USGS National Water Information System</p>
+                </div>
+              );
+            })}
           </div>
+        ) : (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Unable to load river data.
+          </p>
+        )}
 
-          {/* Sunrise/Sunset Card */}
-          <div className="card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-sunset-500/20 rounded-lg flex items-center justify-center">
-                <Sun className="w-5 h-5 text-sunset-400" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white">Sun & Light</h2>
-                <p className="text-xs text-gray-500">Bend, Oregon (44.06°N)</p>
-              </div>
-            </div>
+        <p className="mt-6 font-mono text-[10px] uppercase text-whisper">
+          Data from USGS National Water Information System
+        </p>
+      </div>
+    </section>
+  );
+}
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-gradient-to-br from-sunset-500/20 to-orange-500/10 rounded-xl p-4 text-center">
-                <Sunrise className="w-6 h-6 text-sunset-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-500 mb-1">Sunrise</p>
-                <p className="text-xl font-bold text-white">{sunTimes.sunrise}</p>
-              </div>
-              <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/10 rounded-xl p-4 text-center">
-                <Sunset className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-500 mb-1">Sunset</p>
-                <p className="text-xl font-bold text-white">{sunTimes.sunset}</p>
-              </div>
-            </div>
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 06 · SUN & LIGHT
+   ═══════════════════════════════════════════════════════════════════ */
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Day Length</span>
-                <span className="text-white font-medium">{sunTimes.dayLength}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Camera className="w-4 h-4 text-sunset-400" />
-                  Golden Hour (AM)
-                </div>
-                <span className="text-white font-medium">{sunTimes.goldenHourMorning}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Camera className="w-4 h-4 text-purple-400" />
-                  Golden Hour (PM)
-                </div>
-                <span className="text-white font-medium">{sunTimes.goldenHourEvening}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Civil Twilight Ends</span>
-                <span className="text-white font-medium">{sunTimes.civilTwilightEnd}</span>
-              </div>
-            </div>
-          </div>
+function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes> }) {
+  return (
+    <section className="border-b border-hair bg-film-deep">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="06"
+          kicker="Sun & Light"
+          title={`${sunTimes.dayLength} Of Daylight.`}
+          meta={
+            <>
+              Bend, Oregon
+              <br />
+              44.06°N · 121.32°W
+            </>
+          }
+        />
+      </div>
 
-          {/* Road Conditions Card */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-500/20 rounded-lg flex items-center justify-center">
-                  <Car className="w-5 h-5 text-gray-400" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Road Conditions</h2>
-                  {roads[0] && <LastUpdated date={roads[0].lastUpdated} />}
-                </div>
-              </div>
-              <a
-                href="https://tripcheck.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-
-            {roadsLoading ? (
-              <LoadingCard />
-            ) : (
-              <div className="space-y-3">
-                {roads.map((road, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-navy-700/50 rounded-xl p-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-white font-medium">{road.name}</p>
-                        <span className="text-xs text-gray-500">({road.route})</span>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">{road.conditions}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {road.status === 'open' && (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 rounded-lg text-xs text-green-400">
-                          <CheckCircle className="w-3 h-3" />
-                          Open
-                        </span>
-                      )}
-                      {road.status === 'chains-required' && (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 rounded-lg text-xs text-yellow-400">
-                          <AlertTriangle className="w-3 h-3" />
-                          Chains
-                        </span>
-                      )}
-                      {road.status === 'closed' && (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-red-500/20 rounded-lg text-xs text-red-400">
-                          <XCircle className="w-3 h-3" />
-                          Closed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Downtown Parking Card */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <ParkingCircle className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Downtown Parking</h2>
-                  <p className="text-xs text-gray-500">Estimated availability</p>
-                </div>
-              </div>
-              <span className="px-2 py-1 bg-navy-700 rounded-lg text-xs text-gray-400">Coming Soon</span>
-            </div>
-
-            <div className="space-y-3">
-              {mockParkingConditions.map((zone, idx) => (
-                <div key={idx} className="bg-navy-700/50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-white font-medium">{zone.zone}</p>
-                    <div className="flex items-center gap-2">
-                      <TrendIcon trend={zone.trend} />
-                      <StatusDot status={zone.status} />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-navy-600 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full ${statusColors[zone.status]}`}
-                        style={{ width: `${((zone.total - zone.available) / zone.total) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-white font-medium">
-                      {zone.available}/{zone.total}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="container-app py-10">
+        <div className="grid grid-cols-2 divide-x divide-y divide-hair border border-hair md:grid-cols-4 md:divide-y-0">
+          <DataCell label="Sunrise" value={sunTimes.sunrise} className="text-[clamp(26px,3.5vw,44px)]" />
+          <DataCell label="Sunset" value={sunTimes.sunset} className="text-[clamp(26px,3.5vw,44px)]" />
+          <DataCell
+            label="Golden hour · AM"
+            value={sunTimes.goldenHourMorning}
+            className="text-[clamp(26px,3.5vw,44px)]"
+          />
+          <DataCell
+            label="Golden hour · PM"
+            value={sunTimes.goldenHourEvening}
+            className="text-[clamp(26px,3.5vw,44px)]"
+          />
         </div>
 
-        {/* Footer Note */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 text-sm">
-            Data sources: USGS Water Services, Open-Meteo Air Quality API, Google Pollen API, Mt. Bachelor, TripCheck
-          </p>
-          <p className="text-gray-600 text-xs mt-2">
-            River and air quality data updates automatically. Always verify conditions before heading out.
-          </p>
+        <div className="mt-6 border-t border-hair pt-6">
+          <StatRow label="Day length" value={sunTimes.dayLength} />
+          <StatRow label="Civil twilight ends" value={sunTimes.civilTwilightEnd} />
         </div>
       </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 07 · ROAD CONDITIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+function roadConditionStatus(status: RoadCondition['status']): ConditionStatus {
+  if (status === 'open') return 'good';
+  if (status === 'chains-required') return 'moderate';
+  return 'closed';
+}
+
+const roadStatusLabel: Record<RoadCondition['status'], string> = {
+  open: 'Open',
+  'chains-required': 'Chains required',
+  closed: 'Closed',
+};
+
+function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boolean }) {
+  return (
+    <section className="border-b border-hair bg-black">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="07"
+          kicker="Road Conditions"
+          title={loading ? 'Reading The Passes.' : `${roads.length} Passes Tracked.`}
+          meta={
+            roads[0] && (
+              <>
+                Updated {getTimeAgo(roads[0].lastUpdated)}
+                <br />
+                <a
+                  href="https://tripcheck.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ember"
+                >
+                  TripCheck ↗
+                </a>
+              </>
+            )
+          }
+        />
+      </div>
+
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Reading the passes…
+          </p>
+        ) : (
+          <div className="border-t border-hair">
+            {roads.map((road, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col gap-3 border-b border-hair py-6 md:flex-row md:items-center md:justify-between md:gap-6"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="film-display-thin text-[20px] text-film-white">{road.name}</span>
+                    <span className="font-mono text-[11px] text-whisper">{road.route}</span>
+                  </div>
+                  <p className="mt-1 max-w-lg text-[13px] leading-relaxed text-mist">{road.conditions}</p>
+                  <div className="mt-1 font-mono text-[10px] uppercase text-whisper">
+                    {road.elevation.toLocaleString()} ft
+                  </div>
+                </div>
+                <ConditionDot
+                  status={roadConditionStatus(road.status)}
+                  label={roadStatusLabel[road.status]}
+                  className="shrink-0"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 08 · DOWNTOWN PARKING
+   ═══════════════════════════════════════════════════════════════════ */
+
+function ParkingScene() {
+  return (
+    <section className="border-b border-hair bg-film-coal">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="08"
+          kicker="Downtown Parking"
+          title="Estimated Availability."
+          meta={
+            <>
+              Coming soon
+              <br />
+              Live sensor data
+            </>
+          }
+        />
+      </div>
+
+      <div className="container-app py-10">
+        <div className="border-t border-hair">
+          {mockParkingConditions.map((zone, idx) => {
+            const pctFull = Math.round(((zone.total - zone.available) / zone.total) * 100);
+            const meta = conditionMeta(zone.status);
+            return (
+              <div
+                key={idx}
+                className="flex flex-col gap-3 border-b border-hair py-6 md:flex-row md:items-center md:justify-between md:gap-6"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="film-display-thin text-[20px] text-film-white">{zone.zone}</span>
+                    <TrendIcon trend={zone.trend} />
+                  </div>
+                  <div className="mt-3 h-1.5 w-full max-w-xs" style={{ background: 'var(--hair)' }}>
+                    <div className="h-1.5" style={{ width: `${pctFull}%`, background: meta.color }} />
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className="film-display text-[26px] text-film-white">{zone.available}</span>
+                  <span className="ml-1.5 font-mono text-[11px] normal-case text-whisper">
+                    / {zone.total} open
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOOTER NOTE
+   ═══════════════════════════════════════════════════════════════════ */
+
+function FooterNote() {
+  return (
+    <div className="container-app py-14 text-center">
+      <p className="font-mono text-[11px] uppercase tracking-wide text-whisper">
+        Data sources — USGS Water Services · Open-Meteo Air Quality API · Google Pollen API · Mt.
+        Bachelor · TripCheck
+      </p>
+      <p className="mt-2 font-mono text-[10px] text-whisper">
+        River and air quality data updates automatically. Always verify conditions before heading
+        out.
+      </p>
     </div>
   );
 }

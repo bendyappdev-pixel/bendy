@@ -15,36 +15,38 @@ export default function ContextualBanner() {
       href={contextualBanner.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block rounded-2xl overflow-hidden hover:shadow-lg transition-shadow group relative"
+      className="group relative block overflow-hidden border border-hair"
     >
       {/* Background Image */}
       <div className="relative h-32 md:h-40">
         <img
           src={contextualBanner.image}
           alt={contextualBanner.title}
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
         />
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-forest/90 to-forest/70" />
+        {/* Scrim — legibility for the type over the photo. */}
+        <div className="scrim-l pointer-events-none absolute inset-0" aria-hidden="true" />
 
         {/* Content */}
         <div className="absolute inset-0 flex items-center justify-between px-6 md:px-10">
-          <div className="text-white">
-            <span className="text-xs text-white/70 mb-1 block">Sponsored</span>
-            <h3 className="text-xl md:text-2xl font-bold mb-1">{contextualBanner.title}</h3>
-            <p className="text-white/80 text-sm md:text-base">{contextualBanner.description}</p>
+          <div>
+            <span className="small-caps mb-1 block text-whisper">Sponsored</span>
+            <h3 className="film-display-thin text-[22px] text-film-white md:text-[28px]">
+              {contextualBanner.title}
+            </h3>
+            <p className="mt-1 font-mono text-[12px] text-mist md:text-[13px]">
+              {contextualBanner.description}
+            </p>
           </div>
           <div className="hidden sm:block">
-            <span className="inline-flex items-center px-6 py-3 bg-white text-forest rounded-xl font-semibold group-hover:bg-sand transition-colors">
-              {contextualBanner.ctaText}
-            </span>
+            <span className="btn-secondary">{contextualBanner.ctaText}</span>
           </div>
         </div>
       </div>
 
       {/* Mobile CTA */}
-      <div className="sm:hidden bg-forest p-4 text-center">
-        <span className="text-white font-semibold">{contextualBanner.ctaText} →</span>
+      <div className="border-t border-hair bg-film-deep p-4 text-center sm:hidden">
+        <span className="small-caps text-film-white">{contextualBanner.ctaText} →</span>
       </div>
     </a>
   );

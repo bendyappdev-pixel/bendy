@@ -1,8 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  Clock,
-  Mountain,
   MapPin,
   Sun,
   Snowflake,
@@ -14,11 +12,11 @@ import {
   Backpack,
   Accessibility,
   DollarSign,
-  AlertCircle,
-  ChevronRight,
 } from 'lucide-react';
 import { guides } from '../data/guides';
 import { Season, Difficulty, GuideStop } from '../types/guide';
+import Reel from '../components/ui/Reel';
+import SceneHeader from '../components/ui/SceneHeader';
 
 const seasonIcons: Record<Season, typeof Sun> = {
   spring: Flower2,
@@ -34,95 +32,73 @@ const seasonLabels: Record<Season, string> = {
   winter: 'Winter',
 };
 
-const difficultyColors: Record<Difficulty, string> = {
-  easy: 'text-pine-400',
-  moderate: 'text-sunset-400',
-  challenging: 'text-red-400',
+/** Same accent map as SequenceCard: pine/ember/gold for easy/moderate/challenging. */
+const difficultyAccent: Record<Difficulty, string> = {
+  easy: 'var(--pine)',
+  moderate: 'var(--ember)',
+  challenging: 'var(--gold)',
 };
 
-function StopCard({ stop, index, isLast }: { stop: GuideStop; index: number; isLast: boolean }) {
+/** One row of the call sheet: a stop, its tips, and its alternatives. */
+function CallSheetRow({ stop, index }: { stop: GuideStop; index: number }) {
+  const numeral = String(index + 1).padStart(2, '0');
+
   return (
-    <div className="relative flex gap-4 md:gap-6">
-      {/* Timeline */}
-      <div className="flex flex-col items-center">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-          stop.isOptional ? 'bg-navy-700 border-2 border-dashed border-sunset-500/50' : 'bg-sunset-500'
-        }`}>
-          <span className="text-white font-bold text-sm">{index + 1}</span>
-        </div>
-        {!isLast && (
-          <div className="w-0.5 flex-1 bg-gradient-to-b from-sunset-500/50 to-navy-700 mt-2" />
+    <li className="border-b border-hair py-8 first:pt-0 last:border-b-0">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
+        <span className="stencil text-[22px] leading-none text-whisper">{numeral}</span>
+        <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-ember">
+          {stop.time}
+        </span>
+        {stop.duration && (
+          <span className="font-mono text-[11px] text-whisper">{stop.duration}</span>
+        )}
+        {stop.isOptional && (
+          <span className="small-caps border border-hair px-2 py-0.5 text-whisper">
+            Optional
+          </span>
         )}
       </div>
 
-      {/* Content */}
-      <div className={`flex-1 pb-8 ${isLast ? '' : ''}`}>
-        <div className="card p-5 md:p-6">
-          {/* Header */}
-          <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sunset-400 text-sm font-medium">{stop.time}</span>
-                {stop.duration && (
-                  <>
-                    <span className="text-gray-600">•</span>
-                    <span className="text-gray-500 text-sm">{stop.duration}</span>
-                  </>
-                )}
-                {stop.isOptional && (
-                  <span className="px-2 py-0.5 bg-navy-700 rounded text-xs text-gray-400">
-                    Optional
-                  </span>
-                )}
-              </div>
-              <h3 className="text-xl font-bold text-white">{stop.title}</h3>
-            </div>
-          </div>
+      <h3 className="film-display-thin mt-3 text-[clamp(24px,3.4vw,34px)] text-film-white">
+        {stop.title}
+      </h3>
 
-          {/* Location */}
-          <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-            <MapPin className="w-4 h-4 text-sunset-400" />
-            {stop.location}
-          </div>
-
-          {/* Description */}
-          <p className="text-gray-300 mb-4">{stop.description}</p>
-
-          {/* Tips */}
-          {stop.tips && stop.tips.length > 0 && (
-            <div className="bg-navy-700/50 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                <Lightbulb className="w-4 h-4" />
-                Local Tips
-              </div>
-              <ul className="space-y-2">
-                {stop.tips.map((tip, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
-                    <ChevronRight className="w-4 h-4 text-sunset-500 flex-shrink-0 mt-0.5" />
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Alternatives */}
-          {stop.alternatives && stop.alternatives.length > 0 && (
-            <div className="border-t border-white/10 pt-4">
-              <p className="text-sm text-gray-500 mb-2">Alternatives:</p>
-              <div className="space-y-2">
-                {stop.alternatives.map((alt, i) => (
-                  <div key={i} className="text-sm">
-                    <span className="text-white font-medium">{alt.title}</span>
-                    <span className="text-gray-400"> — {alt.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      <div className="mt-1.5 flex items-center gap-2 font-mono text-[12px] text-whisper">
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
+        {stop.location}
       </div>
-    </div>
+
+      <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-mist">{stop.description}</p>
+
+      {stop.tips && stop.tips.length > 0 && (
+        <ul className="mt-5 max-w-2xl divide-y divide-hair border-y border-hair">
+          {stop.tips.map((tip, i) => (
+            <li
+              key={i}
+              className="flex items-start gap-3 py-2.5 font-mono text-[12px] leading-relaxed text-whisper"
+            >
+              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
+              {tip}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {stop.alternatives && stop.alternatives.length > 0 && (
+        <div className="mt-5 max-w-2xl border-l border-hair pl-4">
+          <div className="small-caps text-whisper">Alternatives</div>
+          <div className="mt-2 space-y-2">
+            {stop.alternatives.map((alt, i) => (
+              <p key={i} className="text-[14px] leading-relaxed">
+                <span className="film-display-thin text-film-white">{alt.title}</span>
+                <span className="text-mist"> — {alt.description}</span>
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -134,241 +110,279 @@ export default function GuideDetailPage() {
     return <Navigate to="/guides" replace />;
   }
 
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
-        <img
-          src={guide.heroImage}
-          alt={guide.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/70 to-navy-900/30" />
+  const accent = difficultyAccent[guide.difficulty] ?? 'var(--ember)';
 
-        {/* Back Button */}
-        <div className="absolute top-4 left-4 md:top-8 md:left-8">
+  // Scene kickers stay contiguous even though Seasonal Notes is conditional.
+  let sceneCount = 1; // About is always scene 01.
+  const nextScene = () => String(++sceneCount).padStart(2, '0');
+
+  return (
+    <div>
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <Reel
+        src={guide.heroImage}
+        alt={guide.title}
+        priority
+        scrim="bottom"
+        className="flex border-b border-hair"
+        style={{ minHeight: 'min(72vh, 680px)' }}
+      >
+        <div className="absolute left-4 top-4 z-20 md:left-8 md:top-8">
           <Link
             to="/guides"
-            className="flex items-center gap-2 px-4 py-2 bg-navy-900/70 backdrop-blur-sm rounded-xl text-white hover:bg-navy-800 transition-colors"
+            className="small-caps flex items-center gap-2 border border-hair bg-film-black/60 px-4 py-2 text-film-white transition-colors hover:border-film-white"
           >
-            <ArrowLeft className="w-4 h-4" />
-            All Guides
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            All Sequences
           </Link>
         </div>
 
-        {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-          <div className="container-app">
-            {/* Season Icons */}
-            <div className="flex gap-2 mb-4">
-              {guide.seasons.map((season) => {
-                const Icon = seasonIcons[season];
-                return (
-                  <span
-                    key={season}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-900/70 backdrop-blur-sm rounded-full text-sm"
-                  >
-                    <Icon className="w-4 h-4 text-sunset-400" />
-                    <span className="text-white">{seasonLabels[season]}</span>
-                  </span>
-                );
-              })}
-            </div>
-
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{guide.title}</h1>
-            <p className="text-xl text-sunset-400 font-medium mb-4">{guide.tagline}</p>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-4 text-gray-300">
-              <span className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-sunset-400" />
-                {guide.duration}
-              </span>
-              <span className="flex items-center gap-2">
-                <Mountain className="w-5 h-5 text-sunset-400" />
-                <span className={difficultyColors[guide.difficulty]}>
-                  {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
+        <div className="relative z-10 flex w-full flex-col justify-end px-6 pb-32 pt-24 md:pb-36 lg:px-10">
+          <div className="small-caps text-ember">
+            {guide.difficulty} · {guide.duration}
+          </div>
+          <h1 className="film-display mt-3 max-w-4xl text-[clamp(44px,8vw,120px)] text-film-white">
+            {guide.title}
+          </h1>
+          <p className="serif-i mt-4 max-w-2xl text-[20px] leading-snug text-mist md:text-[26px]">
+            {guide.tagline}
+          </p>
+          <div className="small-caps mt-5 flex flex-wrap gap-x-6 gap-y-2 text-whisper">
+            {guide.seasons.map((season) => {
+              const Icon = seasonIcons[season];
+              return (
+                <span key={season} className="inline-flex items-center gap-1.5">
+                  <Icon className="h-3.5 w-3.5 text-ember" aria-hidden="true" />
+                  {seasonLabels[season]}
                 </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-sunset-400" />
-                {guide.stops.length} stops
-              </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Letterboxed lower-third: the stat block */}
+        <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-hair px-6 py-6 md:grid-cols-4 lg:px-10">
+            <div>
+              <div className="small-caps text-whisper">Duration</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {guide.duration}
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">Difficulty</div>
+              <div
+                className="film-display-thin mt-1 text-[22px] capitalize"
+                style={{ color: accent }}
+              >
+                {guide.difficulty}
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">Stops</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {guide.stops.length}
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">First Stop</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {guide.stops[0]?.time ?? '—'}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Reel>
 
       {/* Main Content */}
-      <div className="container-app py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Timeline - Main Content */}
-          <div className="lg:col-span-2">
-            {/* Description */}
-            <div className="card p-6 mb-8">
-              <h2 className="text-xl font-semibold text-white mb-3">About This Guide</h2>
-              <p className="text-gray-300">{guide.description}</p>
+      <div className="container-app py-12 md:py-16">
+        <div className="grid grid-cols-12 gap-6 lg:gap-10">
+          {/* Main column */}
+          <div className="col-span-12 lg:col-span-8">
+            {/* Scene 01 · About */}
+            <section>
+              <SceneHeader scene="01" kicker="About This Sequence" title="The Brief." size="sub" />
+              <p className="mt-6 max-w-3xl text-[16px] leading-relaxed text-mist">
+                {guide.description}
+              </p>
 
-              {/* Best For */}
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="mt-6 flex flex-wrap gap-2">
                 {guide.bestFor.map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1.5 bg-sunset-500/10 border border-sunset-500/30 rounded-lg text-sm text-sunset-400"
+                    className="small-caps border border-hair px-3 py-2 text-mist"
                   >
                     {tag}
                   </span>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* Seasonal Notes */}
             {guide.seasonalNotes.length > 0 && (
-              <div className="card p-6 mb-8 border-sunset-500/30">
-                <div className="flex items-center gap-2 text-sunset-400 mb-4">
-                  <AlertCircle className="w-5 h-5" />
-                  <h3 className="font-semibold">Seasonal Notes</h3>
-                </div>
-                <div className="space-y-3">
+              <section className="mt-14 border-t border-hair pt-10">
+                <SceneHeader
+                  scene={nextScene()}
+                  kicker="Seasonal Notes"
+                  title="Plan Around The Weather."
+                  size="sub"
+                />
+                <div className="mt-6 divide-y divide-hair border-t border-hair">
                   {guide.seasonalNotes.map((note, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="flex gap-1 flex-shrink-0">
-                        {note.seasons.map((season) => {
-                          const Icon = seasonIcons[season];
-                          return (
-                            <Icon key={season} className="w-4 h-4 text-gray-500" />
-                          );
-                        })}
-                      </div>
-                      <p className="text-gray-400 text-sm">{note.note}</p>
+                    <div key={i} className="flex flex-col gap-1.5 py-4 sm:flex-row sm:items-baseline sm:gap-4">
+                      <span className="small-caps shrink-0 text-whisper">
+                        {note.seasons.map((season) => seasonLabels[season]).join(' · ')}
+                      </span>
+                      <p className="text-[14px] leading-relaxed text-mist">{note.note}</p>
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Stops Timeline */}
-            <h2 className="text-2xl font-bold text-white mb-6">Your Itinerary</h2>
-            <div className="space-y-0">
-              {guide.stops.map((stop, index) => (
-                <StopCard
-                  key={stop.id}
-                  stop={stop}
-                  index={index}
-                  isLast={index === guide.stops.length - 1}
-                />
-              ))}
-            </div>
+            {/* Call Sheet — the centrepiece: every stop, timed and mapped. */}
+            <section className="mt-14 border-t border-hair pt-10">
+              <SceneHeader
+                scene={nextScene()}
+                kicker="The Call Sheet"
+                title="Your Itinerary."
+                size="sub"
+                meta={`${guide.stops.length} stops`}
+              />
+              <ol className="mt-6 border-t border-hair">
+                {guide.stops.map((stop, index) => (
+                  <CallSheetRow key={stop.id} stop={stop} index={index} />
+                ))}
+              </ol>
+            </section>
           </div>
 
-          {/* Sidebar - Practical Info */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              {/* Quick Start Card */}
-              <div className="card p-6 bg-gradient-to-br from-sunset-500/10 to-navy-800/50">
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Start</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">First Stop</span>
-                    <span className="text-white">{guide.stops[0]?.time}</span>
+          {/* Sidebar */}
+          <div className="col-span-12 lg:col-span-4">
+            <div className="lg:sticky lg:top-24 lg:space-y-10">
+              {/* Quick Start */}
+              <div className="border-t border-hair pt-6 lg:border-t-0 lg:pt-0">
+                <h3 className="small-caps text-whisper">Quick Start</h3>
+                <div className="mt-3">
+                  <div className="flex items-baseline justify-between gap-4 border-b border-hair py-3">
+                    <span className="small-caps text-whisper">First Stop</span>
+                    <span className="film-display-thin text-[19px] text-film-white">
+                      {guide.stops[0]?.time ?? '—'}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Duration</span>
-                    <span className="text-white">{guide.duration}</span>
+                  <div className="flex items-baseline justify-between gap-4 border-b border-hair py-3">
+                    <span className="small-caps text-whisper">Total Duration</span>
+                    <span className="film-display-thin text-[19px] text-film-white">
+                      {guide.duration}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Difficulty</span>
-                    <span className={difficultyColors[guide.difficulty]}>
-                      {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
+                  <div className="flex items-baseline justify-between gap-4 py-3">
+                    <span className="small-caps text-whisper">Difficulty</span>
+                    <span
+                      className="film-display-thin capitalize text-[19px]"
+                      style={{ color: accent }}
+                    >
+                      {guide.difficulty}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Practical Info */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Practical Info</h3>
-
-                {guide.practicalInfo.permits && guide.practicalInfo.permits.length > 0 && (
-                  <div className="mb-5">
-                    <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                      <Ticket className="w-4 h-4" />
-                      Permits & Passes
+              <div className="mt-10 border-t border-hair pt-6">
+                <h3 className="small-caps text-whisper">Practical Info</h3>
+                <div className="mt-4 space-y-6">
+                  {guide.practicalInfo.permits && guide.practicalInfo.permits.length > 0 && (
+                    <div>
+                      <div className="small-caps flex items-center gap-2 text-ember">
+                        <Ticket className="h-3.5 w-3.5" aria-hidden="true" />
+                        Permits & Passes
+                      </div>
+                      <ul className="mt-2 space-y-1.5">
+                        {guide.practicalInfo.permits.map((permit, i) => (
+                          <li
+                            key={i}
+                            className="font-mono text-[12px] leading-relaxed text-whisper"
+                          >
+                            {permit}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="space-y-1">
-                      {guide.practicalInfo.permits.map((permit, i) => (
-                        <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                          <span className="text-sunset-500">•</span>
-                          {permit}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                  )}
 
-                {guide.practicalInfo.parking && guide.practicalInfo.parking.length > 0 && (
-                  <div className="mb-5">
-                    <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                      <Car className="w-4 h-4" />
-                      Parking
+                  {guide.practicalInfo.parking && guide.practicalInfo.parking.length > 0 && (
+                    <div className="border-t border-hair pt-6">
+                      <div className="small-caps flex items-center gap-2 text-ember">
+                        <Car className="h-3.5 w-3.5" aria-hidden="true" />
+                        Parking
+                      </div>
+                      <ul className="mt-2 space-y-1.5">
+                        {guide.practicalInfo.parking.map((info, i) => (
+                          <li
+                            key={i}
+                            className="font-mono text-[12px] leading-relaxed text-whisper"
+                          >
+                            {info}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="space-y-1">
-                      {guide.practicalInfo.parking.map((info, i) => (
-                        <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                          <span className="text-sunset-500">•</span>
-                          {info}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                  )}
 
-                {guide.practicalInfo.gear && guide.practicalInfo.gear.length > 0 && (
-                  <div className="mb-5">
-                    <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                      <Backpack className="w-4 h-4" />
-                      Recommended Gear
+                  {guide.practicalInfo.gear && guide.practicalInfo.gear.length > 0 && (
+                    <div className="border-t border-hair pt-6">
+                      <div className="small-caps flex items-center gap-2 text-ember">
+                        <Backpack className="h-3.5 w-3.5" aria-hidden="true" />
+                        Recommended Gear
+                      </div>
+                      <ul className="mt-2 space-y-1.5">
+                        {guide.practicalInfo.gear.map((item, i) => (
+                          <li
+                            key={i}
+                            className="font-mono text-[12px] leading-relaxed text-whisper"
+                          >
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="space-y-1">
-                      {guide.practicalInfo.gear.map((item, i) => (
-                        <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                          <span className="text-sunset-500">•</span>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                  )}
 
-                {guide.practicalInfo.accessibility && (
-                  <div className="mb-5">
-                    <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                      <Accessibility className="w-4 h-4" />
-                      Accessibility
+                  {guide.practicalInfo.accessibility && (
+                    <div className="border-t border-hair pt-6">
+                      <div className="small-caps flex items-center gap-2 text-ember">
+                        <Accessibility className="h-3.5 w-3.5" aria-hidden="true" />
+                        Accessibility
+                      </div>
+                      <p className="mt-2 font-mono text-[12px] leading-relaxed text-whisper">
+                        {guide.practicalInfo.accessibility}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-400">{guide.practicalInfo.accessibility}</p>
-                  </div>
-                )}
+                  )}
 
-                {guide.practicalInfo.budgetEstimate && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sunset-400 text-sm font-medium mb-2">
-                      <DollarSign className="w-4 h-4" />
-                      Budget Estimate
+                  {guide.practicalInfo.budgetEstimate && (
+                    <div className="border-t border-hair pt-6">
+                      <div className="small-caps flex items-center gap-2 text-ember">
+                        <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                        Budget Estimate
+                      </div>
+                      <p className="mt-2 font-mono text-[12px] leading-relaxed text-whisper">
+                        {guide.practicalInfo.budgetEstimate}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-400">{guide.practicalInfo.budgetEstimate}</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
-              {/* Share/Save Buttons */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Share This Guide</h3>
-                <div className="flex gap-3">
-                  <button className="flex-1 btn-primary text-sm py-2">
+              {/* Share/Save */}
+              <div className="mt-10 border-t border-hair pt-6">
+                <h3 className="small-caps text-whisper">Share This Sequence</h3>
+                <div className="mt-4 flex gap-3">
+                  <button className="btn-primary flex-1 justify-center text-[10px]">
                     Copy Link
                   </button>
-                  <button className="flex-1 btn-secondary text-sm py-2">
+                  <button className="btn-secondary flex-1 justify-center text-[10px]">
                     Save
                   </button>
                 </div>

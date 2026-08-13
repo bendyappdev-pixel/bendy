@@ -29,43 +29,49 @@ export interface WeatherData {
   sunset: Date;
 }
 
-// Weather codes from Open-Meteo WMO
-export const weatherDescriptions: Record<number, { description: string; icon: string }> = {
-  0: { description: 'Clear sky', icon: '☀️' },
-  1: { description: 'Mainly clear', icon: '🌤️' },
-  2: { description: 'Partly cloudy', icon: '⛅' },
-  3: { description: 'Overcast', icon: '☁️' },
-  45: { description: 'Foggy', icon: '🌫️' },
-  48: { description: 'Rime fog', icon: '🌫️' },
-  51: { description: 'Light drizzle', icon: '🌧️' },
-  53: { description: 'Drizzle', icon: '🌧️' },
-  55: { description: 'Dense drizzle', icon: '🌧️' },
-  56: { description: 'Freezing drizzle', icon: '🌧️' },
-  57: { description: 'Dense freezing drizzle', icon: '🌧️' },
-  61: { description: 'Slight rain', icon: '🌧️' },
-  63: { description: 'Rain', icon: '🌧️' },
-  65: { description: 'Heavy rain', icon: '🌧️' },
-  66: { description: 'Freezing rain', icon: '🌧️' },
-  67: { description: 'Heavy freezing rain', icon: '🌧️' },
-  71: { description: 'Slight snow', icon: '🌨️' },
-  73: { description: 'Snow', icon: '🌨️' },
-  75: { description: 'Heavy snow', icon: '🌨️' },
-  77: { description: 'Snow grains', icon: '🌨️' },
-  80: { description: 'Slight showers', icon: '🌦️' },
-  81: { description: 'Showers', icon: '🌦️' },
-  82: { description: 'Violent showers', icon: '🌦️' },
-  85: { description: 'Slight snow showers', icon: '🌨️' },
-  86: { description: 'Heavy snow showers', icon: '🌨️' },
-  95: { description: 'Thunderstorm', icon: '⛈️' },
-  96: { description: 'Thunderstorm with hail', icon: '⛈️' },
-  99: { description: 'Thunderstorm with heavy hail', icon: '⛈️' },
+// Weather codes from Open-Meteo WMO.
+//
+// These carried an emoji glyph per code until the cinematic facelift, which
+// bans emoji in UI. Nothing rendered them by the end — every surface reads
+// `description` and sets it in the display or serif face — so the field is
+// gone rather than left as a trap for the next person.
+export const weatherDescriptions: Record<number, { description: string }> = {
+  0: { description: 'Clear sky' },
+  1: { description: 'Mainly clear' },
+  2: { description: 'Partly cloudy' },
+  3: { description: 'Overcast' },
+  45: { description: 'Foggy' },
+  48: { description: 'Rime fog' },
+  51: { description: 'Light drizzle' },
+  53: { description: 'Drizzle' },
+  55: { description: 'Dense drizzle' },
+  56: { description: 'Freezing drizzle' },
+  57: { description: 'Dense freezing drizzle' },
+  61: { description: 'Slight rain' },
+  63: { description: 'Rain' },
+  65: { description: 'Heavy rain' },
+  66: { description: 'Freezing rain' },
+  67: { description: 'Heavy freezing rain' },
+  71: { description: 'Slight snow' },
+  73: { description: 'Snow' },
+  75: { description: 'Heavy snow' },
+  77: { description: 'Snow grains' },
+  80: { description: 'Slight showers' },
+  81: { description: 'Showers' },
+  82: { description: 'Violent showers' },
+  85: { description: 'Slight snow showers' },
+  86: { description: 'Heavy snow showers' },
+  95: { description: 'Thunderstorm' },
+  96: { description: 'Thunderstorm with hail' },
+  99: { description: 'Thunderstorm with heavy hail' },
 };
 
 export function getWeatherInfo(code: number, isDay: boolean = true) {
-  const info = weatherDescriptions[code] || { description: 'Unknown', icon: '❓' };
-  // Use moon for clear night
+  const info = weatherDescriptions[code] || { description: 'Unknown' };
+  // `isDay` used to swap in a moon glyph; it now adjusts the wording instead,
+  // so a clear night doesn't read as "Clear sky" after dark.
   if (code <= 1 && !isDay) {
-    return { ...info, icon: '🌙' };
+    return { description: code === 0 ? 'Clear night' : 'Mainly clear night' };
   }
   return info;
 }

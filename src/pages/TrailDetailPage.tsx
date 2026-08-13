@@ -14,14 +14,16 @@ import {
   Navigation,
   ExternalLink,
   ChevronRight,
-  TreePine,
   Calendar,
   Users,
 } from 'lucide-react';
 import { getTrailBySlug, getNearbyTrails } from '../data/trails';
-import { TrailDifficulty, TrailActivity } from '../types/trail';
-import { useCrowdReports, crowdLevelConfig, formatTimeAgo, popularSpots } from '../hooks/useCrowdReports';
+import { TrailActivity } from '../types/trail';
+import { useCrowdReports, formatTimeAgo, popularSpots } from '../hooks/useCrowdReports';
 import CrowdReportForm from '../components/crowd/CrowdReportForm';
+import Reel from '../components/ui/Reel';
+import SceneHeader from '../components/ui/SceneHeader';
+import CrowdBadge from '../components/ui/CrowdBadge';
 
 const activityIcons: Record<TrailActivity, React.ElementType> = {
   hiking: Footprints,
@@ -39,19 +41,15 @@ const activityLabels: Record<TrailActivity, string> = {
   snowshoeing: 'Snowshoeing',
 };
 
-const difficultyColors: Record<TrailDifficulty, string> = {
-  easy: 'text-pine-400',
-  moderate: 'text-sunset-400',
-  difficult: 'text-orange-400',
-  expert: 'text-red-400',
-};
-
-const difficultyBadgeColors: Record<TrailDifficulty, string> = {
-  easy: 'bg-pine-500/20 text-pine-400 border-pine-500/30',
-  moderate: 'bg-sunset-500/20 text-sunset-400 border-sunset-500/30',
-  difficult: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  expert: 'bg-red-500/20 text-red-400 border-red-500/30',
-};
+/** One hairline row: mono label left, film-display-thin value right. */
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-hair py-3 last:border-b-0">
+      <span className="small-caps text-whisper">{label}</span>
+      <span className="film-display-thin capitalize text-[19px] text-film-white">{value}</span>
+    </div>
+  );
+}
 
 export default function TrailDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -75,105 +73,108 @@ export default function TrailDetailPage() {
     return <Navigate to="/trails" replace />;
   }
 
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
-        <img
-          src={trail.heroImage}
-          alt={trail.name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/70 to-navy-900/30" />
+  // Scene kickers stay contiguous even though a couple of sections are
+  // conditional on the trail's data (crowd reporting, nearby trails).
+  let sceneCount = 2; // About + Trailhead are always scenes 01 / 02.
+  const nextScene = () => String(++sceneCount).padStart(2, '0');
 
-        {/* Back Button */}
-        <div className="absolute top-4 left-4 md:top-8 md:left-8">
+  return (
+    <div>
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <Reel
+        src={trail.heroImage}
+        alt={trail.name}
+        priority
+        scrim="bottom"
+        className="flex border-b border-hair"
+        style={{ minHeight: 'min(72vh, 680px)' }}
+      >
+        <div className="absolute left-4 top-4 z-20 md:left-8 md:top-8">
           <Link
             to="/trails"
-            className="flex items-center gap-2 px-4 py-2 bg-navy-900/70 backdrop-blur-sm rounded-xl text-white hover:bg-navy-800 transition-colors"
+            className="small-caps flex items-center gap-2 border border-hair bg-film-black/60 px-4 py-2 text-film-white transition-colors hover:border-film-white"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             All Trails
           </Link>
         </div>
 
-        {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-          <div className="container-app">
-            {/* Difficulty Badge */}
-            <span className={`inline-flex px-3 py-1.5 rounded-lg text-sm font-medium border mb-4 ${difficultyBadgeColors[trail.difficulty]}`}>
-              {trail.difficulty.charAt(0).toUpperCase() + trail.difficulty.slice(1)}
+        <div className="relative z-10 flex w-full flex-col justify-end px-6 pb-32 pt-24 md:pb-36 lg:px-10">
+          <div className="small-caps text-ember">
+            {trail.difficulty} · {trail.trailType.replace('-', ' ')}
+          </div>
+          <h1 className="film-display mt-3 max-w-4xl text-[clamp(44px,8vw,120px)] text-film-white">
+            {trail.name}
+          </h1>
+          <div className="small-caps mt-4 flex flex-wrap gap-x-6 gap-y-2 text-whisper">
+            <span>
+              {trail.distanceFromBend} mi {trail.direction} of Bend
             </span>
+            <span>{trail.managedBy}</span>
+          </div>
+        </div>
 
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{trail.name}</h1>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-4 text-gray-300">
-              <span className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-sunset-400" />
-                {trail.distanceFromBend} mi {trail.direction} of Bend
-              </span>
-              <span className="flex items-center gap-2">
-                <TreePine className="w-5 h-5 text-sunset-400" />
-                {trail.managedBy}
-              </span>
+        {/* Letterboxed lower-third: the stat block */}
+        <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-hair px-6 py-6 md:grid-cols-5 lg:px-10">
+            <div>
+              <div className="small-caps text-whisper">Distance</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {trail.distance} mi
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">Elevation Gain</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {trail.elevationGain.toLocaleString()} ft
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">Time</div>
+              <div className="film-display-thin mt-1 text-[22px] text-film-white">
+                {trail.estimatedTime}
+              </div>
+            </div>
+            <div>
+              <div className="small-caps text-whisper">Trail Type</div>
+              <div className="film-display-thin mt-1 text-[22px] capitalize text-film-white">
+                {trail.trailType.replace('-', ' ')}
+              </div>
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <div className="small-caps text-whisper">Difficulty</div>
+              <div className="film-display-thin mt-1 text-[22px] capitalize text-film-white">
+                {trail.difficulty}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Stats Bar */}
-      <div className="bg-navy-800/50 border-y border-white/5">
-        <div className="container-app">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-4">
-            <div className="text-center">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Distance</p>
-              <p className="text-white font-semibold">{trail.distance} miles</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Elevation Gain</p>
-              <p className="text-white font-semibold">{trail.elevationGain.toLocaleString()} ft</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Time</p>
-              <p className="text-white font-semibold">{trail.estimatedTime}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Trail Type</p>
-              <p className="text-white font-semibold capitalize">{trail.trailType.replace('-', ' ')}</p>
-            </div>
-            <div className="text-center col-span-2 md:col-span-1">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Difficulty</p>
-              <p className={`font-semibold ${difficultyColors[trail.difficulty]}`}>
-                {trail.difficulty.charAt(0).toUpperCase() + trail.difficulty.slice(1)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </Reel>
 
       {/* Main Content */}
-      <div className="container-app py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="container-app py-12 md:py-16">
+        <div className="grid grid-cols-12 gap-6 lg:gap-10">
           {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Description */}
-            <div className="card p-6 mb-8">
-              <h2 className="text-xl font-semibold text-white mb-3">About This Trail</h2>
-              <p className="text-gray-300 leading-relaxed">{trail.description}</p>
+          <div className="col-span-12 lg:col-span-8">
+            {/* Scene 01 · About */}
+            <section>
+              <SceneHeader scene="01" kicker="About This Trail" title="Trail Notes." size="sub" />
+              <p className="mt-6 max-w-3xl text-[16px] leading-relaxed text-mist">
+                {trail.description}
+              </p>
 
               {/* Activities */}
-              <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Activities</h3>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-8">
+                <h3 className="small-caps text-whisper">Activities</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {trail.activities.map((activity) => {
                     const Icon = activityIcons[activity];
                     return (
                       <span
                         key={activity}
-                        className="flex items-center gap-2 px-3 py-2 bg-navy-700/50 rounded-lg text-sm text-gray-300"
+                        className="small-caps flex items-center gap-2 border border-hair px-3 py-2 text-mist"
                       >
-                        <Icon className="w-4 h-4 text-sunset-400" />
+                        <Icon className="h-3.5 w-3.5 text-ember" aria-hidden="true" />
                         {activityLabels[activity]}
                       </span>
                     );
@@ -183,50 +184,56 @@ export default function TrailDetailPage() {
 
               {/* Features */}
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Features</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="small-caps text-whisper">Features</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {trail.isDogFriendly && (
-                    <span className="flex items-center gap-2 px-3 py-2 bg-pine-500/10 border border-pine-500/30 rounded-lg text-sm text-pine-400">
-                      <Dog className="w-4 h-4" />
+                    <span className="small-caps flex items-center gap-2 border border-hair px-3 py-2 text-mist">
+                      <Dog className="h-3.5 w-3.5 text-ember" aria-hidden="true" />
                       Dog-friendly
                     </span>
                   )}
                   {trail.isKidFriendly && (
-                    <span className="flex items-center gap-2 px-3 py-2 bg-sunset-500/10 border border-sunset-500/30 rounded-lg text-sm text-sunset-400">
-                      <Baby className="w-4 h-4" />
+                    <span className="small-caps flex items-center gap-2 border border-hair px-3 py-2 text-mist">
+                      <Baby className="h-3.5 w-3.5 text-ember" aria-hidden="true" />
                       Kid-friendly
                     </span>
                   )}
                   {trail.features.map((feature) => (
                     <span
                       key={feature}
-                      className="px-3 py-2 bg-navy-700/50 rounded-lg text-sm text-gray-300 capitalize"
+                      className="small-caps border border-hair px-3 py-2 capitalize text-mist"
                     >
                       {feature.replace('-', ' ')}
                     </span>
                   ))}
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Trailhead Info */}
-            <div className="card p-6 mb-8">
-              <h2 className="text-xl font-semibold text-white mb-4">Trailhead Information</h2>
+            {/* Scene 02 · Trailhead */}
+            <section className="mt-14 border-t border-hair pt-10">
+              <SceneHeader scene="02" kicker="Trailhead & Access" title="Getting There." size="sub" />
 
-              <div className="space-y-4">
+              <div className="mt-6 space-y-5">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-ember" aria-hidden="true" />
                   <div>
-                    <p className="font-medium text-white">{trail.trailhead.name}</p>
-                    <p className="text-sm text-gray-400">{trail.trailhead.address}</p>
+                    <p className="film-display-thin text-[18px] text-film-white">
+                      {trail.trailhead.name}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[12px] text-whisper">
+                      {trail.trailhead.address}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Car className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
+                  <Car className="mt-0.5 h-5 w-5 shrink-0 text-ember" aria-hidden="true" />
                   <div>
-                    <p className="font-medium text-white">Parking</p>
-                    <p className="text-sm text-gray-400">{trail.trailhead.parking}</p>
+                    <p className="film-display-thin text-[18px] text-film-white">Parking</p>
+                    <p className="mt-0.5 font-mono text-[12px] text-whisper">
+                      {trail.trailhead.parking}
+                    </p>
                   </div>
                 </div>
 
@@ -234,46 +241,67 @@ export default function TrailDetailPage() {
                   href={`https://www.google.com/maps/dir/?api=1&destination=${trail.trailhead.coordinates.lat},${trail.trailhead.coordinates.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 btn-primary mt-2"
+                  className="btn-primary mt-2 inline-flex items-center gap-2"
                 >
-                  <Navigation className="w-4 h-4" />
+                  <Navigation className="h-4 w-4" aria-hidden="true" />
                   Get Directions
                 </a>
               </div>
-            </div>
+            </section>
 
-            {/* Crowd Conditions */}
+            {/* Gallery — a row of small Reels, when the trail has extra photography. */}
+            {trail.images.length > 0 && (
+              <section className="mt-14 border-t border-hair pt-10">
+                <h3 className="small-caps text-whisper">Gallery</h3>
+                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {trail.images.map((image, i) => (
+                    <Reel
+                      key={image}
+                      src={image}
+                      alt={`${trail.name}, photo ${i + 1}`}
+                      hoverable
+                      style={{ aspectRatio: '4 / 3' }}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Current Conditions */}
             {trailSpot && (
-              <div className="card p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-white">Current Conditions</h2>
+              <section className="mt-14 border-t border-hair pt-10">
+                <SceneHeader
+                  scene={nextScene()}
+                  kicker="Current Conditions"
+                  title="Right Now."
+                  size="sub"
+                >
                   <button
                     onClick={() => setShowReportForm(!showReportForm)}
-                    className="btn-secondary text-sm py-2"
+                    className="btn-secondary"
                   >
-                    <Users className="w-4 h-4 mr-1" />
+                    <Users className="mr-1 h-4 w-4" aria-hidden="true" />
                     Report Conditions
                   </button>
-                </div>
+                </SceneHeader>
 
                 {latestReport ? (
-                  <div className="flex items-center gap-4 p-4 bg-navy-700/50 rounded-xl">
-                    <span className="text-3xl">{crowdLevelConfig[latestReport.crowdLevel].emoji}</span>
+                  <div className="mt-6 flex items-center justify-between gap-4 border border-hair p-5">
                     <div>
-                      <p className="text-white font-medium">
-                        {crowdLevelConfig[latestReport.crowdLevel].label}
-                      </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="font-mono text-[11px] text-whisper">
                         Reported {formatTimeAgo(latestReport.timestamp)}
                       </p>
                       {latestReport.comment && (
-                        <p className="text-sm text-gray-300 mt-1">{latestReport.comment}</p>
+                        <p className="mt-1 text-[15px] text-mist">“{latestReport.comment}”</p>
                       )}
                     </div>
+                    <CrowdBadge level={latestReport.crowdLevel} verbose />
                   </div>
                 ) : (
-                  <div className="p-4 bg-navy-700/50 rounded-xl text-center">
-                    <p className="text-gray-400">No recent reports. Be the first to share conditions!</p>
+                  <div className="mt-6 border border-hair p-5 text-center">
+                    <p className="font-mono text-[12px] text-whisper">
+                      No recent reports. Be the first to share conditions!
+                    </p>
                   </div>
                 )}
 
@@ -285,161 +313,153 @@ export default function TrailDetailPage() {
                     />
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
             {/* Nearby Trails */}
             {nearbyTrails.length > 0 && (
-              <div className="card p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">Nearby Trails</h2>
-                <div className="space-y-3">
+              <section className="mt-14 border-t border-hair pt-10">
+                <SceneHeader scene={nextScene()} kicker="Nearby Trails" title="Keep Rolling." size="sub" />
+                <div className="mt-6 divide-y divide-hair border-t border-hair">
                   {nearbyTrails.map((nearbyTrail) => (
                     <Link
                       key={nearbyTrail.id}
                       to={`/trails/${nearbyTrail.slug}`}
-                      className="flex items-center gap-4 p-4 bg-navy-700/50 rounded-xl hover:bg-navy-700 transition-colors group"
+                      className="row-hover group flex items-center gap-4 py-4"
                     >
-                      <img
+                      <Reel
                         src={nearbyTrail.heroImage}
-                        alt={nearbyTrail.name}
-                        className="w-16 h-16 rounded-lg object-cover"
+                        alt=""
+                        className="h-16 w-16 shrink-0"
                       />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-white group-hover:text-sunset-400 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="film-display-thin text-[18px] text-film-white transition-colors group-hover:text-ember">
                           {nearbyTrail.name}
                         </h3>
-                        <p className="text-sm text-gray-400">
-                          {nearbyTrail.distance} mi • {nearbyTrail.elevationGain.toLocaleString()} ft gain
+                        <p className="mt-0.5 font-mono text-[11px] text-whisper">
+                          {nearbyTrail.distance} mi ·{' '}
+                          {nearbyTrail.elevationGain.toLocaleString()} ft gain
                         </p>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-sunset-400 transition-colors" />
+                      <ChevronRight
+                        className="h-5 w-5 shrink-0 text-whisper transition-colors group-hover:text-ember"
+                        aria-hidden="true"
+                      />
                     </Link>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              {/* Quick Info Card */}
-              <div className="card p-6 bg-gradient-to-br from-sunset-500/10 to-navy-800/50">
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Info</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Distance</span>
-                    <span className="text-white font-medium">{trail.distance} miles</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Elevation Gain</span>
-                    <span className="text-white font-medium">{trail.elevationGain.toLocaleString()} ft</span>
-                  </div>
+          <div className="col-span-12 lg:col-span-4">
+            <div className="lg:sticky lg:top-24 lg:space-y-10">
+              {/* Quick Info */}
+              <div className="border-t border-hair pt-6 lg:border-t-0 lg:pt-0">
+                <h3 className="small-caps text-whisper">Quick Info</h3>
+                <div className="mt-3">
+                  <StatRow label="Distance" value={`${trail.distance} miles`} />
+                  <StatRow label="Elevation Gain" value={`${trail.elevationGain.toLocaleString()} ft`} />
                   {trail.highestPoint && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Highest Point</span>
-                      <span className="text-white font-medium">{trail.highestPoint.toLocaleString()} ft</span>
-                    </div>
+                    <StatRow label="Highest Point" value={`${trail.highestPoint.toLocaleString()} ft`} />
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Estimated Time</span>
-                    <span className="text-white font-medium">{trail.estimatedTime}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Trail Type</span>
-                    <span className="text-white font-medium capitalize">{trail.trailType.replace('-', ' ')}</span>
-                  </div>
+                  <StatRow label="Estimated Time" value={trail.estimatedTime} />
+                  <StatRow label="Trail Type" value={trail.trailType.replace('-', ' ')} />
                 </div>
               </div>
 
               {/* Season & Access */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Season & Access</h3>
-
-                <div className="space-y-4">
+              <div className="mt-10 border-t border-hair pt-6">
+                <h3 className="small-caps text-whisper">Season & Access</h3>
+                <div className="mt-4 space-y-4">
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
+                    <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-ember" aria-hidden="true" />
                     <div>
-                      <p className="font-medium text-white">Best Season</p>
-                      <p className="text-sm text-gray-400">{trail.bestSeason}</p>
+                      <p className="film-display-thin text-[16px] text-film-white">Best Season</p>
+                      <p className="mt-0.5 font-mono text-[12px] text-whisper">{trail.bestSeason}</p>
                     </div>
                   </div>
 
                   {trail.permitRequired && (
                     <div className="flex items-start gap-3">
-                      <Ticket className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
+                      <Ticket className="mt-0.5 h-5 w-5 shrink-0 text-ember" aria-hidden="true" />
                       <div>
-                        <p className="font-medium text-white">Permits Required</p>
-                        <p className="text-sm text-gray-400">{trail.permitInfo}</p>
+                        <p className="film-display-thin text-[16px] text-film-white">
+                          Permits Required
+                        </p>
+                        <p className="mt-0.5 font-mono text-[12px] text-whisper">
+                          {trail.permitInfo}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   <div className="flex items-start gap-3">
-                    <Ticket className="w-5 h-5 text-sunset-400 flex-shrink-0 mt-0.5" />
+                    <Ticket className="mt-0.5 h-5 w-5 shrink-0 text-ember" aria-hidden="true" />
                     <div>
-                      <p className="font-medium text-white">Fees</p>
-                      <p className="text-sm text-gray-400">{trail.fees}</p>
+                      <p className="film-display-thin text-[16px] text-film-white">Fees</p>
+                      <p className="mt-0.5 font-mono text-[12px] text-whisper">{trail.fees}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Safety Tips */}
-              <div className="card p-6 border-sunset-500/30">
-                <div className="flex items-center gap-2 text-sunset-400 mb-4">
-                  <AlertCircle className="w-5 h-5" />
-                  <h3 className="font-semibold">Safety Tips</h3>
+              <div className="mt-10 border-t border-hair pt-6">
+                <div className="flex items-center gap-2 text-ember">
+                  <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                  <h3 className="small-caps text-ember">Safety Tips</h3>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-400">
+                <ul className="mt-4 space-y-2.5 font-mono text-[12px] leading-relaxed text-whisper">
                   <li className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 text-sunset-500 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
                     Bring plenty of water (1 liter per 2 hours of hiking)
                   </li>
                   <li className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 text-sunset-500 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
                     Check weather and trail conditions before you go
                   </li>
                   <li className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 text-sunset-500 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
                     Tell someone your plans and expected return time
                   </li>
                   <li className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 text-sunset-500 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ember" aria-hidden="true" />
                     Pack the 10 essentials for any hike
                   </li>
                 </ul>
               </div>
 
               {/* External Links */}
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
-                <div className="space-y-2">
+              <div className="mt-10 border-t border-hair pt-6">
+                <h3 className="small-caps text-whisper">Resources</h3>
+                <div className="mt-4 space-y-3">
                   <a
                     href="https://www.fs.usda.gov/recarea/deschutes"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-sunset-400 transition-colors"
+                    className="flex items-center gap-2 font-mono text-[12px] text-mist transition-colors hover:text-ember"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
                     Deschutes National Forest
                   </a>
                   <a
                     href="https://www.recreation.gov"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-sunset-400 transition-colors"
+                    className="flex items-center gap-2 font-mono text-[12px] text-mist transition-colors hover:text-ember"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
                     Recreation.gov (Permits)
                   </a>
                   <a
                     href="https://centraloregonfire.org"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-sunset-400 transition-colors"
+                    className="flex items-center gap-2 font-mono text-[12px] text-mist transition-colors hover:text-ember"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
                     Fire Restrictions
                   </a>
                 </div>

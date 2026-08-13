@@ -7,12 +7,16 @@ import {
   formatTime,
   formatDate,
 } from '../../hooks/useLocationHistory';
-import { crowdLevelConfig, popularSpots } from '../../hooks/useCrowdReports';
+import { popularSpots } from '../../hooks/useCrowdReports';
+import { crowdMeta } from '../ui/CrowdBadge';
 
 interface CrowdReportHistoryProps {
   locationId?: string;
   showLocationPicker?: boolean;
 }
+
+const selectClass =
+  'border border-hair bg-transparent px-4 py-2.5 font-mono text-[12px] text-film-white focus:border-ember focus:outline-none transition-colors';
 
 export default function CrowdReportHistory({
   locationId: initialLocationId,
@@ -29,19 +33,19 @@ export default function CrowdReportHistory({
   const selectedSpot = popularSpots.find((s) => s.id === selectedLocation);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <History className="w-5 h-5 text-forest" />
-        <h3 className="text-lg font-semibold text-gray-900">Crowd History</h3>
+    <div className="space-y-5">
+      <div className="flex items-center gap-2">
+        <History className="h-4 w-4 text-ember" aria-hidden="true" />
+        <h3 className="small-caps text-whisper">Crowd History</h3>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         {showLocationPicker && (
           <select
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(e.target.value)}
-            className="flex-1 px-4 py-2 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+            className={`flex-1 ${selectClass}`}
           >
             <option value="">Select a location...</option>
             {popularSpots.map((spot) => (
@@ -55,7 +59,7 @@ export default function CrowdReportHistory({
         <select
           value={daysBack}
           onChange={(e) => setDaysBack(Number(e.target.value))}
-          className="px-4 py-2 bg-white text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-forest focus:border-forest transition-colors"
+          className={selectClass}
         >
           <option value={1}>Today</option>
           <option value={3}>Last 3 days</option>
@@ -67,28 +71,30 @@ export default function CrowdReportHistory({
 
       {/* Content */}
       {!selectedLocation ? (
-        <div className="text-center py-8 bg-sand rounded-xl">
-          <History className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">Select a location to view crowd history</p>
+        <div className="border border-hair py-8 text-center">
+          <History className="mx-auto mb-3 h-8 w-8 text-whisper" aria-hidden="true" />
+          <p className="font-mono text-[12px] text-mist">
+            Select a location to view crowd history
+          </p>
         </div>
       ) : loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="w-8 h-8 border-4 border-forest border-t-transparent rounded-full animate-spin" />
+        <div className="border border-hair py-8 text-center">
+          <p className="font-mono text-[12px] text-whisper">Loading history…</p>
         </div>
       ) : error ? (
-        <div className="text-center py-8 text-red-500">
-          <p>{error}</p>
+        <div className="border border-hair py-8 text-center">
+          <p className="font-mono text-[12px] text-whisper">{error}</p>
         </div>
       ) : dailySummaries.length === 0 ? (
-        <div className="text-center py-8 bg-sand rounded-xl">
-          <History className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">No reports for {selectedSpot?.name}</p>
-          <p className="text-sm text-gray-400 mt-1">
+        <div className="border border-hair py-8 text-center">
+          <History className="mx-auto mb-3 h-8 w-8 text-whisper" aria-hidden="true" />
+          <p className="font-mono text-[12px] text-mist">No reports for {selectedSpot?.name}</p>
+          <p className="mt-1 font-mono text-[11px] text-whisper">
             in the last {daysBack} day{daysBack !== 1 ? 's' : ''}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-white/10 border-y border-hair">
           {dailySummaries.map((summary) => (
             <DaySummaryCard key={summary.date.toISOString()} summary={summary} />
           ))}
@@ -104,65 +110,61 @@ interface DaySummaryCardProps {
 
 function DaySummaryCard({ summary }: DaySummaryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const avgConfig = crowdLevelConfig[summary.averageLevel];
-  const peakConfig = crowdLevelConfig[summary.peakLevel];
+  const avgMeta = crowdMeta(summary.averageLevel);
+  const peakMeta = crowdMeta(summary.peakLevel);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div>
       {/* Summary Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        aria-expanded={isExpanded}
+        className="row-hover flex w-full items-center justify-between p-4 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-            style={{ backgroundColor: `${avgConfig.color}20` }}
-          >
-            {avgConfig.emoji}
-          </div>
+          <span
+            aria-hidden="true"
+            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ background: avgMeta.color, boxShadow: `0 0 8px ${avgMeta.color}` }}
+          />
           <div className="text-left">
-            <p className="font-medium text-gray-900">{formatDate(summary.date)}</p>
-            <p className="text-sm text-gray-500">
+            <p className="film-display-thin text-[18px] text-film-white">
+              {formatDate(summary.date)}
+            </p>
+            <p className="font-mono text-[11px] text-whisper">
               {summary.reportCount} report{summary.reportCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <div className="flex items-center gap-1 text-sm">
-              <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-gray-500">Peak:</span>
-              <span style={{ color: peakConfig.color }} className="font-medium">
-                {peakConfig.label}
-              </span>
-              <span className="text-gray-400">at {formatTime(summary.peakTime)}</span>
-            </div>
+          <div className="hidden text-right font-mono text-[11px] text-whisper sm:block">
+            <span className="inline-flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+              Peak <span style={{ color: peakMeta.color }}>{peakMeta.label}</span>
+              <span>at {formatTime(summary.peakTime)}</span>
+            </span>
           </div>
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="h-4 w-4 text-whisper" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="h-4 w-4 text-whisper" aria-hidden="true" />
           )}
         </div>
       </button>
 
       {/* Expanded Timeline */}
       {isExpanded && (
-        <div className="border-t border-gray-100 p-4 bg-gray-50">
-          <div className="sm:hidden mb-3 text-sm">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-gray-500">Peak:</span>
-              <span style={{ color: peakConfig.color }} className="font-medium">
-                {peakConfig.label}
-              </span>
-              <span className="text-gray-400">at {formatTime(summary.peakTime)}</span>
-            </div>
+        <div className="border-t border-hair p-4">
+          <div className="mb-3 font-mono text-[11px] text-whisper sm:hidden">
+            <span className="inline-flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+              Peak <span style={{ color: peakMeta.color }}>{peakMeta.label}</span>
+              <span>at {formatTime(summary.peakTime)}</span>
+            </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="divide-y divide-white/10">
             {summary.reports.map((report) => (
               <ReportTimelineItem key={report.id} report={report} />
             ))}
@@ -178,25 +180,21 @@ interface ReportTimelineItemProps {
 }
 
 function ReportTimelineItem({ report }: ReportTimelineItemProps) {
-  const config = crowdLevelConfig[report.crowdLevel];
+  const meta = crowdMeta(report.crowdLevel);
 
   return (
-    <div className="flex items-start gap-3 p-2 bg-white rounded-lg">
-      <div className="flex items-center gap-2 min-w-[80px] text-sm text-gray-500">
-        <Clock className="w-3.5 h-3.5" />
+    <div className="flex items-center gap-3 py-2.5">
+      <div className="flex min-w-[76px] items-center gap-1.5 font-mono text-[11px] text-whisper">
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
         <span>{formatTime(report.timestamp)}</span>
       </div>
-      <div
-        className="px-2 py-0.5 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: `${config.color}20`,
-          color: config.color,
-        }}
-      >
-        {config.emoji} {config.label}
-      </div>
+      <span className="shrink-0 font-mono text-[11px]" style={{ color: meta.color }}>
+        {meta.label}
+      </span>
       {report.comment && (
-        <p className="text-sm text-gray-600 flex-1 truncate">"{report.comment}"</p>
+        <p className="min-w-0 flex-1 truncate font-mono text-[11px] text-mist">
+          "{report.comment}"
+        </p>
       )}
     </div>
   );

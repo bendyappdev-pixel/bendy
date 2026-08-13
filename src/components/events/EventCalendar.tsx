@@ -46,50 +46,50 @@ export default function EventCalendar({
   };
 
   return (
-    <div className="card p-4 md:p-6">
+    <div className="border border-hair p-4 md:p-6">
       {/* Header with navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="row-hover flex h-8 w-8 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
             aria-label="Previous month"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-400" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
-          <h2 className="text-lg font-semibold text-white min-w-[140px] text-center">
+          <h2 className="film-display-thin min-w-[140px] text-center text-[18px] text-film-white md:text-[22px]">
             {formatMonthYear(currentMonth)}
           </h2>
           <button
             onClick={handleNextMonth}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="row-hover flex h-8 w-8 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
             aria-label="Next month"
           >
-            <ChevronRight className="w-5 h-5 text-gray-400" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
         <button
           onClick={handleToday}
-          className="px-3 py-1.5 text-sm font-medium text-sunset-400 bg-sunset-500/10 border border-sunset-500/30 rounded-lg hover:bg-sunset-500/20 transition-colors"
+          className="small-caps border border-ember px-3 py-1.5 text-ember transition-colors hover:bg-[var(--ember-50)] hover:text-film-white"
         >
           Today
         </button>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-1 mb-2 md:gap-2">
         {WEEKDAYS.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="small-caps py-2 text-center text-whisper"
           >
             {day}
           </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
+      {/* Calendar grid — small fixed gaps so 7 columns never overflow 390px. */}
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {days.map((day, index) => {
           const dayEvents = getEventsForDay(events, day);
           return (
