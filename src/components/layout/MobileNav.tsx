@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
+import ViewfinderMark from '../ui/ViewfinderMark';
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -8,20 +9,11 @@ interface MobileNavProps {
   links: { name: string; href: string }[];
 }
 
-// Minimalist Pine Tree SVG Component
-function PineTreeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L7 9h2l-3 5h2l-4 8h16l-4-8h2l-3-5h2L12 2zm0 3.5L14.5 9h-1.3l2.3 3.8h-1.5L17 18H7l3-5.2H8.5L10.8 9H9.5L12 5.5z"/>
-    </svg>
-  );
-}
-
 export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Animate in after mount
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => setVisible(true));
@@ -30,64 +22,85 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
     }
   }, [isOpen]);
 
+  // Escape closes the drawer, focus moves into it on open, and the page
+  // behind it stops scrolling. None of this was wired up before.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    closeRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden">
-      {/* Backdrop */}
+    <div
+      className="fixed inset-0 z-50 md:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu"
+    >
       <div
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
+        className={`absolute inset-0 bg-black/70 transition-opacity duration-200 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
       />
 
-      {/* Drawer — slide in from right */}
       <div
-        className={`absolute right-0 top-0 bottom-0 w-72 bg-navy-800 shadow-xl border-l border-white/10 transition-transform duration-300 ease-out ${
+        className={`absolute bottom-0 right-0 top-0 w-72 border-l border-hair bg-film-deep transition-transform duration-300 ease-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <PineTreeIcon className="w-7 h-7 text-pine-500" />
-            <span className="text-lg font-bold text-white">Bendy</span>
+        <div className="flex items-center justify-between border-b border-hair p-4">
+          <div className="flex items-center gap-3">
+            <ViewfinderMark className="h-6 w-6" />
+            <span className="film-display text-[28px]">BENDY</span>
           </div>
           <button
+            ref={closeRef}
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+            className="p-2 transition-colors hover:bg-white/10"
             aria-label="Close menu"
           >
-            <X className="w-6 h-6 text-gray-400" />
+            <X className="h-6 w-6 text-mist" />
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
-          {links.map((link, i) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              onClick={onClose}
-              className={`block px-4 py-3 rounded-xl text-lg font-medium transition-all duration-200 ${
-                location.pathname === link.href
-                  ? 'bg-sunset-500 text-white'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-sunset-400'
-              }`}
-              style={{
-                transitionDelay: visible ? `${i * 30}ms` : '0ms',
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'translateX(0)' : 'translateX(12px)',
-              }}
-            >
-              {link.name}
-            </Link>
-          ))}
+        <nav className="flex flex-col">
+          {links.map((link, i) => {
+            const active = location.pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={onClose}
+                aria-current={active ? 'page' : undefined}
+                className={`film-display-thin border-b border-hair px-5 py-4 text-[26px] transition-colors ${
+                  active ? 'text-ember' : 'text-film-white hover:text-ember'
+                }`}
+                style={{
+                  transitionDelay: visible ? `${i * 30}ms` : '0ms',
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateX(0)' : 'translateX(12px)',
+                }}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
-          <p className="text-sm text-gray-500 text-center">
-            Your guide to Bend, Oregon
-          </p>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-hair p-4">
+          <p className="small-caps text-center text-whisper">Reel №07 · Spring 2026</p>
         </div>
       </div>
     </div>

@@ -29,3 +29,9 @@ dist-ssr
 .env.*.local
 .vercel
 .env*.local
+
+# local verification helpers (not part of the app)
+/shot.mjs
+/overflow.mjs
+/probe*.mjs
+/imgcheck.mjs

@@ -2,44 +2,86 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { locations } from '../../data/locations';
-import { Location } from '../../types';
+import { Location, CrowdLevel } from '../../types';
+import { useCrowdReports } from '../../hooks/useCrowdReports';
+import { crowdMeta } from '../ui/CrowdBadge';
+import { coordinatesForSpot } from '../../utils/spotCoordinates';
 import { AlertCircle } from 'lucide-react';
 
-const typeConfig: Record<Location['type'], { emoji: string; color: string; label: string }> = {
-  park: { emoji: '🌲', color: '#2D5016', label: 'Parks' },
-  'dog-park': { emoji: '🐕', color: '#F59E0B', label: 'Dog Parks' },
-  trailhead: { emoji: '🥾', color: '#8B7355', label: 'Trailheads' },
-  ski: { emoji: '⛷️', color: '#4A6FA5', label: 'Ski Areas' },
-  brewery: { emoji: '🍺', color: '#D97706', label: 'Breweries' },
-  restaurant: { emoji: '🍽️', color: '#DC2626', label: 'Restaurants' },
-  venue: { emoji: '🎵', color: '#7C3AED', label: 'Venues' },
-  recreation: { emoji: '🏊', color: '#0891B2', label: 'Recreation' },
-  family: { emoji: '👨‍👩‍👧‍👦', color: '#A855F7', label: 'Family Fun' },
-  museum: { emoji: '🏛️', color: '#6366F1', label: 'Museums' },
+/**
+ * Location categories. The emoji glyphs the old markers used are gone — the
+ * design system bans emoji in UI — so each type is now a colour drawn from
+ * the film palette's functional secondaries plus a plain text label.
+ */
+const typeConfig: Record<Location['type'], { color: string; label: string }> = {
+  park: { color: 'var(--pine)', label: 'Parks' },
+  'dog-park': { color: 'var(--gold)', label: 'Dog Parks' },
+  trailhead: { color: 'var(--ember)', label: 'Trailheads' },
+  ski: { color: 'var(--lake)', label: 'Ski Areas' },
+  brewery: { color: 'var(--gold)', label: 'Breweries' },
+  restaurant: { color: 'var(--flame)', label: 'Restaurants' },
+  venue: { color: 'var(--ember)', label: 'Venues' },
+  recreation: { color: 'var(--lake)', label: 'Recreation' },
+  family: { color: 'var(--lake)', label: 'Family Fun' },
+  museum: { color: 'var(--pine)', label: 'Museums' },
 };
 
 const DEFAULT_CENTER: [number, number] = [-121.3153, 44.0582];
 const DEFAULT_ZOOM = 12;
 
-export default function InteractiveMap() {
+/** Escapes interpolated data before it goes into marker/popup innerHTML. */
+function esc(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+interface InteractiveMapProps {
+  /** Tailwind height or aspect class for the canvas. */
+  height?: string;
+  /** Overlay live crowd reports as plain-language pins. */
+  showCrowdPins?: boolean;
+  /** Show the location-type filter chips. */
+  showFilters?: boolean;
+  className?: string;
+}
+
+export default function InteractiveMap({
+  height = 'h-[600px]',
+  showCrowdPins = false,
+  showFilters = true,
+  className,
+}: InteractiveMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const crowdMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<Location['type']>>(
-    new Set(['park', 'dog-park', 'trailhead', 'ski', 'brewery', 'venue', 'recreation', 'family', 'museum'])
+    new Set([
+      'park',
+      'dog-park',
+      'trailhead',
+      'ski',
+      'brewery',
+      'venue',
+      'recreation',
+      'family',
+      'museum',
+    ])
   );
+
+  const { reports } = useCrowdReports();
 
   const toggleFilter = (type: Location['type']) => {
     setActiveFilters((prev) => {
       const next = new Set(prev);
-      if (next.has(type)) {
-        next.delete(type);
-      } else {
-        next.add(type);
-      }
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
       return next;
     });
   };
@@ -49,9 +91,8 @@ export default function InteractiveMap() {
     if (!mapContainer.current || mapRef.current) return;
 
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
-
     if (!token) {
-      setError('Mapbox token not found. Please add VITE_MAPBOX_TOKEN to your .env file.');
+      setError('Mapbox token not found. Add VITE_MAPBOX_TOKEN to your .env file.');
       return;
     }
 
@@ -60,7 +101,8 @@ export default function InteractiveMap() {
     try {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/outdoors-v12',
+        // Dark style — the outdoors style fought the film palette badly.
+        style: 'mapbox://styles/mapbox/dark-v11',
         center: DEFAULT_CENTER,
         zoom: DEFAULT_ZOOM,
       });
@@ -76,10 +118,7 @@ export default function InteractiveMap() {
         'top-right'
       );
 
-      map.on('load', () => {
-        setIsLoaded(true);
-      });
-
+      map.on('load', () => setIsLoaded(true));
       map.on('error', (e) => {
         console.error('Mapbox error:', e);
         setError(e.error?.message || 'Map failed to load');
@@ -97,133 +136,186 @@ export default function InteractiveMap() {
     };
   }, []);
 
-  // Update markers when filters change
+  // Location markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isLoaded) return;
 
-    // Remove existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Add new markers for filtered locations
-    const newMarkers = locations
+    markersRef.current = locations
       .filter((location) => activeFilters.has(location.type))
       .map((location) => {
         const config = typeConfig[location.type];
 
-        // Create custom marker element
         const el = document.createElement('div');
-        el.className = 'marker';
         el.innerHTML = `
-          <div style="
-            background: ${config.color};
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            cursor: pointer;
-            border: 2px solid white;
-          ">
-            ${config.emoji}
-          </div>
-        `;
-
-        // Create popup content
-        const popupContent = `
-          <div style="padding: 12px; min-width: 200px;">
-            <h3 style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">${location.name}</h3>
-            <p style="color: #666; font-size: 13px; margin-bottom: 8px;">${location.description}</p>
-            ${location.amenities ? `
-              <div style="margin-top: 8px;">
-                <p style="font-size: 12px; color: #888; margin-bottom: 4px;">Amenities:</p>
-                <p style="font-size: 12px; color: #666;">${location.amenities.join(', ')}</p>
-              </div>
-            ` : ''}
-            ${location.website ? `
-              <a href="${location.website}" target="_blank" rel="noopener noreferrer"
-                 style="display: inline-block; margin-top: 8px; color: #4A6FA5; font-size: 13px; text-decoration: none;">
-                Visit Website →
-              </a>
-            ` : ''}
-          </div>
+          <span style="
+            display:block;
+            width:12px;
+            height:12px;
+            border-radius:9999px;
+            background:${config.color};
+            box-shadow:0 0 10px ${config.color};
+            border:1px solid rgba(7,6,5,0.8);
+            cursor:pointer;
+          "></span>
         `;
 
         const popup = new mapboxgl.Popup({
-          offset: 25,
+          offset: 16,
           closeButton: true,
           maxWidth: '280px',
-        }).setHTML(popupContent);
+        }).setHTML(`
+          <div style="padding:14px; min-width:200px; font-family:'JetBrains Mono', monospace;">
+            <div style="
+              font-family:'Big Shoulders Display', sans-serif;
+              font-weight:500; text-transform:uppercase; line-height:0.9;
+              font-size:22px; color:#f2ede1; margin-bottom:6px;
+            ">${esc(location.name)}</div>
+            <div style="
+              font-size:10px; letter-spacing:0.22em; text-transform:uppercase;
+              color:${config.color}; margin-bottom:8px;
+            ">${esc(config.label)}</div>
+            <p style="font-size:12px; line-height:1.5; color:rgba(242,237,225,0.65); margin:0;">
+              ${esc(location.description)}
+            </p>
+            ${
+              location.amenities?.length
+                ? `<p style="font-size:11px; color:rgba(242,237,225,0.40); margin:10px 0 0;">
+                     ${esc(location.amenities.join(' · '))}
+                   </p>`
+                : ''
+            }
+            ${
+              location.website
+                ? `<a href="${esc(location.website)}" target="_blank" rel="noopener noreferrer"
+                     style="display:inline-block; margin-top:10px; color:#e07a3a;
+                            font-size:11px; letter-spacing:0.18em; text-transform:uppercase;">
+                     Visit site →
+                   </a>`
+                : ''
+            }
+          </div>
+        `);
 
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat(location.coordinates)
-          .setPopup(popup)
-          .addTo(map);
-
-        return marker;
+        return new mapboxgl.Marker(el).setLngLat(location.coordinates).setPopup(popup).addTo(map);
       });
-
-    markersRef.current = newMarkers;
   }, [isLoaded, activeFilters]);
+
+  // Crowd pins — dot plus a plain-language status card
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLoaded) return;
+
+    crowdMarkersRef.current.forEach((marker) => marker.remove());
+    crowdMarkersRef.current = [];
+
+    if (!showCrowdPins) return;
+
+    // One pin per place: the freshest report wins.
+    const freshest = new Map<string, (typeof reports)[number]>();
+    reports.forEach((report) => {
+      const existing = freshest.get(report.locationId);
+      if (!existing || report.timestamp > existing.timestamp) {
+        freshest.set(report.locationId, report);
+      }
+    });
+
+    crowdMarkersRef.current = [...freshest.values()]
+      .map((report) => {
+        const coords = coordinatesForSpot(report.locationId);
+        if (!coords) return null;
+
+        const meta = crowdMeta(report.crowdLevel as CrowdLevel);
+        const el = document.createElement('div');
+        el.style.cursor = 'pointer';
+        el.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="
+              flex:none; width:12px; height:12px; border-radius:9999px;
+              background:${meta.color}; box-shadow:0 0 12px ${meta.color};
+            "></span>
+            <div style="
+              background:rgba(0,0,0,0.75);
+              border:1px solid rgba(242,237,225,0.15);
+              padding:6px 10px; line-height:1.15;
+            ">
+              <div style="
+                font-family:'Big Shoulders Display', sans-serif; font-weight:500;
+                text-transform:uppercase; font-size:15px; color:#f2ede1;
+              ">${esc(report.locationName)}</div>
+              <div style="
+                font-family:'JetBrains Mono', monospace; font-size:9px; color:${meta.color};
+              ">${esc(meta.full)}</div>
+            </div>
+          </div>
+        `;
+
+        return new mapboxgl.Marker({ element: el, anchor: 'left' })
+          .setLngLat(coords)
+          .addTo(map);
+      })
+      .filter((m): m is mapboxgl.Marker => m !== null);
+  }, [isLoaded, showCrowdPins, reports]);
 
   if (error) {
     return (
-      <div className="h-[600px] bg-sand rounded-2xl flex flex-col items-center justify-center p-8">
-        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-          <AlertCircle className="w-8 h-8 text-amber-600" />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">Map Unavailable</h3>
-        <p className="text-gray-600 text-center max-w-md mb-4">{error}</p>
-        <div className="bg-gray-100 rounded-xl p-4 text-sm text-gray-700 font-mono">
+      <div
+        className={`flex flex-col items-center justify-center border border-hair bg-film-deep p-8 ${height} ${
+          className ?? ''
+        }`}
+      >
+        <AlertCircle className="mb-4 h-8 w-8 text-ember" aria-hidden="true" />
+        <h3 className="film-display-thin mb-2 text-[28px] text-film-white">Map Unavailable</h3>
+        <p className="mb-4 max-w-md text-center font-mono text-[12px] text-mist">{error}</p>
+        <div className="border border-hair p-4 font-mono text-[11px] text-whisper">
           <p>1. Create a free account at mapbox.com</p>
           <p>2. Copy your public access token</p>
           <p>3. Create a .env file with:</p>
-          <p className="text-forest">VITE_MAPBOX_TOKEN=your_token_here</p>
+          <p className="text-ember">VITE_MAPBOX_TOKEN=your_token_here</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {/* Filter Toggles */}
-      <div className="absolute top-4 left-4 z-10 bg-white rounded-xl shadow-lg p-3 max-w-[calc(100%-2rem)] overflow-x-auto">
-        <div className="flex gap-2">
-          {Object.entries(typeConfig).map(([type, config]) => (
-            <button
-              key={type}
-              onClick={() => toggleFilter(type as Location['type'])}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                activeFilters.has(type as Location['type'])
-                  ? 'bg-forest text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <span>{config.emoji}</span>
-              <span className="hidden sm:inline">{config.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Map Container */}
-      <div
-        ref={mapContainer}
-        className="h-[600px] rounded-2xl overflow-hidden"
-        style={{ minHeight: '400px' }}
-      />
-
-      {/* Loading State */}
-      {!isLoaded && !error && (
-        <div className="absolute inset-0 bg-sand rounded-2xl flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-forest border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600">Loading map...</p>
+    <div className={`relative ${className ?? ''}`}>
+      {showFilters && (
+        <div className="absolute left-4 top-4 z-10 max-w-[calc(100%-2rem)] overflow-x-auto border border-hair bg-black/80 p-2">
+          <div className="flex gap-2">
+            {Object.entries(typeConfig).map(([type, config]) => {
+              const active = activeFilters.has(type as Location['type']);
+              return (
+                <button
+                  key={type}
+                  onClick={() => toggleFilter(type as Location['type'])}
+                  aria-pressed={active}
+                  className={`small-caps flex items-center gap-2 whitespace-nowrap border px-3 py-2 transition-colors ${
+                    active
+                      ? 'border-ember text-ember'
+                      : 'border-hair text-whisper hover:text-film-white'
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-2 w-2 rounded-full"
+                    style={{ background: config.color, opacity: active ? 1 : 0.4 }}
+                  />
+                  <span className="hidden sm:inline">{config.label}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+      )}
+
+      <div ref={mapContainer} className={`${height} overflow-hidden`} />
+
+      {!isLoaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-film-deep">
+          <p className="small-caps text-whisper">Loading map…</p>
         </div>
       )}
     </div>

@@ -15,7 +15,7 @@ import ConditionsPage from './pages/ConditionsPage';
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-[100dvh] flex flex-col">
       <Header />
       <main className="flex-1">
         <Routes>

@@ -1,34 +1,44 @@
 /**
- * Hero Carousel Component
+ * Hero Carousel
  *
- * Displays a rotating set of panorama images with smooth crossfade transitions.
- * Falls back to gradient background if no images are provided.
+ * Crossfades the panorama set behind the title card. The rotation logic is
+ * unchanged from the previous design — 4s interval, 1000ms fade, pause on
+ * hover. What changed is the frame: the layers now live inside a `.reel`
+ * so the hero picks up the same vignette, grain and viewfinder treatment as
+ * every other photo in the system, and the indicator dots are square + ember.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { heroImages, carouselConfig } from '../../data/heroImages';
+import { webpFor } from '../../utils/imageUtils';
 
 interface HeroCarouselProps {
   children: React.ReactNode;
+  /** Bottom-left mono slate. */
+  label?: string;
+  /** Bottom-right mono timecode. */
+  timecode?: string;
 }
 
-export default function HeroCarousel({ children }: HeroCarouselProps) {
+const FRAME_STYLE: React.CSSProperties = {
+  height: 'min(92vh, 940px)',
+  minHeight: 680,
+};
+
+export default function HeroCarousel({ children, label, timecode }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const hasImages = heroImages.length > 0;
 
-  // Preload images
   useEffect(() => {
     if (!hasImages) return;
-
     heroImages.forEach((src) => {
       const img = new Image();
       img.src = src;
     });
   }, [hasImages]);
 
-  // Rotate images
   const nextImage = useCallback(() => {
     if (heroImages.length <= 1) return;
     setCurrentIndex((prev) => (prev + 1) % heroImages.length);
@@ -36,91 +46,98 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
 
   useEffect(() => {
     if (!hasImages || isPaused || heroImages.length <= 1) return;
-
     const timer = setInterval(nextImage, carouselConfig.interval);
     return () => clearInterval(timer);
   }, [hasImages, isPaused, nextImage]);
 
-  // Pause on hover handlers
   const handleMouseEnter = () => {
-    if (carouselConfig.pauseOnHover) {
-      setIsPaused(true);
-    }
+    if (carouselConfig.pauseOnHover) setIsPaused(true);
   };
-
   const handleMouseLeave = () => {
-    if (carouselConfig.pauseOnHover) {
-      setIsPaused(false);
-    }
+    if (carouselConfig.pauseOnHover) setIsPaused(false);
   };
 
-  // Fallback gradient background
+  // No photography: the bare .reel already paints a dark cinematic placeholder.
   if (!hasImages) {
     return (
-      <section className="relative min-h-[90dvh] flex items-center overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-800 via-navy-900 to-navy-900" />
-
-        {/* Content */}
-        {children}
+      <section className="relative">
+        <div className="reel leak" style={FRAME_STYLE}>
+          <div className="brackets" aria-hidden="true">
+            <i className="tl" />
+            <i className="tr" />
+          </div>
+          {children}
+        </div>
       </section>
     );
   }
 
   return (
     <section
-      className="relative min-h-[90dvh] flex items-center overflow-hidden"
+      className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Image Layers */}
-      {heroImages.map((src, index) => (
-        <div
-          key={src}
-          className="absolute inset-0 transition-opacity"
-          style={{
-            opacity: index === currentIndex ? 1 : 0,
-            transitionDuration: `${carouselConfig.transitionDuration}ms`,
-            transitionTimingFunction: 'ease-in-out',
-          }}
-        >
-          <img
-            src={src}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            loading={index === 0 ? 'eager' : 'lazy'}
-          />
+      <div className="reel has-photo leak" style={FRAME_STYLE}>
+        {heroImages.map((src, index) => (
+          <div
+            key={src}
+            className="absolute inset-0 -z-10"
+            style={{
+              opacity: index === currentIndex ? 1 : 0,
+              transition: `opacity ${carouselConfig.transitionDuration}ms ease-in-out`,
+            }}
+            aria-hidden="true"
+          >
+            <picture>
+              <source srcSet={webpFor(src)} type="image/webp" />
+              <img
+                src={src}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding={index === 0 ? 'sync' : 'async'}
+                fetchPriority={index === 0 ? 'high' : undefined}
+              />
+            </picture>
+          </div>
+        ))}
+
+        <div className="brackets" aria-hidden="true">
+          <i className="tl" />
+          <i className="tr" />
         </div>
-      ))}
+        {label && (
+          <span className="label hidden md:block" aria-hidden="true">
+            {label}
+          </span>
+        )}
+        {timecode && (
+          <span className="tc hidden md:block" aria-hidden="true">
+            {timecode}
+          </span>
+        )}
 
-      {/* Dark Gradient Overlay for Text Readability - Navy theme */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(15,23,42,0.4) 0%, rgba(15,23,42,0.6) 50%, rgba(15,23,42,0.95) 100%)',
-        }}
-      />
+        {children}
 
-      {/* Content */}
-      {children}
-
-      {/* Image Indicators */}
-      {heroImages.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex
-                  ? 'bg-sunset-400 w-6'
-                  : 'bg-white/50 hover:bg-white/70'
-              }`}
-              aria-label={`Go to image ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
+        {/* Frame selector — square, ember when live. Sits clear of the
+            lower-third letterbox, which owns the bottom of the frame. */}
+        {heroImages.length > 1 && (
+          <div className="absolute left-1/2 top-6 z-30 flex -translate-x-1/2 gap-2">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-1.5 transition-all ${
+                  index === currentIndex ? 'w-6 bg-ember' : 'w-3 bg-white/40 hover:bg-white/70'
+                }`}
+                aria-label={`Show frame ${index + 1} of ${heroImages.length}`}
+                aria-current={index === currentIndex ? 'true' : undefined}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

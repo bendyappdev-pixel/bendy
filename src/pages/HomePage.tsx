@@ -1,14 +1,27 @@
-import { useState } from 'react';
+/**
+ * HomePage — seven scenes.
+ *
+ *   01  Title Card Hero        (components/home/Hero)
+ *   02  Today's Almanac        weather / on the ground / this week
+ *   03  Sequences              guides as cinematic title cards
+ *   04  Locations              categories as chapter bands
+ *   05  Live from the Field    map + field transmission
+ *   06  The Marquee            events as a table
+ *   07  End Slate              stats + geo strip
+ */
+
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { X } from 'lucide-react';
+
 import Hero from '../components/home/Hero';
 import CategoryCard from '../components/home/CategoryCard';
-import { categories } from '../data/categories';
-import { MapPin, Compass, Sun, Users, Cloud, Calendar, ArrowRight, Clock, Mountain } from 'lucide-react';
+import SequenceCard, { SequenceCardCompact } from '../components/guides/SequenceCard';
+import SceneHeader from '../components/ui/SceneHeader';
+import CrowdBadge, { CrowdLegend, crowdMeta } from '../components/ui/CrowdBadge';
 import { PartnerBanner } from '../components/ads';
-import { CrowdReportsList, CrowdReportForm } from '../components/crowd';
-import { WeatherWidget } from '../components/weather';
-import { events } from '../data/events';
-import { guides } from '../data/guides';
+import { CrowdReportForm } from '../components/crowd';
+import InteractiveMap from '../components/map/InteractiveMap';
 import {
   Dialog,
   DialogContent,
@@ -17,276 +30,89 @@ import {
   DialogDescription,
   DialogClose,
 } from '../components/ui/dialog';
-import { X } from 'lucide-react';
+
+import { categories } from '../data/categories';
+import { events } from '../data/events';
+import { guides } from '../data/guides';
+import { trails } from '../data/trails';
+import { campgrounds } from '../data/campgrounds';
+import { useWeather, getWeatherInfo, formatDay } from '../hooks/useWeather';
+import { useCrowdReports, formatTimeAgo } from '../hooks/useCrowdReports';
+import { useMountainConditions, useRiverConditions, useRoadConditions } from '../hooks/useConditions';
+import { CrowdLevel, Event as EventType } from '../types';
+
+/* Chapter band photography, keyed by category id. */
+const chapterImages: Record<string, string | undefined> = {
+  events: undefined,
+  outdoor: '/images/trails/broken-top.jpg',
+  food: undefined,
+  kids: '/images/family-fun-day.jpg',
+};
+
+const chapterCtas: Record<string, string> = {
+  events: 'Open the calendar',
+  outdoor: 'Get outside',
+  food: 'Eat & drink',
+  kids: 'Take the kids',
+};
+
+/* Chapter titles are set at up to 90px — the long-form category names wrap
+   and crowd the blurb, so bands use a short form. */
+const chapterNames: Record<string, string> = {
+  events: 'Events',
+  outdoor: 'Outdoor',
+  food: 'Food & Drink',
+  kids: 'Bendy Kids',
+};
+
+function formatClock(date: Date): string {
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Los_Angeles',
+  });
+}
 
 export default function HomePage() {
   const [showReportModal, setShowReportModal] = useState(false);
 
   return (
     <div>
+      {/* ── Scene 01 ─────────────────────────────────────────────── */}
       <Hero />
 
-      {/* Plan Today Section */}
-      <section className="container-app py-16">
-        <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-          <span className="w-10 h-10 bg-sunset-500/20 rounded-xl flex items-center justify-center">
-            <Sun className="w-5 h-5 text-sunset-400" />
-          </span>
-          Plan Today
-        </h2>
+      {/* ── Scene 02 ─────────────────────────────────────────────── */}
+      <AlmanacScene onFileReport={() => setShowReportModal(true)} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Weather Card */}
-          <div className="card overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-4">
-              <div className="flex items-center gap-2 text-white">
-                <Cloud className="w-5 h-5" />
-                <h3 className="font-semibold">Weather</h3>
-              </div>
-            </div>
-            <div className="p-4">
-              <WeatherWidget />
-            </div>
-          </div>
+      {/* ── Scene 03 ─────────────────────────────────────────────── */}
+      <SequencesScene />
 
-          {/* Crowd Reports Card */}
-          <div className="card overflow-hidden">
-            <div className="bg-gradient-to-r from-pine-700 to-pine-600 px-5 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white">
-                  <Users className="w-5 h-5" />
-                  <h3 className="font-semibold">Crowd Reports</h3>
-                </div>
-                <button
-                  onClick={() => setShowReportModal(true)}
-                  className="text-white/80 hover:text-white text-sm flex items-center gap-1 transition-colors"
-                >
-                  Report
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              <CrowdReportsList limit={3} showTitle={false} compact />
-            </div>
-          </div>
+      {/* ── Scene 04 ─────────────────────────────────────────────── */}
+      <LocationsScene />
 
-          {/* Upcoming Events Card */}
-          <div className="card overflow-hidden">
-            <div className="bg-gradient-to-r from-sunset-500 to-sunset-400 px-5 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white">
-                  <Calendar className="w-5 h-5" />
-                  <h3 className="font-semibold">Upcoming Events</h3>
-                </div>
-                <Link
-                  to="/events"
-                  className="text-white/80 hover:text-white text-sm flex items-center gap-1 transition-colors"
-                >
-                  View all
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-            <div className="p-4">
-              <UpcomingEventsList />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── Scene 05 ─────────────────────────────────────────────── */}
+      <FieldScene />
 
-      {/* Local Guides Section */}
-      <section className="container-app py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="w-10 h-10 bg-pine-700/30 rounded-xl flex items-center justify-center">
-              <Compass className="w-5 h-5 text-pine-400" />
-            </span>
-            Local Guides
-          </h2>
-          <Link
-            to="/guides"
-            className="text-sunset-400 hover:text-sunset-300 text-sm font-medium flex items-center gap-1 transition-colors"
-          >
-            View all
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+      {/* ── Scene 06 ─────────────────────────────────────────────── */}
+      <MarqueeScene />
 
-        <p className="text-gray-400 mb-8 max-w-2xl">
-          Curated day-long adventures from locals who know Bend best. Skip the research and get straight to the adventure.
-        </p>
+      {/* ── Scene 07 ─────────────────────────────────────────────── */}
+      <EndSlateScene />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {guides.slice(0, 2).map((guide) => (
-            <Link
-              key={guide.id}
-              to={`/guides/${guide.slug}`}
-              className="group card overflow-hidden hover:border-sunset-500/50 transition-all duration-300"
-            >
-              <div className="relative h-40 overflow-hidden">
-                <img
-                  src={guide.heroImage}
-                  alt={guide.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/50 to-transparent" />
-              </div>
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-white mb-1 group-hover:text-sunset-400 transition-colors">
-                  {guide.title}
-                </h3>
-                <p className="text-sunset-400 text-sm font-medium mb-2">{guide.tagline}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    {guide.duration}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Mountain className="w-4 h-4" />
-                    {guide.stops.length} stops
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-16 bg-navy-800/30">
-        <div className="container-app">
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Explore Bend
-            </h2>
-            <p className="text-gray-400 max-w-2xl">
-              From world-class skiing to craft breweries, discover what makes Bend one of the best outdoor towns in America.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quick Stats */}
-      <section className="border-y border-white/10 py-12">
-        <div className="container-app">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-            <div className="flex items-center gap-4 px-6 py-4 md:border-r md:border-white/10">
-              <Sun className="w-6 h-6 text-sunset-400 shrink-0" />
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">300+</div>
-                <div className="text-sm text-gray-500">Days of Sunshine</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 px-6 py-4 md:border-r md:border-white/10 border-t md:border-t-0 border-white/10">
-              <Compass className="w-6 h-6 text-pine-400 shrink-0" />
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">500+</div>
-                <div className="text-sm text-gray-500">Miles of Trails</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 px-6 py-4 border-t md:border-t-0 border-white/10">
-              <MapPin className="w-6 h-6 text-sunset-400 shrink-0" />
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">30+</div>
-                <div className="text-sm text-gray-500">Craft Breweries</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* About Bend */}
-      <section className="container-app py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              Why Bend?
-            </h2>
-            <p className="text-gray-300 text-lg mb-4 leading-relaxed">
-              Nestled in the high desert of Central Oregon, Bend offers an unparalleled combination of outdoor recreation,
-              natural beauty, and vibrant culture. With Mt. Bachelor just 22 miles away and the Deschutes River running
-              through downtown, adventure is always within reach.
-            </p>
-            <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-              Whether you're here to ski, bike, paddle, or simply enjoy the craft beer scene, Bend welcomes you with
-              300+ days of sunshine and endless opportunities for exploration.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/category/outdoor?filter=skiing"
-                className="px-4 py-2 bg-pine-700/30 text-pine-400 border border-pine-700/50 rounded-full text-sm font-medium hover:bg-pine-700/50 hover:text-pine-300 transition-colors"
-              >
-                Skiing & Snowboarding
-              </Link>
-              <Link
-                to="/category/outdoor?filter=biking"
-                className="px-4 py-2 bg-pine-700/30 text-pine-400 border border-pine-700/50 rounded-full text-sm font-medium hover:bg-pine-700/50 hover:text-pine-300 transition-colors"
-              >
-                Mountain Biking
-              </Link>
-              <Link
-                to="/category/food"
-                className="px-4 py-2 bg-sunset-500/20 text-sunset-400 border border-sunset-500/30 rounded-full text-sm font-medium hover:bg-sunset-500/30 hover:text-sunset-300 transition-colors"
-              >
-                Craft Beer
-              </Link>
-              <Link
-                to="/category/outdoor?filter=hiking"
-                className="px-4 py-2 bg-pine-700/30 text-pine-400 border border-pine-700/50 rounded-full text-sm font-medium hover:bg-pine-700/50 hover:text-pine-300 transition-colors"
-              >
-                Hiking
-              </Link>
-              <Link
-                to="/category/outdoor?filter=climbing"
-                className="px-4 py-2 bg-pine-700/30 text-pine-400 border border-pine-700/50 rounded-full text-sm font-medium hover:bg-pine-700/50 hover:text-pine-300 transition-colors"
-              >
-                Rock Climbing
-              </Link>
-            </div>
-          </div>
-          <div className="card p-8 lg:p-12" style={{ boxShadow: '0 0 40px rgba(249, 115, 22, 0.1)' }}>
-            <div className="text-center">
-              {/* Map Pin Icon */}
-              <div className="w-24 h-24 bg-sunset-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MapPin className="w-12 h-12 text-sunset-400" />
-              </div>
-
-              {/* Coordinates */}
-              <p className="text-2xl font-bold text-sunset-400 mb-2 tracking-wide" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                44.0582° N, 121.3153° W
-              </p>
-
-              <div className="space-y-2 text-gray-400">
-                <p>Elevation: <span className="text-white font-medium">3,623 ft</span></p>
-                <p>Population: <span className="text-white font-medium">~100,000</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Partner Banner (hidden when no ads) */}
       <PartnerBanner />
 
-      {/* Report Conditions Modal — accessible via Radix Dialog */}
       <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report Conditions</DialogTitle>
-            <DialogClose className="p-2 hover:bg-white/10 rounded-full transition-colors">
-              <X className="w-5 h-5 text-gray-400" />
+            <DialogTitle>File a Report</DialogTitle>
+            <DialogClose className="p-2 transition-colors hover:bg-white/10">
+              <X className="h-5 w-5 text-mist" />
             </DialogClose>
           </DialogHeader>
           <div className="p-6">
             <DialogDescription className="mb-6">
-              Help others plan their visit by sharing current crowd conditions at popular spots.
+              Tell everyone else how busy it is out there right now.
             </DialogDescription>
             <CrowdReportForm onSuccess={() => setShowReportModal(false)} />
           </div>
@@ -296,70 +122,634 @@ export default function HomePage() {
   );
 }
 
-// Helper component to show upcoming events
-function UpcomingEventsList() {
-  const today = new Date();
-  const nextWeek = new Date(today);
-  nextWeek.setDate(nextWeek.getDate() + 7);
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 02 · TODAY'S ALMANAC
+   ═══════════════════════════════════════════════════════════════════ */
 
-  // Get events in the next 7 days
-  const upcomingEvents = events
-    .filter((event) => {
-      const eventDate = new Date(
-        event.date.getUTCFullYear(),
-        event.date.getUTCMonth(),
-        event.date.getUTCDate()
-      );
-      const endDate = event.endDate
-        ? new Date(
-            event.endDate.getUTCFullYear(),
-            event.endDate.getUTCMonth(),
-            event.endDate.getUTCDate()
-          )
-        : eventDate;
+function AlmanacScene({ onFileReport }: { onFileReport: () => void }) {
+  const { weather, loading: weatherLoading } = useWeather();
+  const { reports } = useCrowdReports();
 
-      // Check if event falls within next 7 days
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      return endDate >= todayStart && eventDate <= nextWeek;
-    })
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 4);
+  const upcoming = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    return events
+      .filter((e) => (e.endDate ?? e.date) >= todayStart)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 4);
+  }, []);
 
-  if (upcomingEvents.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <Calendar className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">No events this week</p>
-        <Link to="/events" className="text-sm text-sunset-400 hover:underline">
-          Browse all events
-        </Link>
+  const condition = weather
+    ? getWeatherInfo(weather.current.weatherCode, weather.current.isDay).description
+    : null;
+
+  return (
+    <section id="almanac" className="border-b border-hair bg-film-deep">
+      <div className="container-app pt-14">
+        <SceneHeader
+          scene="02"
+          kicker="Today's Almanac"
+          title="The Day, In One Frame."
+          meta={
+            <>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}
+              <br />
+              Open-Meteo + community reports
+            </>
+          }
+        />
       </div>
+
+      <div className="container-app py-10">
+        <div className="grid grid-cols-12 gap-0 border-y border-hair">
+          {/* 01 — Weather */}
+          <div className="col-span-12 p-8 lg:col-span-4 lg:border-r lg:border-hair">
+            <h3 className="small-caps text-whisper">Weather</h3>
+
+            {weatherLoading && !weather ? (
+              <p className="mt-5 font-mono text-[12px] text-whisper">Reading the sky…</p>
+            ) : weather ? (
+              <>
+                <div className="mt-5 flex items-end gap-5">
+                  {/* .film-display already sets line-height 0.85 — do not stack
+                      extra negative leading here, glyphs will collide. */}
+                  <div className="film-display text-[128px] text-film-white">
+                    {Math.round(weather.current.temperature)}°
+                  </div>
+                  <div className="pb-2">
+                    <div className="serif-i text-[26px] leading-tight text-film-white">
+                      {condition}
+                    </div>
+                    <div className="mt-1.5 font-mono text-[11px] leading-relaxed text-whisper">
+                      Feels {Math.round(weather.current.feelsLike)}° · Wind{' '}
+                      {Math.round(weather.current.windSpeed)} mph
+                      <br />
+                      Humidity {Math.round(weather.current.humidity)}%
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-7 grid grid-cols-5 gap-2 font-mono text-[10px]">
+                  {weather.daily.slice(0, 5).map((day) => (
+                    <div key={day.date.toISOString()} className="border border-hair py-3 text-center">
+                      <div className="text-whisper">{formatDay(day.date).toUpperCase()}</div>
+                      <div className="film-display-thin mt-1.5 text-[22px] text-film-white">
+                        {Math.round(day.tempMax)}°
+                      </div>
+                      <div className="mt-1 text-whisper">{Math.round(day.tempMin)}°</div>
+                    </div>
+                  ))}
+                </div>
+
+                <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-hair pt-4 font-mono text-[10px] text-whisper">
+                  <div>
+                    Sunrise <span className="ml-1 text-film-white">{formatClock(weather.sunrise)}</span>
+                  </div>
+                  <div>
+                    Sunset <span className="ml-1 text-film-white">{formatClock(weather.sunset)}</span>
+                  </div>
+                  <div>
+                    Wind{' '}
+                    <span className="ml-1 text-film-white">
+                      {Math.round(weather.current.windSpeed)} mph
+                    </span>
+                  </div>
+                  <div>
+                    Rain{' '}
+                    <span className="ml-1 text-film-white">
+                      {Math.round(weather.daily[0]?.precipProbability ?? 0)}%
+                    </span>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <p className="mt-5 font-mono text-[12px] text-whisper">
+                Weather is off the air right now.
+              </p>
+            )}
+          </div>
+
+          {/* 02 — On the Ground */}
+          <div className="col-span-12 border-t border-hair p-8 lg:col-span-4 lg:border-t-0 lg:border-r">
+            <div className="flex items-center justify-between">
+              <h3 className="small-caps text-whisper">On the Ground</h3>
+              <button
+                onClick={onFileReport}
+                className="small-caps text-ember transition-colors hover:text-film-white"
+              >
+                + File a report
+              </button>
+            </div>
+
+            {reports.length === 0 ? (
+              <p className="mt-6 font-mono text-[12px] text-whisper">
+                No reports in the last few hours. Be the first to file one.
+              </p>
+            ) : (
+              <ul className="mt-6 divide-y divide-white/10">
+                {reports.slice(0, 4).map((report, i) => {
+                  const meta = crowdMeta(report.crowdLevel as CrowdLevel);
+                  return (
+                    <li key={report.id ?? i} className="flex items-center gap-3 py-4">
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: meta.color, boxShadow: `0 0 8px ${meta.color}` }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="film-display-thin text-[22px] text-film-white">
+                          {report.locationName}
+                        </div>
+                        {report.comment && (
+                          <div className="mt-0.5 font-mono text-[11px] text-whisper">
+                            “{report.comment}”
+                          </div>
+                        )}
+                      </div>
+                      <div className="shrink-0 text-right font-mono text-[10px]">
+                        <div style={{ color: meta.color }}>{meta.label}</div>
+                        <div className="text-whisper">{formatTimeAgo(report.timestamp)}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* 03 — This Week */}
+          <div className="col-span-12 border-t border-hair p-8 lg:col-span-4 lg:border-t-0">
+            <div className="flex items-center justify-between">
+              <h3 className="small-caps text-whisper">This Week</h3>
+              <Link
+                to="/events"
+                className="small-caps text-ember transition-colors hover:text-film-white"
+              >
+                All events →
+              </Link>
+            </div>
+
+            {upcoming.length === 0 ? (
+              <p className="mt-6 font-mono text-[12px] text-whisper">Nothing on the books.</p>
+            ) : (
+              <ul className="mt-6 space-y-4">
+                {upcoming.map((event, i) => (
+                  /* Flex, not a 12-col grid: at this width a col-span-2 track
+                     is 36px and the 34px date numeral overflowed it. */
+                  <li
+                    key={event.id}
+                    className={`flex gap-4 ${
+                      i < upcoming.length - 1 ? 'border-b border-hair pb-4' : ''
+                    }`}
+                  >
+                    <div className="w-12 shrink-0">
+                      <div className="film-display text-[34px] leading-none text-film-white">
+                        {event.date.getUTCDate()}
+                      </div>
+                      <div className="mt-1 font-mono text-[10px] uppercase text-whisper">
+                        {event.date.toLocaleDateString('en-US', {
+                          month: 'short',
+                          weekday: 'short',
+                          timeZone: 'UTC',
+                        })}
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to="/events"
+                        className="film-display-thin text-[22px] leading-tight text-film-white hover:text-ember"
+                      >
+                        {event.title}
+                      </Link>
+                      <div className="mt-1.5 font-mono text-[10px] uppercase text-whisper">
+                        {event.location} · {event.category}
+                        {event.price ? ` · ${event.price}` : ''}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 03 · SEQUENCES
+   ═══════════════════════════════════════════════════════════════════ */
+
+function SequencesScene() {
+  const featured = guides.slice(0, 2);
+  const rest = guides.slice(2, 4);
+
+  return (
+    <section id="sequences" className="border-b border-hair bg-black">
+      <div className="container-app pb-10 pt-20">
+        <SceneHeader
+          scene="03"
+          kicker="Sequences"
+          title={
+            <>
+              Day-Long Itineraries.
+              <br />
+              Shot Lists Included.
+            </>
+          }
+        >
+          <p className="max-w-md leading-relaxed text-mist md:ml-auto">
+            Each sequence is a real day in Bend — written and shot by people who live the
+            route. Skip the listicles. Open the call sheet.
+          </p>
+          <Link to="/guides" className="small-caps mt-4 inline-block text-ember">
+            All {guides.length} sequences →
+          </Link>
+        </SceneHeader>
+      </div>
+
+      {featured.map((guide, i) => (
+        <SequenceCard
+          key={guide.id}
+          guide={guide}
+          index={i + 1}
+          total={guides.length}
+          leak={i % 2 === 1}
+        />
+      ))}
+
+      {rest.length > 0 && (
+        <div className="container-app grid grid-cols-12 gap-6 py-12">
+          {rest.map((guide, i) => (
+            <SequenceCardCompact
+              key={guide.id}
+              guide={guide}
+              index={featured.length + i + 1}
+              leak={i % 2 === 1}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 04 · LOCATIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+function LocationsScene() {
+  const chapterMeta: Record<string, string> = {
+    events: `${events.length} listings · updated weekly`,
+    outdoor: `${trails.length} trails · ${campgrounds.length} sites · 4 seasons`,
+    food: '30+ breweries · 80+ kitchens',
+    kids: 'All ages · stroller-friendly',
+  };
+
+  return (
+    <section className="border-b border-hair bg-film-deep">
+      <div className="container-app pb-12 pt-20">
+        <SceneHeader scene="04" kicker="Locations" title="Four Front Doors.">
+          <p className="max-w-md leading-relaxed text-mist md:ml-auto">
+            Skiing in winter. Trails in summer. Kids menu sorted. Beer always. Pick a chapter.
+          </p>
+        </SceneHeader>
+      </div>
+
+      <ul className="border-y border-hair">
+        {categories.map((category, i) => (
+          <CategoryCard
+            key={category.id}
+            category={category}
+            displayName={chapterNames[category.id]}
+            index={i + 1}
+            total={categories.length}
+            image={chapterImages[category.id]}
+            cta={chapterCtas[category.id]}
+            meta={chapterMeta[category.id]}
+            leak={i % 2 === 1}
+            last={i === categories.length - 1}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 05 · LIVE FROM THE FIELD
+   ═══════════════════════════════════════════════════════════════════ */
+
+function FieldScene() {
+  const { conditions: mountain } = useMountainConditions();
+  const { rivers } = useRiverConditions();
+  const { roads } = useRoadConditions();
+  const { reports } = useCrowdReports();
+
+  const deschutes = rivers.find((r) => /deschutes/i.test(r.name)) ?? rivers[0];
+  const notableRoad = roads.find((r) => r.status !== 'open') ?? roads[0];
+
+  const transmissions: { label: string; value: string; status: string; ember?: boolean }[] = [];
+
+  if (mountain) {
+    transmissions.push({
+      label: 'Snow · Bachelor',
+      value: `${mountain.snowDepthBase}" base · ${mountain.conditions}`,
+      status: `${mountain.liftsOpen}/${mountain.liftsTotal} lifts`,
+      ember: mountain.liftsOpen > 0,
+    });
+  }
+  if (deschutes) {
+    transmissions.push({
+      label: `River · ${deschutes.name}`,
+      value: `${Math.round(deschutes.temperature)}° · ${deschutes.flowRate.toLocaleString()} cfs · ${deschutes.flowTrend}`,
+      status: deschutes.paddlingRating,
+      ember: deschutes.status === 'good',
+    });
+  }
+  if (notableRoad) {
+    transmissions.push({
+      label: `Road · ${notableRoad.name}`,
+      value: notableRoad.conditions,
+      status: notableRoad.status.replace('-', ' '),
+      ember: notableRoad.status === 'open',
+    });
+  }
+
+  const latest = reports[0];
+
+  return (
+    <section className="border-b border-hair bg-black">
+      <div className="container-app grid grid-cols-12 gap-6 py-20 lg:gap-10">
+        <div className="col-span-12 lg:col-span-7">
+          <div className="small-caps text-ember">Scene 05 · Live from the Field</div>
+          <h2 className="film-display mt-3 text-[clamp(48px,7vw,110px)]">
+            The Map
+            <br />
+            Is Live.
+          </h2>
+          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-mist">
+            Real-time crowd, weather and trail conditions, layered onto the geography that
+            shapes Bend. Click a peak. Drop a pin. File a report.
+          </p>
+
+          <div className="mt-8">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="film-display-thin text-[26px] text-film-white">
+                  How busy is it right now?
+                </div>
+                <div className="mt-1 font-mono text-[11px] text-whisper">
+                  {latest
+                    ? `Reported by locals · latest ${formatTimeAgo(latest.timestamp)}`
+                    : 'Reported by locals · Bend & Central Oregon'}
+                </div>
+              </div>
+              <CrowdLegend />
+            </div>
+
+            <div className="border border-hair">
+              <InteractiveMap height="aspect-[4/3]" showCrowdPins />
+            </div>
+          </div>
+        </div>
+
+        <aside className="col-span-12 lg:col-span-5">
+          <div className="small-caps flex items-center gap-3 text-whisper">
+            <span className="live-caret" aria-hidden="true" /> Field Transmission
+          </div>
+          <h3 className="film-display mt-3 text-[clamp(34px,4.5vw,60px)] leading-[0.9]">
+            {mountain
+              ? `Bachelor Holds ${mountain.snowDepthBase}".`
+              : 'The Cascades Are Still Spinning.'}
+          </h3>
+          <p className="mt-4 text-[16px] leading-relaxed text-mist">
+            Conditions pulled straight from the mountain, the river gauges and the road
+            crews — the same sources the locals check before they commit to a day.
+          </p>
+
+          {transmissions.length > 0 && (
+            <ul className="mt-7 border-t border-hair">
+              {transmissions.map((t) => (
+                <li
+                  key={t.label}
+                  className="grid grid-cols-12 items-center gap-4 border-b border-hair py-4"
+                >
+                  <div className="col-span-4 font-mono text-[10px] uppercase text-whisper md:col-span-3">
+                    {t.label}
+                  </div>
+                  <div className="film-display-thin col-span-5 text-[22px] text-film-white md:col-span-7">
+                    {t.value}
+                  </div>
+                  <div
+                    className={`col-span-3 text-right font-mono text-[11px] md:col-span-2 ${
+                      t.ember ? 'text-ember' : 'text-whisper'
+                    }`}
+                  >
+                    {t.status}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {reports.length > 0 && (
+            <ul className="mt-6 space-y-3">
+              {reports.slice(0, 3).map((r, i) => (
+                <li key={r.id ?? i} className="flex items-center justify-between gap-4">
+                  <span className="film-display-thin text-[20px] text-film-white">
+                    {r.locationName}
+                  </span>
+                  <CrowdBadge level={r.crowdLevel as CrowdLevel} verbose />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Link to="/map" className="btn-primary mt-8">
+            Open the full map <span aria-hidden="true">→</span>
+          </Link>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 06 · THE MARQUEE
+   ═══════════════════════════════════════════════════════════════════ */
+
+function MarqueeScene() {
+  const upcoming = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    return events
+      .filter((e) => (e.endDate ?? e.date) >= todayStart)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 8);
+  }, []);
+
+  return (
+    <section id="programme" className="border-b border-hair bg-film-coal">
+      <div className="container-app py-20">
+        {/* A 12-col grid, not flex-wrap: the headline is wide enough to force
+            a wrap, which dropped the blurb to the left edge instead of
+            keeping it right-aligned in its own column. */}
+        <SceneHeader scene="06" kicker="Now Showing" title="The Marquee.">
+          <p className="max-w-md leading-relaxed text-mist md:ml-auto">
+            {events.length} events on the books. Tower Theatre. Hayden Homes. Drake Park.
+            Sisters. The Old Mill. Pick your weekend.
+          </p>
+          <Link to="/events" className="small-caps mt-3 inline-block text-ember">
+            Full programme →
+          </Link>
+        </SceneHeader>
+
+        <div className="mt-10 border-t border-hair">
+          <div className="small-caps grid grid-cols-12 gap-3 border-b border-hair py-3 text-whisper">
+            <div className="col-span-3 md:col-span-2">Date</div>
+            <div className="col-span-7 md:col-span-4">Title</div>
+            <div className="col-span-3 hidden md:block">Venue</div>
+            <div className="col-span-1 hidden md:block">Cat.</div>
+            <div className="col-span-1 hidden md:block">Price</div>
+            <div className="col-span-2 text-right md:col-span-1">Status</div>
+          </div>
+
+          {upcoming.map((event) => (
+            <MarqueeRow key={event.id} event={event} />
+          ))}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between font-mono text-[11px] text-whisper">
+          <span>
+            Showing {upcoming.length} of {events.length} events
+          </span>
+          <Link to="/events" className="text-ember">
+            Open the full programme →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * One marquee row. Events with a ticket link go out to the vendor; the rest
+ * go to the events page. Splitting this out avoids a union-typed element that
+ * neither <a> nor <Link> props typecheck cleanly against.
+ */
+function MarqueeRow({ event }: { event: EventType }) {
+  const rowClass =
+    'row-hover grid grid-cols-12 items-center gap-3 border-b border-hair py-5';
+
+  const body = (
+    <>
+      <div className="col-span-3 flex items-baseline gap-2 md:col-span-2">
+        <span className="film-display text-[40px] leading-none text-film-white">
+          {String(event.date.getUTCDate()).padStart(2, '0')}
+        </span>
+        <span className="font-mono text-[11px] uppercase text-whisper">
+          {event.date.toLocaleDateString('en-US', {
+            month: 'short',
+            weekday: 'short',
+            timeZone: 'UTC',
+          })}
+        </span>
+      </div>
+      <div className="film-display-thin col-span-7 text-[22px] text-film-white md:col-span-4">
+        {event.title}
+      </div>
+      <div className="col-span-3 hidden font-mono text-[11px] text-mist md:block">
+        {event.location}
+      </div>
+      <div className="col-span-1 hidden font-mono text-[11px] capitalize text-whisper md:block">
+        {event.category}
+      </div>
+      <div className="col-span-1 hidden font-mono text-[11px] text-mist md:block">
+        {event.price ?? '—'}
+      </div>
+      <div className="col-span-2 text-right font-mono text-[11px] text-ember md:col-span-1">
+        {event.ticketUrl ? 'Buy →' : 'Info →'}
+      </div>
+    </>
+  );
+
+  if (event.ticketUrl) {
+    return (
+      <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer" className={rowClass}>
+        {body}
+      </a>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {upcomingEvents.map((event) => (
-        <Link
-          key={event.id}
-          to="/events"
-          className="block p-3 bg-navy-700/50 hover:bg-navy-700 rounded-xl transition-colors group"
-        >
-          <p className="font-medium text-white text-sm group-hover:text-sunset-400 transition-colors truncate">
-            {event.title}
+    <Link to="/events" className={rowClass}>
+      {body}
+    </Link>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 07 · END SLATE
+   ═══════════════════════════════════════════════════════════════════ */
+
+const stats: { value: string; suffix?: string; label: string }[] = [
+  { value: '300', suffix: '+', label: 'Days of sun' },
+  { value: '500', suffix: '+', label: 'Mi. of trail' },
+  { value: '30', suffix: '+', label: 'Breweries' },
+  { value: '3,623', label: 'Ft. elevation' },
+  { value: '22', label: 'Mi. to Bachelor' },
+  { value: '≈100k', label: 'Population' },
+];
+
+const geoData = [
+  'BEND, OR · 44.0582° N · 121.3153° W',
+  'EST. 1905 · DESCHUTES COUNTY',
+  'HIGH DESERT · CASCADE RANGE',
+  'USDA ZONE 6B · ANNUAL PRECIP 11"',
+  'MEAN ANNUAL TEMP 47°F',
+];
+
+function EndSlateScene() {
+  return (
+    <section className="horizon border-b border-hair bg-black">
+      <div className="container-app py-24">
+        <SceneHeader scene="07" kicker="End Slate" title="Bend, By the Numbers.">
+          <p className="max-w-md leading-relaxed text-mist md:ml-auto">
+            Population, peaks, breweries, sun. The math behind why people keep moving here —
+            and why the locals never leave.
           </p>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-            <span>
-              {event.date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-            <span className="text-gray-600">•</span>
-            <span className="truncate">{event.location}</span>
-          </div>
-        </Link>
-      ))}
-    </div>
+        </SceneHeader>
+
+        {/* The handoff asks for six columns at clamp(64px,8vw,120px). A sixth
+            of the container is ~207px and "≈100k" needs 265px at that size,
+            so the numerals collided with their neighbours and pushed the page
+            into h-scroll. Two rows of three keeps the type genuinely large —
+            which is the point of the end slate — and fits. */}
+        <dl className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 border-t border-hair pt-12 md:grid-cols-3">
+          {stats.map((stat) => (
+            <div key={stat.label} className="min-w-0">
+              <dd className="film-display text-[clamp(40px,6vw,104px)] leading-none text-film-white">
+                {stat.value}
+                {stat.suffix && <span className="text-ember">{stat.suffix}</span>}
+              </dd>
+              <dt className="small-caps mt-3 text-whisper">{stat.label}</dt>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-16 flex flex-wrap justify-between gap-x-8 gap-y-2 border-t border-hair pt-6 font-mono text-[11px] text-whisper">
+          {geoData.map((d) => (
+            <span key={d}>{d}</span>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import MobileNav from './MobileNav';
+import BulletinTicker from './BulletinTicker';
+import ViewfinderMark from '../ui/ViewfinderMark';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -13,77 +15,65 @@ const navLinks = [
   { name: 'Map', href: '/map' },
 ];
 
-// Minimalist Pine Tree SVG Component
-function PineTreeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L7 9h2l-3 5h2l-4 8h16l-4-8h2l-3-5h2L12 2zm0 3.5L14.5 9h-1.3l2.3 3.8h-1.5L17 18H7l3-5.2H8.5L10.8 9H9.5L12 5.5z"/>
-    </svg>
-  );
-}
+export const REEL_ISSUE = 'Reel №07 · Spring 2026';
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-
-  // Add scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-        scrolled
-          ? 'bg-navy-900/95 backdrop-blur-lg border-b border-white/5'
-          : 'bg-navy-900/80 backdrop-blur-sm'
-      }`}>
-        <div className="container-app">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <PineTreeIcon className="w-8 h-8 text-pine-500 group-hover:scale-105 transition-transform" />
-              <span className="text-xl font-bold text-white">Bendy</span>
-            </Link>
+      <BulletinTicker />
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
+      {/* Not fixed — the masthead scrolls away with the page. The old
+          `scrolled` state, backdrop blur, and the h-16 spacer that
+          compensated for fixed positioning are all gone. */}
+      <header className="relative z-40 border-b border-hair">
+        <div className="container-app flex items-center justify-between gap-6 py-5">
+          <Link to="/" className="flex shrink-0 items-center gap-3 text-film-white">
+            <ViewfinderMark className="h-6 w-6" />
+            <span className="film-display text-[36px] tracking-[-0.02em]">BENDY</span>
+          </Link>
+
+          <nav className="hidden items-center gap-8 whitespace-nowrap md:flex">
+            {navLinks.map((link) => {
+              const active = location.pathname === link.href;
+              return (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    location.pathname === link.href
-                      ? 'text-sunset-400'
-                      : 'text-gray-300 hover:text-sunset-400'
+                  aria-current={active ? 'page' : undefined}
+                  className={`small-caps transition-colors duration-200 ${
+                    active ? 'text-ember' : 'text-mist hover:text-film-white'
                   }`}
                 >
                   {link.name}
                 </Link>
-              ))}
-            </nav>
+              );
+            })}
+          </nav>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileNavOpen(true)}
-              className="md:hidden p-2 rounded-xl hover:bg-white/10 transition-colors"
-              aria-label="Open menu"
+          <div className="hidden shrink-0 items-center gap-4 md:flex">
+            <span className="small-caps text-mist">{REEL_ISSUE}</span>
+            <Link
+              to="/map"
+              className="small-caps inline-flex items-center gap-2 border border-hair px-3 py-1.5 text-mist transition-colors hover:border-white/40 hover:text-film-white"
             >
-              <Menu className="w-6 h-6 text-white" />
-            </button>
+              <span>Search</span>
+              <span className="text-[10px] opacity-60">⌘K</span>
+            </Link>
           </div>
+
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="p-2 transition-colors hover:bg-white/10 md:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6 text-film-white" />
+          </button>
         </div>
       </header>
 
-      {/* Spacer for fixed header */}
-      <div className="h-16" />
-
-      {/* Mobile Navigation Drawer */}
       <MobileNav
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
