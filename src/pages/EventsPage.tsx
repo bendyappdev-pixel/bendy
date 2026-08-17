@@ -6,7 +6,7 @@ import EventCard from '../components/events/EventCard';
 import EventCalendar from '../components/events/EventCalendar';
 import DayEventsPanel from '../components/events/DayEventsPanel';
 import ViewToggle, { ViewMode } from '../components/events/ViewToggle';
-import { events, eventSources } from '../data/events';
+import { events, eventSources, upcomingEvents } from '../data/events';
 import { SponsoredEvent, InFeedBanner } from '../components/ads';
 import { getEventsForDay } from '../utils/dateUtils';
 import { cn } from '../lib/utils';
@@ -63,7 +63,7 @@ export default function EventsPage() {
           as="h1"
           kicker="Now Showing"
           title="The Full Programme."
-          meta={`${events.length} events on the books`}
+          meta={`${upcomingEvents().length} events still to come`}
         >
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             Festivals, markets, live music, and local happenings around Bend.

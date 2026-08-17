@@ -32,7 +32,7 @@ import {
 } from '../components/ui/dialog';
 
 import { categories } from '../data/categories';
-import { events } from '../data/events';
+import { upcomingEvents } from '../data/events';
 import { guides } from '../data/guides';
 import { trails } from '../data/trails';
 import { campgrounds } from '../data/campgrounds';
@@ -130,14 +130,7 @@ function AlmanacScene({ onFileReport }: { onFileReport: () => void }) {
   const { weather, loading: weatherLoading } = useWeather();
   const { reports } = useCrowdReports();
 
-  const upcoming = useMemo(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    return events
-      .filter((e) => (e.endDate ?? e.date) >= todayStart)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 4);
-  }, []);
+  const upcoming = useMemo(() => upcomingEvents().slice(0, 4), []);
 
   const condition = weather
     ? getWeatherInfo(weather.current.weatherCode, weather.current.isDay).description
@@ -406,7 +399,7 @@ function SequencesScene() {
 
 function LocationsScene() {
   const chapterMeta: Record<string, string> = {
-    events: `${events.length} listings · updated weekly`,
+    events: `${upcomingEvents().length} upcoming · Bend & Central Oregon`,
     outdoor: `${trails.length} trails · ${campgrounds.length} sites · 4 seasons`,
     food: '30+ breweries · 80+ kitchens',
     kids: 'All ages · stroller-friendly',
@@ -586,14 +579,9 @@ function FieldScene() {
    ═══════════════════════════════════════════════════════════════════ */
 
 function MarqueeScene() {
-  const upcoming = useMemo(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    return events
-      .filter((e) => (e.endDate ?? e.date) >= todayStart)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 8);
-  }, []);
+  const all = useMemo(() => upcomingEvents(), []);
+  const upcoming = all.slice(0, 8);
+  const upcomingCount = all.length;
 
   return (
     <section id="programme" className="border-b border-hair bg-film-coal">
@@ -603,8 +591,8 @@ function MarqueeScene() {
             keeping it right-aligned in its own column. */}
         <SceneHeader scene="06" kicker="Now Showing" title="The Marquee.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
-            {events.length} events on the books. Tower Theatre. Hayden Homes. Drake Park.
-            Sisters. The Old Mill. Pick your weekend.
+            {upcomingCount} events still to come. Tower Theatre. Hayden Homes. Drake
+            Park. Sisters. The Old Mill. Pick your weekend.
           </p>
           <Link to="/events" className="small-caps mt-3 inline-block text-ember">
             Full programme →
@@ -628,7 +616,7 @@ function MarqueeScene() {
 
         <div className="mt-6 flex items-center justify-between font-mono text-[11px] text-whisper">
           <span>
-            Showing {upcoming.length} of {events.length} events
+            Showing {upcoming.length} of {upcomingCount} upcoming events
           </span>
           <Link to="/events" className="text-ember">
             Open the full programme →

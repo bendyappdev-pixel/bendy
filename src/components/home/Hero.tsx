@@ -10,10 +10,11 @@
  * too busy against the bulletin ticker already sitting above the masthead.
  */
 
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import HeroCarousel from './HeroCarousel';
 import { useWeather, getWeatherInfo } from '../../hooks/useWeather';
-import { events } from '../../data/events';
+import { upcomingEvents } from '../../data/events';
 import { trails } from '../../data/trails';
 import { guides } from '../../data/guides';
 
@@ -48,6 +49,8 @@ function daylight(sunrise: Date, sunset: Date) {
 
 export default function Hero() {
   const { weather } = useWeather();
+  // Count what is still to come, not the whole archive.
+  const upcomingCount = useMemo(() => upcomingEvents().length, []);
 
   const conditionText = weather
     ? getWeatherInfo(weather.current.weatherCode, weather.current.isDay).description
@@ -134,7 +137,7 @@ export default function Hero() {
             <div>
               <div className="small-caps text-whisper">Cast</div>
               <div className="film-display-thin mt-1 text-[22px] text-film-white">
-                {events.length} events · {trails.length} trails · {guides.length} guides
+                {upcomingCount} events · {trails.length} trails · {guides.length} guides
               </div>
             </div>
           </div>

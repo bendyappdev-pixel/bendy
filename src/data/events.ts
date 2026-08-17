@@ -1372,3 +1372,19 @@ export const eventSources = [
     description: 'Local community events and happenings',
   },
 ];
+
+/**
+ * Events that haven't happened yet, soonest first.
+ *
+ * `events` is a historical archive as much as a listing — at the time of
+ * writing 119 of its 159 entries are in the past. Anything user-facing that
+ * counts or lists events must go through here, or the site advertises a
+ * catalogue of shows that already happened.
+ */
+export function upcomingEvents(from: Date = new Date()): Event[] {
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  return events
+    .filter((e) => (e.endDate ?? e.date) >= start)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+}
