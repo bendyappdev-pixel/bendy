@@ -155,6 +155,28 @@
     font-size: 10px; letter-spacing: 0.14em; color: var(--whisper);
   }
 
+  /* Photo credit. Unlike .label and .tc this is NOT decorative and is NOT
+     hidden on small screens — it is attribution, and attribution that
+     disappears on a phone isn't attribution. The text-shadow keeps it legible
+     over any photograph without needing a scrim. */
+  .reel > .credit {
+    @apply absolute right-[14px] bottom-3 z-[4] font-mono;
+    font-size: 9px; letter-spacing: 0.1em; color: var(--whisper);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+    max-width: calc(100% - 28px);
+    text-align: right;
+  }
+  /* Frames that carry a letterbox bar along the bottom (the hero, sequence
+     title cards) would bury a bottom-right credit behind it. Those move the
+     credit to the top edge, inset far enough to clear the viewfinder
+     bracket. */
+  .reel > .credit.top {
+    @apply bottom-auto top-[13px] right-[38px];
+  }
+  /* When a frame carries both, the timecode steps up and lets the credit
+     keep the corner. */
+  .reel > .tc.has-credit { bottom: 26px; }
+
   /* Corner viewfinder brackets. Markup:
      <div class="brackets"><i class="tl"></i><i class="tr"></i></div> */
   .reel > .brackets > i { @apply absolute w-[18px] h-[18px]; border: 1px solid rgba(242,237,225,0.35); }

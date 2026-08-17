@@ -1,6 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ViewfinderMark from '../ui/ViewfinderMark';
+import { creditedContributors, UNATTRIBUTED_COUNT } from '../../data/photoCredits';
+
+/** Where photographers should write to claim or withdraw an image. */
+const RIGHTS_CONTACT = 'info@benjaminedwardsphotography.com';
 
 const credits: { role: string; name: string }[] = [
   { role: 'Directed by', name: 'The Locals' },
@@ -152,6 +156,58 @@ export default function Footer() {
             </p>
           </div>
         </div>
+
+        {/* Photography credits + rights notice.
+            Named contributors come from the images' own embedded metadata
+            (see data/photoCredits.ts), so this list stays honest as
+            photography is added or swapped. */}
+        <section className="mt-12 border-t border-hair pt-8">
+          <h3 className="small-caps text-whisper">Photography</h3>
+
+          <div className="mt-4 grid grid-cols-12 gap-6 lg:gap-10">
+            <div className="col-span-12 md:col-span-5">
+              <ul className="font-mono text-[12px] text-mist">
+                {creditedContributors().map((c) => (
+                  <li key={c.name} className="mt-1.5 first:mt-0">
+                    {c.url ? (
+                      <a
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-film-white hover:text-ember"
+                      >
+                        {c.name}
+                      </a>
+                    ) : (
+                      <span className="text-film-white">{c.name}</span>
+                    )}
+                    {c.organization && c.organization !== c.name && (
+                      <span className="text-whisper"> · {c.organization}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-span-12 md:col-span-7">
+              <p className="max-w-2xl text-[14px] leading-relaxed text-mist">
+                Some of the photography here was gathered from public and archival sources
+                while this guide was being assembled, and{' '}
+                {UNATTRIBUTED_COUNT} images carry no record of who took them.{' '}
+                <span className="text-film-white">
+                  If one of these locations is your photograph, please reach out — we will
+                  credit you properly or take it down, whichever you would prefer.
+                </span>
+              </p>
+              <a
+                href={`mailto:${RIGHTS_CONTACT}?subject=Bendy%20%E2%80%94%20photo%20credit`}
+                className="small-caps mt-4 inline-block text-ember hover:text-film-white"
+              >
+                {RIGHTS_CONTACT} →
+              </a>
+            </div>
+          </div>
+        </section>
 
         {/* Card-out */}
         <div className="mt-12 grid grid-cols-12 items-center gap-3 border-t border-hair pt-6 font-mono text-[11px] text-whisper">

@@ -17,6 +17,7 @@
 import { CSSProperties, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { webpFor } from '../../utils/imageUtils';
+import { creditFor } from '../../data/photoCredits';
 
 export interface ReelProps {
   /** Photo path, e.g. "/images/trails/tumalo-falls.jpg". Omit for the dark placeholder. */
@@ -41,6 +42,18 @@ export interface ReelProps {
    * bright photograph needs one of these to stay legible.
    */
   scrim?: 'bottom' | 'left' | 'both';
+  /**
+   * Photo credit. Looked up automatically from `src` against
+   * `data/photoCredits`, so every reel in the product is attributed without
+   * its caller doing anything. Pass a string to override, or `false` to
+   * suppress it where the frame is too small to carry one.
+   */
+  credit?: string | false;
+  /**
+   * Where the credit sits. Use `top` on any reel with a letterbox bar across
+   * the bottom, which would otherwise cover it.
+   */
+  creditPosition?: 'bottom' | 'top';
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -56,10 +69,15 @@ export default function Reel({
   hoverable = false,
   priority = false,
   scrim,
+  credit,
+  creditPosition = 'bottom',
   className,
   style,
   children,
 }: ReelProps) {
+  const creditText =
+    credit === false ? undefined : (credit ?? creditFor(src)?.label);
+
   return (
     <div
       className={cn(
@@ -111,8 +129,21 @@ export default function Reel({
         </span>
       )}
       {timecode && (
-        <span className="tc hidden md:block" aria-hidden="true">
+        <span
+          className={cn(
+            'tc hidden md:block',
+            creditText && creditPosition === 'bottom' && 'has-credit'
+          )}
+          aria-hidden="true"
+        >
           {timecode}
+        </span>
+      )}
+
+      {/* Attribution — always rendered, at every screen size. */}
+      {creditText && (
+        <span className={cn('credit', creditPosition === 'top' && 'top')}>
+          {creditText}
         </span>
       )}
 

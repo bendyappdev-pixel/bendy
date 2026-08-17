@@ -62,7 +62,11 @@ for (const file of files) {
   // 1 + 2 — resize / re-encode the original in place, but only keep the
   // result if it actually saved bytes.
   const tmp = `${file}.tmp`;
-  let pipeline = sharp(file).rotate();
+  // withMetadata() keeps EXIF/XMP — sharp strips it by default, which would
+  // destroy the copyright and creator fields that src/data/photoCredits.ts is
+  // built from and that establish who shot what. Attribution data survives
+  // optimisation.
+  let pipeline = sharp(file).rotate().withMetadata();
   if (needsResize) {
     pipeline = pipeline.resize({
       width: MAX_EDGE,
@@ -86,7 +90,7 @@ for (const file of files) {
 
   // 3 — WebP sibling
   const webpPath = file.replace(RASTER, '.webp');
-  let webpPipeline = sharp(file).rotate();
+  let webpPipeline = sharp(file).rotate().withMetadata();
   if (needsResize) {
     webpPipeline = webpPipeline.resize({
       width: MAX_EDGE,

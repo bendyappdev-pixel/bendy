@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { heroImages, carouselConfig } from '../../data/heroImages';
 import { webpFor } from '../../utils/imageUtils';
+import { creditFor } from '../../data/photoCredits';
 
 interface HeroCarouselProps {
   children: React.ReactNode;
@@ -115,6 +116,15 @@ export default function HeroCarousel({ children, label, timecode }: HeroCarousel
         {timecode && (
           <span className="tc hidden md:block" aria-hidden="true">
             {timecode}
+          </span>
+        )}
+
+        {/* Credit tracks the frame currently showing, so it stays truthful as
+            the carousel crossfades. Pinned to the top edge because the
+            lower-third letterbox covers the bottom of this reel. */}
+        {creditFor(heroImages[currentIndex]) && (
+          <span className="credit top">
+            {creditFor(heroImages[currentIndex])!.label}
           </span>
         )}
 

@@ -161,6 +161,28 @@ only gradients the system permits.
 Alternate the `leak` prop across sequential reels so the warm light-leak does
 not repeat identically.
 
+### Attribution
+
+`src/data/photoCredits.ts` is the site's record of who shot what, built from
+each original file's embedded EXIF/XMP. `Reel` looks a credit up from its own
+`src` and renders it automatically, so **every photo in the product is
+attributed without its caller doing anything**. Pass `credit={false}` to
+suppress, or `creditPosition="top"` on any frame whose bottom edge is covered
+by a letterbox bar.
+
+Unlike `label` and `timecode`, the credit is **not** hidden below `md` — it is
+attribution, and attribution that disappears on a phone isn't attribution.
+
+`scripts/optimize-images.mjs` calls `withMetadata()` so copyright and creator
+fields survive optimisation in both the JPEG and the WebP. Do not remove it;
+sharp strips metadata by default and would erase the provenance this file is
+built from.
+
+The footer names every credited contributor and carries a standing notice
+inviting unattributed photographers to claim or withdraw their work. When you
+add photography, add its credit to `photoCredits.ts` — or add its path to
+`UNATTRIBUTED` so the count in that notice stays honest.
+
 All photography under `public/images/` is processed by
 `npm run optimize:images`, which caps the long edge at 2400px, re-encodes the
 original, and writes a WebP sibling at the same path. **Every raster the app

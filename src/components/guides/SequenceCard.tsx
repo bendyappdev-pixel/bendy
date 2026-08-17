@@ -48,6 +48,8 @@ export default function SequenceCard({
         leak={leak}
         priority={priority}
         scrim="both"
+        /* The call-sheet letterbox owns the bottom of this frame. */
+        creditPosition="top"
         label={`SEQ${numeral}_${guide.slug.toUpperCase()}.MOV`}
         timecode={`SCENE ${numeral} OF ${String(total).padStart(2, '0')} · ${guide.duration.toUpperCase()}`}
         className="flex"
