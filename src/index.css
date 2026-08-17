@@ -207,6 +207,19 @@
       rgba(7, 6, 5, 0) 78%
     );
   }
+  /* Centre-weighted scrim for the hero, whose type sits in the middle of the
+     frame rather than along an edge. The vignette only darkens the corners,
+     so over a bright photograph — the Smith Rock panorama at golden hour, for
+     instance — the coordinates and tagline dropped below legibility. Falls off
+     well before the edges so the photograph keeps its light. */
+  .scrim-center {
+    background: radial-gradient(
+      72% 52% at 50% 42%,
+      rgba(7, 6, 5, 0.6) 0%,
+      rgba(7, 6, 5, 0.34) 52%,
+      rgba(7, 6, 5, 0) 82%
+    );
+  }
 
   /* ── Motion ────────────────────────────────────────────────────────── */
 

@@ -10,9 +10,10 @@
  * too busy against the bulletin ticker already sitting above the masthead.
  */
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HeroCarousel from './HeroCarousel';
+import { heroFrames, formatCoordinates } from '../../data/heroImages';
 import { useWeather, getWeatherInfo } from '../../hooks/useWeather';
 import { upcomingEvents } from '../../data/events';
 import { trails } from '../../data/trails';
@@ -52,6 +53,11 @@ export default function Hero() {
   // Count what is still to come, not the whole archive.
   const upcomingCount = useMemo(() => upcomingEvents().length, []);
 
+  // Which panorama is on screen, so its caption tells the truth.
+  const [frameIndex, setFrameIndex] = useState(0);
+  const handleFrameChange = useCallback((i: number) => setFrameIndex(i), []);
+  const frame = heroFrames[frameIndex];
+
   const conditionText = weather
     ? getWeatherInfo(weather.current.weatherCode, weather.current.isDay).description
     : null;
@@ -61,21 +67,38 @@ export default function Hero() {
     <HeroCarousel
       label="PANORAMA.MOV — CENTRAL OREGON · CASCADE RANGE"
       timecode="REEL №07 · SPRING 2026"
+      onFrameChange={handleFrameChange}
     >
       {/* Centre title. Bottom padding keeps it clear of the lower-thirds. */}
       <div className="absolute inset-0 z-10 flex items-center justify-center px-6 pb-40">
         <div className="text-center">
+          {/* The design reference set this as "BEND", reading it as a title
+              card for the city. That is wrong for this brand: the Y is the
+              point. BENDY covers Central Oregon out to roughly a 30-mile
+              radius, not the city limits — the three hero panoramas were shot
+              at Smith Rock, Broken Top and Sparks Lake, 19 to 23 miles out.
+              So the wordmark stays BENDY.
+
+              The scale is tuned to five letters, not four: at the reference's
+              22vw the extra character ran off the side of wide screens. */}
           <h1
-            className="film-display text-[clamp(110px,22vw,340px)] tracking-[-0.02em] text-film-white"
+            className="film-display text-[clamp(88px,17.5vw,272px)] tracking-[-0.02em] text-film-white"
             style={{ textShadow: '0 4px 40px rgba(0,0,0,0.5)' }}
           >
-            BEND
+            BENDY
           </h1>
+          {/* Captions the frame actually on screen. Pinning Bend's own
+              coordinates here was wrong twice over: none of these panoramas
+              were shot in Bend, and the brand covers the region rather than
+              the city. Full white, not /80 — at 10.5px over a sunlit
+              photograph the dimmed version disappeared. */}
           <p
-            className="small-caps mt-8 text-film-white/80"
-            style={{ textShadow: '0 2px 20px rgba(0,0,0,0.6)' }}
+            className="small-caps mt-8 text-film-white"
+            style={{ textShadow: '0 2px 14px rgba(0,0,0,0.85)' }}
           >
-            Oregon · 44.0582° N · 121.3153° W
+            {frame
+              ? `${frame.location} · ${formatCoordinates(frame)} · ${frame.milesFromBend} mi from Bend`
+              : 'Central Oregon · 44.0582° N · 121.3153° W'}
           </p>
           <p
             className="serif-i mx-auto mt-6 max-w-2xl text-[24px] leading-snug text-film-white md:text-[34px]"

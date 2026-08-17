@@ -35,7 +35,11 @@ export default function Header() {
             <span className="film-display text-[36px] tracking-[-0.02em]">BENDY</span>
           </Link>
 
-          <nav className="hidden items-center gap-8 whitespace-nowrap md:flex">
+          {/* Seven nav links plus the wordmark do not fit at md (768px) — the
+              row overflowed the viewport between roughly 768 and 1100px. The
+              full nav appears at lg, the issue slug and search only at xl,
+              and the drawer covers everything below. */}
+          <nav className="hidden items-center gap-6 whitespace-nowrap lg:flex xl:gap-8">
             {navLinks.map((link) => {
               const active = location.pathname === link.href;
               return (
@@ -53,7 +57,7 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="hidden shrink-0 items-center gap-4 md:flex">
+          <div className="hidden shrink-0 items-center gap-4 xl:flex">
             <span className="small-caps text-mist">{REEL_ISSUE}</span>
             <Link
               to="/map"
@@ -66,7 +70,7 @@ export default function Header() {
 
           <button
             onClick={() => setMobileNavOpen(true)}
-            className="p-2 transition-colors hover:bg-white/10 md:hidden"
+            className="p-2 transition-colors hover:bg-white/10 lg:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6 text-film-white" />

@@ -19,6 +19,9 @@ interface HeroCarouselProps {
   label?: string;
   /** Bottom-right mono timecode. */
   timecode?: string;
+  /** Fires with the index of the frame now on screen, so the caller can
+      caption the photograph that is actually visible. */
+  onFrameChange?: (index: number) => void;
 }
 
 const FRAME_STYLE: React.CSSProperties = {
@@ -26,11 +29,20 @@ const FRAME_STYLE: React.CSSProperties = {
   minHeight: 680,
 };
 
-export default function HeroCarousel({ children, label, timecode }: HeroCarouselProps) {
+export default function HeroCarousel({
+  children,
+  label,
+  timecode,
+  onFrameChange,
+}: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const hasImages = heroImages.length > 0;
+
+  useEffect(() => {
+    onFrameChange?.(currentIndex);
+  }, [currentIndex, onFrameChange]);
 
   useEffect(() => {
     if (!hasImages) return;
@@ -103,6 +115,10 @@ export default function HeroCarousel({ children, label, timecode }: HeroCarousel
             </picture>
           </div>
         ))}
+
+        {/* Sits above the photography (which is at -z-10) and below the title
+            block (z-10), so the centred type stays legible over bright frames. */}
+        <div className="scrim-center pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
 
         <div className="brackets" aria-hidden="true">
           <i className="tl" />
