@@ -35,3 +35,4 @@ dist-ssr
 /overflow.mjs
 /probe*.mjs
 /imgcheck.mjs
+dist-emu
