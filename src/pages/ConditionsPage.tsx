@@ -211,7 +211,7 @@ export default function ConditionsPage() {
       <MountainScene
         scene="01"
         kicker="Mt. Bachelor"
-        href="https://www.mtbachelor.com/conditions"
+        href="https://www.mtbachelor.com/"
         bg="bg-black"
         conditions={mountain}
         loading={mtLoading}
@@ -221,7 +221,7 @@ export default function ConditionsPage() {
       <MountainScene
         scene="02"
         kicker="Hoodoo Ski Area"
-        href="https://www.skihoodoo.com/conditions"
+        href="https://www.skihoodoo.com/"
         bg="bg-film-deep"
         conditions={hoodoo}
         loading={hoodooLoading}
@@ -373,7 +373,7 @@ function MountainScene({
                 </>
               )}
               <a href={href} target="_blank" rel="noopener noreferrer" className="text-ember">
-                Full report ↗
+                {conditions ? 'Full report ↗' : 'Visit their website ↗'}
               </a>
             </>
           }
@@ -400,9 +400,20 @@ function MountainScene({
             />
           </div>
         ) : (
-          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
-            {notice || 'No live conditions feed is available right now.'}
-          </p>
+          <div className="border-t border-hair py-10">
+            <p className="font-mono text-[12px] text-whisper">
+              {notice || 'No live conditions feed is available right now.'}
+            </p>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary mt-6 inline-flex"
+            >
+              Visit {new URL(href).hostname.replace(/^www\./, '')}{' '}
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
         )}
       </div>
     </section>
