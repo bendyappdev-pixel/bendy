@@ -1,5 +1,5 @@
 /**
- * ConditionsPage — the almanac language taken all the way. Nine scenes, one
+ * ConditionsPage — the almanac language taken all the way. Eight scenes, one
  * per live data source, each a numbered SceneHeader over a hairline-divided
  * grid of mono/display readouts. No cards, no filled backgrounds, no emoji —
  * every status is read off the shared crowd-token palette via `conditionMeta`
@@ -10,15 +10,14 @@
  *   02  Hoodoo Ski Area        mountain snow report
  *   03  Air Quality            Open-Meteo AQI
  *   04  Fire                   NIFC/WFIGS wildfire incidents
- *   05  Pollen & Allergies     Google Pollen API
- *   06  River Flows            USGS gauges
- *   07  Sun & Light            sunrise / sunset / golden hour
- *   08  Road Conditions        mountain pass status
- *   09  Downtown Parking       typical availability
+ *   05  River Flows            USGS gauges
+ *   06  Sun & Light            sunrise / sunset / golden hour
+ *   07  Road Conditions        mountain pass status
+ *   08  Downtown Parking       typical availability
  */
 
 import { ReactNode, useEffect, useState } from 'react';
-import { TrendingDown, TrendingUp, Minus, RefreshCw, TreePine, Sprout, Flower2, Flame } from 'lucide-react';
+import { TrendingDown, TrendingUp, Minus, RefreshCw, Flame } from 'lucide-react';
 
 import { mockParkingConditions, calculateSunTimes } from '../data/conditions';
 import {
@@ -26,14 +25,12 @@ import {
   ConditionStatus,
   FireIncident,
   MountainConditions,
-  PollenData,
   RiverConditions,
   RoadCondition,
 } from '../types/conditions';
 import {
   useRiverConditions,
   useAirQuality,
-  usePollenData,
   useFireIncidents,
   useMountainConditions,
   useHoodooConditions,
@@ -175,7 +172,6 @@ export default function ConditionsPage() {
 
   const { rivers, loading: riversLoading, refresh: refreshRivers } = useRiverConditions();
   const { airQuality, loading: aqLoading, refresh: refreshAQ } = useAirQuality();
-  const { pollenData, loading: pollenLoading, refresh: refreshPollen } = usePollenData();
   const { conditions: mountain, loading: mtLoading, error: mtError } = useMountainConditions();
   const { conditions: hoodoo, loading: hoodooLoading, error: hoodooError } = useHoodooConditions();
   const { roads, loading: roadsLoading } = useRoadConditions();
@@ -197,7 +193,6 @@ export default function ConditionsPage() {
   const handleRefresh = () => {
     refreshRivers();
     refreshAQ();
-    refreshPollen();
   };
 
   return (
@@ -236,8 +231,6 @@ export default function ConditionsPage() {
       <AirQualityScene airQuality={airQuality} loading={aqLoading} />
 
       <FireScene active={activeFires} significant={significantFires} loading={firesLoading} error={firesError} />
-
-      <PollenScene pollenData={pollenData} loading={pollenLoading} />
 
       <RiversScene rivers={rivers} loading={riversLoading} />
 
@@ -622,125 +615,7 @@ function FireScene({
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 05 · POLLEN & ALLERGIES
-   ═══════════════════════════════════════════════════════════════════ */
-
-function pollenSeverity(pt: { inSeason: boolean; indexValue: number }): ConditionStatus {
-  if (!pt.inSeason || pt.indexValue <= 1) return 'good';
-  if (pt.indexValue <= 3) return 'moderate';
-  return 'poor';
-}
-
-function PollenScene({ pollenData, loading }: { pollenData: PollenData | null; loading: boolean }) {
-  return (
-    <section className="border-b border-hair bg-film-deep">
-      <div className="container-app pt-16">
-        <SceneHeader
-          scene="05"
-          kicker="Pollen & Allergies"
-          title={
-            loading
-              ? 'Counting Grains.'
-              : pollenData
-              ? `${
-                  pollenData.overallStatus === 'good'
-                    ? 'Low'
-                    : pollenData.overallStatus === 'moderate'
-                    ? 'Moderate'
-                    : 'High'
-                } Pollen Today.`
-              : 'Off The Grid.'
-          }
-          meta={
-            pollenData && (
-              <>
-                <LiveTag />
-                <br />
-                Updated {getTimeAgo(pollenData.lastUpdated)}
-                <br />
-                Google Pollen API
-              </>
-            )
-          }
-        />
-      </div>
-
-      <div className="container-app py-10">
-        {loading ? (
-          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
-            Counting pollen grains…
-          </p>
-        ) : pollenData ? (
-          <div className="border-t border-hair pt-10">
-            <div className="grid grid-cols-3 divide-x divide-hair border border-hair">
-              {pollenData.pollenTypes.map((pt) => {
-                const Icon = pt.code === 'TREE' ? TreePine : pt.code === 'GRASS' ? Sprout : Flower2;
-                const color = conditionMeta(pollenSeverity(pt)).color;
-                return (
-                  <div key={pt.code} className="p-6 text-center">
-                    <Icon className="mx-auto h-5 w-5" style={{ color }} aria-hidden="true" />
-                    <div className="small-caps mt-3 text-whisper">{pt.displayName}</div>
-                    <div className="film-display-thin mt-1.5 text-[18px]" style={{ color }}>
-                      {pt.inSeason ? pt.category : 'Off Season'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {pollenData.plants.length > 0 && (
-              <div className="mt-8">
-                <div className="small-caps text-whisper">Top allergens today</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {pollenData.plants.slice(0, 5).map((plant) => {
-                    const color = conditionMeta(pollenSeverity(plant)).color;
-                    return (
-                      <span
-                        key={plant.code}
-                        className="flex items-center gap-2 border border-hair px-3 py-1.5 font-mono text-[11px] uppercase"
-                        style={{ color }}
-                      >
-                        {plant.displayName}
-                        <span className="text-whisper">{plant.indexValue}/5</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {(() => {
-              const recommendation = pollenData.pollenTypes
-                .flatMap((pt) => pt.healthRecommendations)
-                .find((r) => r);
-              const fallback =
-                pollenData.overallStatus === 'good'
-                  ? 'Low pollen levels — great day to be outdoors.'
-                  : pollenData.overallStatus === 'moderate'
-                  ? 'Moderate pollen — allergy sufferers may want to take medication before heading out.'
-                  : 'High pollen levels — consider limiting outdoor time if you have allergies.';
-              return (
-                <div className="mt-8 border-t border-hair pt-6">
-                  <div className="small-caps text-whisper">Health tip</div>
-                  <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-mist">
-                    {recommendation ?? fallback}
-                  </p>
-                </div>
-              );
-            })()}
-          </div>
-        ) : (
-          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
-            Unable to load pollen data.
-          </p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   SCENE 06 · RIVER FLOWS
+   SCENE 05 · RIVER FLOWS
    ═══════════════════════════════════════════════════════════════════ */
 
 function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: boolean }) {
@@ -750,7 +625,7 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="06"
+          scene="05"
           kicker="River Flows"
           title={
             loading
@@ -866,7 +741,7 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 07 · SUN & LIGHT
+   SCENE 06 · SUN & LIGHT
    ═══════════════════════════════════════════════════════════════════ */
 
 function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes> }) {
@@ -874,7 +749,7 @@ function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes>
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="07"
+          scene="06"
           kicker="Sun & Light"
           title={`${sunTimes.dayLength} Of Daylight.`}
           meta={
@@ -913,7 +788,7 @@ function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes>
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 08 · ROAD CONDITIONS
+   SCENE 07 · ROAD CONDITIONS
    ═══════════════════════════════════════════════════════════════════ */
 
 function roadConditionStatus(status: RoadCondition['status']): ConditionStatus {
@@ -933,7 +808,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="08"
+          scene="07"
           kicker="Road Conditions"
           title={loading ? 'Reading The Passes.' : `${roads.length} Passes Tracked.`}
           meta={
@@ -992,7 +867,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 09 · DOWNTOWN PARKING
+   SCENE 08 · DOWNTOWN PARKING
    ═══════════════════════════════════════════════════════════════════ */
 
 function ParkingScene() {
@@ -1000,7 +875,7 @@ function ParkingScene() {
     <section className="border-b border-hair bg-film-coal">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="09"
+          scene="08"
           kicker="Downtown Parking"
           title="Typical Availability."
           meta={
@@ -1055,8 +930,8 @@ function FooterNote() {
   return (
     <div className="container-app py-14 text-center">
       <p className="font-mono text-[11px] uppercase tracking-wide text-whisper">
-        Data sources — USGS Water Services · Open-Meteo Air Quality API · NIFC WFIGS · Google
-        Pollen API · Mt. Bachelor · TripCheck
+        Data sources — USGS Water Services · Open-Meteo Air Quality API · NIFC WFIGS · Mt.
+        Bachelor · TripCheck
       </p>
       <p className="mt-2 font-mono text-[10px] text-whisper">
         River and air quality data updates automatically. Always verify conditions before heading

@@ -67,30 +67,6 @@ export interface ParkingConditions {
   trend: 'filling' | 'emptying' | 'stable';
 }
 
-export interface PollenTypeInfo {
-  code: string; // GRASS, TREE, WEED
-  displayName: string;
-  inSeason: boolean;
-  indexValue: number; // 0-5 Universal Pollen Index
-  category: string; // None, Very Low, Low, Moderate, High, Very High
-  healthRecommendations: string[];
-}
-
-export interface PlantInfo {
-  code: string;
-  displayName: string;
-  inSeason: boolean;
-  indexValue: number;
-  category: string;
-}
-
-export interface PollenData {
-  pollenTypes: PollenTypeInfo[];
-  plants: PlantInfo[];
-  overallStatus: ConditionStatus;
-  lastUpdated: Date;
-}
-
 export interface FireIncident {
   /** Cleaned display name — dispatch codes stripped ("0433 BREWER" → "Brewer"). */
   name: string;
