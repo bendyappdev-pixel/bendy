@@ -9,6 +9,17 @@ interface RoadCondition {
   lastUpdated: string;
 }
 
+/**
+ * Mountain pass status, derived from published seasonal schedules.
+ *
+ * TripCheck's undocumented JSON endpoint this used to call is gone, and
+ * ODOT's official API requires a registered key. Until one is wired up, the
+ * statuses below come from each road's published seasonal closure schedule —
+ * which is real information (McKenzie Pass genuinely closes every winter) but
+ * is NOT live incident data, and every entry says so. `source` is
+ * 'seasonal-schedule' so the client can label it honestly.
+ */
+
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -16,90 +27,59 @@ const corsHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
 };
 
-function parseRoadStatus(status: string): 'open' | 'chains-required' | 'closed' {
-  const lower = status.toLowerCase();
-  if (lower.includes('closed')) return 'closed';
-  if (lower.includes('chain') || lower.includes('traction')) return 'chains-required';
-  return 'open';
+const VERIFY = 'Seasonal schedule — verify current status at tripcheck.com.';
+
+function seasonalRoads(now: Date): RoadCondition[] {
+  const month = now.getMonth(); // 0-indexed
+  const iso = now.toISOString();
+
+  // Published closure windows: McKenzie Pass ~Nov–late Jun; Cascade Lakes
+  // Highway ~Nov–May; Newberry's FR-21 snowbound ~Nov–May; Santiam year-round.
+  const mckenzieOpen = month >= 6 && month <= 9; // Jul–Oct
+  const cascadeLakesOpen = month >= 5 && month <= 10; // Jun–Nov
+  const newberryOpen = month >= 5 && month <= 9; // Jun–Oct
+
+  return [
+    {
+      name: 'Santiam Pass',
+      route: 'US-20',
+      status: 'open',
+      conditions: `Open year-round; winter storms can require chains. ${VERIFY}`,
+      elevation: 4817,
+      lastUpdated: iso,
+    },
+    {
+      name: 'McKenzie Pass',
+      route: 'OR-242',
+      status: mckenzieOpen ? 'open' : 'closed',
+      conditions: mckenzieOpen
+        ? `Open for the season (typically July through October). ${VERIFY}`
+        : `Closed for the winter season (typically November through late June). ${VERIFY}`,
+      elevation: 5325,
+      lastUpdated: iso,
+    },
+    {
+      name: 'Cascade Lakes Highway',
+      route: 'OR-46',
+      status: cascadeLakesOpen ? 'open' : 'closed',
+      conditions: cascadeLakesOpen
+        ? `Open for the season (typically June through November). ${VERIFY}`
+        : `Gated past Mt. Bachelor for winter (typically November through May). ${VERIFY}`,
+      elevation: 6300,
+      lastUpdated: iso,
+    },
+    {
+      name: 'Newberry Crater',
+      route: 'FR-21',
+      status: newberryOpen ? 'open' : 'closed',
+      conditions: newberryOpen
+        ? `Open for the season (typically June through October). ${VERIFY}`
+        : `Snowbound at upper elevations (typically November through May). ${VERIFY}`,
+      elevation: 6400,
+      lastUpdated: iso,
+    },
+  ];
 }
-
-function getRouteElevation(name: string): number {
-  const elevations: Record<string, number> = {
-    'Santiam Pass': 4817,
-    'McKenzie Pass': 5325,
-    'Cascade Lakes Highway': 6300,
-    'Newberry Crater': 6400,
-  };
-  return elevations[name] || 4000;
-}
-
-async function fetchTripCheckRoute(routeId: string, name: string): Promise<RoadCondition | null> {
-  try {
-    const response = await fetch('https://tripcheck.com/Scripts/map/data/roadConditions.json', {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BendyApp/1.0)' },
-    });
-
-    if (!response.ok) return null;
-
-    const data = (await response.json()) as Record<string, unknown>[];
-
-    const route = data.find(
-      (r: Record<string, unknown>) =>
-        String(r.routeId || '').includes(routeId) ||
-        String(r.name || '').toLowerCase().includes(name.toLowerCase())
-    );
-
-    if (route) {
-      return {
-        name,
-        route: routeId.replace(/([A-Z]+)(\d+)/, '$1-$2'),
-        status: parseRoadStatus(String(route.status || '')),
-        conditions: String(route.conditions || route.description || 'No current alerts'),
-        elevation: getRouteElevation(name),
-        lastUpdated: new Date().toISOString(),
-      };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-const FALLBACK_ROADS: RoadCondition[] = [
-  {
-    name: 'Santiam Pass',
-    route: 'US-20',
-    status: 'open',
-    conditions: 'Check tripcheck.com for current conditions',
-    elevation: 4817,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    name: 'McKenzie Pass',
-    route: 'OR-242',
-    status: 'closed',
-    conditions: 'Closed for winter season (Nov-June)',
-    elevation: 5325,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    name: 'Cascade Lakes Highway',
-    route: 'OR-46',
-    status: 'open',
-    conditions: 'Check tripcheck.com for current conditions',
-    elevation: 6300,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    name: 'Newberry Crater',
-    route: 'FR-21',
-    status: 'chains-required',
-    conditions: 'Snow covered, chains or 4WD required',
-    elevation: 6400,
-    lastUpdated: new Date().toISOString(),
-  },
-];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
@@ -111,45 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
 
-  try {
-    const roads: RoadCondition[] = [];
-
-    const santiamCondition = await fetchTripCheckRoute('US20', 'Santiam Pass');
-    if (santiamCondition) roads.push(santiamCondition);
-
-    const cascadeCondition = await fetchTripCheckRoute('OR46', 'Cascade Lakes Highway');
-    if (cascadeCondition) roads.push(cascadeCondition);
-
-    roads.push({
-      name: 'McKenzie Pass',
-      route: 'OR-242',
-      status: 'closed',
-      conditions: 'Closed for winter season (Nov-June)',
-      elevation: 5325,
-      lastUpdated: new Date().toISOString(),
-    });
-
-    roads.push({
-      name: 'Newberry Crater',
-      route: 'FR-21',
-      status: 'chains-required',
-      conditions: 'Snow covered, chains or 4WD required',
-      elevation: 6400,
-      lastUpdated: new Date().toISOString(),
-    });
-
-    return res.status(200).json({
-      roads,
-      lastUpdated: new Date().toISOString(),
-      source: 'tripcheck.com',
-    });
-  } catch (error) {
-    console.error('Error fetching road conditions:', error);
-    return res.status(200).json({
-      roads: FALLBACK_ROADS.map((r) => ({ ...r, lastUpdated: new Date().toISOString() })),
-      lastUpdated: new Date().toISOString(),
-      source: 'fallback',
-      error: 'Live data temporarily unavailable',
-    });
-  }
+  const now = new Date();
+  return res.status(200).json({
+    roads: seasonalRoads(now),
+    lastUpdated: now.toISOString(),
+    source: 'seasonal-schedule',
+  });
 }

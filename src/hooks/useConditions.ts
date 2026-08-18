@@ -10,23 +10,22 @@ import {
   PollenTypeInfo,
   PlantInfo,
 } from '../types/conditions';
-import {
-  mockMountainConditions,
-  mockHoodooConditions,
-  mockRoadConditions,
-} from '../data/conditions';
 import { appCheckFetch } from '../utils/appCheckFetch';
 
-// USGS Site IDs for Central Oregon rivers
+// USGS Site IDs for Central Oregon rivers. Only gauges that actually report
+// real-time data belong here — the upper Deschutes gauges near Bend
+// (14064500, 14056500) and Fall River (14057500) were discontinued in 1991
+// and USGS returns their last-ever reading, which we must not display.
 const USGS_SITES = {
-  deschutesAtBend: '14064500',
-  deschutesBelowWickiup: '14056500',
+  deschutesAtCulver: '14076500', // Middle Deschutes above Lake Billy Chinook
   deschutesAtMadras: '14092500', // Lower Deschutes - drift boat fishing
   metolius: '14091500',
   crookedOsborne: '14087380', // Below Osborne Canyon - upper tailwater
   crookedOpalSprings: '14087400', // Below Opal Springs - lower tailwater
-  fallRiver: '14057500', // Spring-fed, premiere fly fishing
 };
+
+// A gauge reading older than this is a dead or stalled station, not live data.
+const MAX_READING_AGE_MS = 24 * 60 * 60 * 1000;
 
 // Bend, OR coordinates for weather APIs
 const BEND_COORDS = { lat: 44.0582, lng: -121.3153 };
@@ -93,6 +92,7 @@ export function useRiverConditions() {
         const latestValue = series.values[0]?.value[0];
 
         if (!latestValue) return;
+        if (Date.now() - new Date(latestValue.dateTime).getTime() > MAX_READING_AGE_MS) return;
 
         // Get or create river entry
         let river = riverData.get(siteName);
@@ -133,16 +133,17 @@ export function useRiverConditions() {
         )
         .map(r => ({
           ...r,
-          temperature: r.temperature || 50, // Default if no temp sensor
+          temperature: r.temperature ?? null, // Not every gauge has a temp sensor
           flowTrend: 'stable' as const, // Would need historical data for trend
           regulations: getRiverRegulations(r.name || '', r.location || ''),
         }));
 
-      setRivers(riversArray.length > 0 ? riversArray : getFallbackRiverData());
+      setRivers(riversArray);
+      if (riversArray.length === 0) setError('No live gauge data available');
     } catch (err) {
       console.error('Error fetching river data:', err);
       setError('Unable to fetch live river data');
-      setRivers(getFallbackRiverData());
+      setRivers([]);
     } finally {
       setLoading(false);
     }
@@ -191,7 +192,7 @@ export function useAirQuality() {
     } catch (err) {
       console.error('Error fetching air quality:', err);
       setError('Unable to fetch live air quality data');
-      setAirQuality(getFallbackAirQuality());
+      setAirQuality(null);
     } finally {
       setLoading(false);
     }
@@ -302,7 +303,7 @@ export function usePollenData() {
     } catch (err) {
       console.error('Error fetching pollen data:', err);
       setError('Unable to fetch live pollen data');
-      setPollenData(getFallbackPollenData());
+      setPollenData(null);
     } finally {
       setLoading(false);
     }
@@ -324,22 +325,10 @@ function getPollenStatus(maxIndex: number): ConditionStatus {
   return 'poor';
 }
 
-function getFallbackPollenData(): PollenData {
-  return {
-    pollenTypes: [
-      { code: 'TREE', displayName: 'Tree', inSeason: true, indexValue: 0, category: 'None', healthRecommendations: [] },
-      { code: 'GRASS', displayName: 'Grass', inSeason: false, indexValue: 0, category: 'None', healthRecommendations: [] },
-      { code: 'WEED', displayName: 'Weed', inSeason: false, indexValue: 0, category: 'None', healthRecommendations: [] },
-    ],
-    plants: [],
-    overallStatus: 'good',
-    lastUpdated: new Date(),
-  };
-}
 
 // Mt. Bachelor - fetches from our Firebase Function proxy
 export function useMountainConditions() {
-  const [conditions, setConditions] = useState<MountainConditions>(mockMountainConditions);
+  const [conditions, setConditions] = useState<MountainConditions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -352,6 +341,14 @@ export function useMountainConditions() {
       if (!response.ok) throw new Error('Failed to fetch Mt. Bachelor conditions');
 
       const data = await response.json();
+
+      // The API says so explicitly when it has no live data. Never display
+      // anything it didn't actually source.
+      if (!data || data.available === false || data.source === 'fallback' || data.error) {
+        setConditions(null);
+        setError(data?.message || 'No live conditions available — check mtbachelor.com.');
+        return;
+      }
 
       setConditions({
         snowDepthBase: data.snowDepthBase,
@@ -366,12 +363,8 @@ export function useMountainConditions() {
       });
     } catch (err) {
       console.error('Error fetching Mt. Bachelor conditions:', err);
-      setError('Unable to fetch live conditions');
-      // Keep mock data as fallback
-      setConditions({
-        ...mockMountainConditions,
-        lastUpdated: new Date(),
-      });
+      setError('No live conditions available — check mtbachelor.com.');
+      setConditions(null);
     } finally {
       setLoading(false);
     }
@@ -389,7 +382,7 @@ export function useMountainConditions() {
 
 // Hoodoo Ski Area - fetches from our Firebase Function proxy
 export function useHoodooConditions() {
-  const [conditions, setConditions] = useState<MountainConditions>(mockHoodooConditions);
+  const [conditions, setConditions] = useState<MountainConditions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -402,6 +395,12 @@ export function useHoodooConditions() {
       if (!response.ok) throw new Error('Failed to fetch Hoodoo conditions');
 
       const data = await response.json();
+
+      if (!data || data.available === false || data.source === 'fallback' || data.error) {
+        setConditions(null);
+        setError(data?.message || 'No live conditions available — check skihoodoo.com.');
+        return;
+      }
 
       setConditions({
         snowDepthBase: data.snowDepthBase,
@@ -416,12 +415,8 @@ export function useHoodooConditions() {
       });
     } catch (err) {
       console.error('Error fetching Hoodoo conditions:', err);
-      setError('Unable to fetch live conditions');
-      // Keep mock data as fallback
-      setConditions({
-        ...mockHoodooConditions,
-        lastUpdated: new Date(),
-      });
+      setError('No live conditions available — check skihoodoo.com.');
+      setConditions(null);
     } finally {
       setLoading(false);
     }
@@ -439,7 +434,7 @@ export function useHoodooConditions() {
 
 // Road conditions - fetches from our Firebase Function proxy
 export function useRoadConditions() {
-  const [roads, setRoads] = useState<RoadCondition[]>(mockRoadConditions);
+  const [roads, setRoads] = useState<RoadCondition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -461,12 +456,8 @@ export function useRoadConditions() {
       }
     } catch (err) {
       console.error('Error fetching road conditions:', err);
-      setError('Unable to fetch live road conditions');
-      // Keep mock data as fallback
-      setRoads(mockRoadConditions.map(road => ({
-        ...road,
-        lastUpdated: new Date(),
-      })));
+      setError('Unable to fetch road status');
+      setRoads([]);
     } finally {
       setLoading(false);
     }
@@ -494,8 +485,7 @@ function getShortenedName(siteName: string): string {
 function getLocationFromSiteName(siteName: string): string {
   // Extract location from USGS site name
   const parts = siteName.split(',')[0];
-  if (parts.toLowerCase().includes('at bend')) return 'At Bend';
-  if (parts.toLowerCase().includes('below wickiup')) return 'Below Wickiup Dam';
+  if (parts.toLowerCase().includes('near culver')) return 'Near Culver';
   if (parts.toLowerCase().includes('near madras')) return 'Near Madras';
   if (parts.toLowerCase().includes('near grandview')) return 'Near Camp Sherman';
   if (parts.toLowerCase().includes('osborne canyon')) return 'Below Osborne Canyon';
@@ -628,82 +618,7 @@ function getForecastMessage(currentAqi: number): string {
   return 'Check local advisories for updates';
 }
 
-function getFallbackRiverData(): RiverConditions[] {
-  return [
-    {
-      name: 'Deschutes River',
-      location: 'At Bend',
-      flowRate: 1200,
-      flowTrend: 'stable',
-      temperature: 50,
-      status: 'good',
-      fishingRating: 'Data unavailable',
-      paddlingRating: 'Data unavailable',
-      regulations: { barblesRequired: false, fliesOnly: false, catchAndRelease: false },
-      lastUpdated: new Date(),
-    },
-    {
-      name: 'Deschutes River',
-      location: 'Near Madras',
-      flowRate: 4200,
-      flowTrend: 'stable',
-      temperature: 52,
-      status: 'good',
-      fishingRating: 'Data unavailable',
-      paddlingRating: 'Prime drift boat conditions',
-      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: false },
-      lastUpdated: new Date(),
-    },
-    {
-      name: 'Crooked River',
-      location: 'Below Osborne Canyon',
-      flowRate: 100,
-      flowTrend: 'stable',
-      temperature: 48,
-      status: 'good',
-      fishingRating: 'Data unavailable',
-      paddlingRating: 'Fly fishing only - not for paddling',
-      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: true },
-      lastUpdated: new Date(),
-    },
-    {
-      name: 'Crooked River',
-      location: 'Below Opal Springs',
-      flowRate: 150,
-      flowTrend: 'stable',
-      temperature: 50,
-      status: 'good',
-      fishingRating: 'Data unavailable',
-      paddlingRating: 'Fly fishing only - not for paddling',
-      regulations: { barblesRequired: true, fliesOnly: false, catchAndRelease: true },
-      lastUpdated: new Date(),
-    },
-    {
-      name: 'Fall River',
-      location: 'Near La Pine',
-      flowRate: 200,
-      flowTrend: 'stable',
-      temperature: 42,
-      status: 'good',
-      fishingRating: 'Data unavailable',
-      paddlingRating: 'No boats - protected fly fishing water',
-      regulations: { barblesRequired: true, fliesOnly: true, catchAndRelease: true },
-      lastUpdated: new Date(),
-    },
-  ];
-}
 
-function getFallbackAirQuality(): AirQuality {
-  return {
-    aqi: 35,
-    category: 'Good',
-    primaryPollutant: 'PM2.5',
-    healthMessage: 'Live data temporarily unavailable',
-    status: 'good',
-    forecast: 'Check airnow.gov for current conditions',
-    lastUpdated: new Date(),
-  };
-}
 
 // ODFW fishing regulations by river (update annually)
 function getRiverRegulations(riverName: string, location: string): RiverRegulations {

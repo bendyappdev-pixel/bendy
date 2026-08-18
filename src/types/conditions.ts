@@ -23,7 +23,7 @@ export interface RiverConditions {
   location: string;
   flowRate: number; // cfs
   flowTrend: 'rising' | 'falling' | 'stable';
-  temperature: number; // fahrenheit
+  temperature: number | null; // fahrenheit; null when the gauge has no temp sensor
   status: ConditionStatus;
   fishingRating: string;
   paddlingRating: string;

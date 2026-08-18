@@ -75,11 +75,10 @@ export default function BulletinTicker() {
 
     const deschutes = rivers.find((r) => /deschutes/i.test(r.name)) ?? rivers[0];
     if (deschutes) {
+      const temp = deschutes.temperature !== null ? ` · ${Math.round(deschutes.temperature)}°F` : '';
       out.push({
         key: 'river',
-        text: `${deschutes.name.toUpperCase()} · ${Math.round(
-          deschutes.temperature
-        )}°F · ${deschutes.flowRate.toLocaleString()} CFS`,
+        text: `${deschutes.name.toUpperCase()} (${deschutes.location.toUpperCase()})${temp} · ${deschutes.flowRate.toLocaleString()} CFS`,
       });
     }
 

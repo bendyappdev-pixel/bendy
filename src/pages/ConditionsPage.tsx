@@ -173,8 +173,8 @@ export default function ConditionsPage() {
   const { rivers, loading: riversLoading, refresh: refreshRivers } = useRiverConditions();
   const { airQuality, loading: aqLoading, refresh: refreshAQ } = useAirQuality();
   const { pollenData, loading: pollenLoading, refresh: refreshPollen } = usePollenData();
-  const { conditions: mountain, loading: mtLoading } = useMountainConditions();
-  const { conditions: hoodoo, loading: hoodooLoading } = useHoodooConditions();
+  const { conditions: mountain, loading: mtLoading, error: mtError } = useMountainConditions();
+  const { conditions: hoodoo, loading: hoodooLoading, error: hoodooError } = useHoodooConditions();
   const { roads, loading: roadsLoading } = useRoadConditions();
 
   useEffect(() => {
@@ -216,6 +216,7 @@ export default function ConditionsPage() {
         bg="bg-black"
         conditions={mountain}
         loading={mtLoading}
+        notice={mtError}
       />
 
       <MountainScene
@@ -225,6 +226,7 @@ export default function ConditionsPage() {
         bg="bg-film-deep"
         conditions={hoodoo}
         loading={hoodooLoading}
+        notice={hoodooError}
       />
 
       <AirQualityScene airQuality={airQuality} loading={aqLoading} />
@@ -258,7 +260,7 @@ function Masthead({
   sunTimes,
   onRefresh,
 }: {
-  mountain: MountainConditions;
+  mountain: MountainConditions | null;
   mtLoading: boolean;
   airQuality: AirQuality | null;
   aqLoading: boolean;
@@ -294,7 +296,7 @@ function Masthead({
         <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-hair pt-10 md:grid-cols-4">
           <div className="min-w-0">
             <dd className="film-display text-[clamp(32px,4vw,56px)] text-film-white">
-              {mtLoading ? '—' : `${mountain.liftsOpen}/${mountain.liftsTotal}`}
+              {mtLoading ? '—' : mountain ? `${mountain.liftsOpen}/${mountain.liftsTotal}` : '--'}
             </dd>
             <dt className="small-caps mt-2 text-whisper">Bachelor lifts open</dt>
           </div>
@@ -334,13 +336,15 @@ function MountainScene({
   bg,
   conditions,
   loading,
+  notice,
 }: {
   scene: string;
   kicker: string;
   href: string;
   bg: string;
-  conditions: MountainConditions;
+  conditions: MountainConditions | null;
   loading: boolean;
+  notice?: string | null;
 }) {
   return (
     <section className={cn('border-b border-hair', bg)}>
@@ -351,18 +355,24 @@ function MountainScene({
           title={
             loading ? (
               'Reading The Mountain.'
-            ) : (
+            ) : conditions ? (
               <>
                 {conditions.snowDepthBase}&quot; Base.
                 <br />
                 {conditions.conditions}.
               </>
+            ) : (
+              'No Live Report.'
             )
           }
           meta={
             <>
-              Updated {getTimeAgo(conditions.lastUpdated)}
-              <br />
+              {conditions && (
+                <>
+                  Updated {getTimeAgo(conditions.lastUpdated)}
+                  <br />
+                </>
+              )}
               <a href={href} target="_blank" rel="noopener noreferrer" className="text-ember">
                 Full report ↗
               </a>
@@ -376,7 +386,7 @@ function MountainScene({
           <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
             Reading the mountain…
           </p>
-        ) : (
+        ) : conditions ? (
           <div className="grid grid-cols-2 divide-x divide-y divide-hair border border-hair md:grid-cols-4">
             <DataCell label="Base depth" value={conditions.snowDepthBase} unit="in" />
             <DataCell label="Summit depth" value={conditions.snowDepthSummit} unit="in" />
@@ -390,6 +400,10 @@ function MountainScene({
               className="text-[22px] text-ember"
             />
           </div>
+        ) : (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            {notice || 'No live conditions feed is available right now.'}
+          </p>
         )}
       </div>
     </section>
@@ -601,7 +615,13 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
         <SceneHeader
           scene="05"
           kicker="River Flows"
-          title={loading ? 'Reading The Gauges.' : `${sorted.length} Gauges, Live.`}
+          title={
+            loading
+              ? 'Reading The Gauges.'
+              : sorted.length > 0
+              ? `${sorted.length} Gauges, Live.`
+              : 'Gauges Offline.'
+          }
           meta={
             sorted[0] && (
               <>
@@ -664,12 +684,16 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
                     </div>
                     <div>
                       <div className="film-display text-[clamp(28px,4vw,44px)] text-film-white">
-                        {river.temperature}
-                        <span className="ml-1.5 align-middle font-mono text-[11px] normal-case text-whisper">
-                          °f
-                        </span>
+                        {river.temperature ?? '—'}
+                        {river.temperature !== null && (
+                          <span className="ml-1.5 align-middle font-mono text-[11px] normal-case text-whisper">
+                            °f
+                          </span>
+                        )}
                       </div>
-                      <div className="small-caps mt-1 text-whisper">Water temp</div>
+                      <div className="small-caps mt-1 text-whisper">
+                        {river.temperature !== null ? 'Water temp' : 'No temp sensor'}
+                      </div>
                     </div>
                   </div>
 
@@ -778,7 +802,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
           meta={
             roads[0] && (
               <>
-                Updated {getTimeAgo(roads[0].lastUpdated)}
+                Seasonal schedule — not live
                 <br />
                 <a
                   href="https://tripcheck.com"
@@ -786,7 +810,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
                   rel="noopener noreferrer"
                   className="text-ember"
                 >
-                  TripCheck ↗
+                  Verify on TripCheck ↗
                 </a>
               </>
             )
@@ -841,12 +865,12 @@ function ParkingScene() {
         <SceneHeader
           scene="08"
           kicker="Downtown Parking"
-          title="Estimated Availability."
+          title="Typical Availability."
           meta={
             <>
-              Coming soon
+              Typical patterns — not live data
               <br />
-              Live sensor data
+              Live sensors coming soon
             </>
           }
         />

@@ -459,9 +459,10 @@ function FieldScene() {
     });
   }
   if (deschutes) {
+    const temp = deschutes.temperature !== null ? `${Math.round(deschutes.temperature)}° · ` : '';
     transmissions.push({
       label: `River · ${deschutes.name}`,
-      value: `${Math.round(deschutes.temperature)}° · ${deschutes.flowRate.toLocaleString()} cfs · ${deschutes.flowTrend}`,
+      value: `${temp}${deschutes.flowRate.toLocaleString()} cfs · ${deschutes.flowTrend}`,
       status: deschutes.paddlingRating,
       ember: deschutes.status === 'good',
     });
@@ -523,8 +524,8 @@ function FieldScene() {
               : 'The Cascades Are Still Spinning.'}
           </h3>
           <p className="mt-4 text-[16px] leading-relaxed text-mist">
-            Conditions pulled straight from the mountain, the river gauges and the road
-            crews — the same sources the locals check before they commit to a day.
+            Live river gauges, mountain reports in season, and the pass schedules — the
+            same sources the locals check before they commit to a day.
           </p>
 
           {transmissions.length > 0 && (
