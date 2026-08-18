@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { locations } from '../../data/locations';
-import { Location, CrowdLevel } from '../../types';
+import { Location, CrowdLevel, CrowdReport } from '../../types';
 import { useCrowdReports } from '../../hooks/useCrowdReports';
 import { crowdMeta } from '../ui/CrowdBadge';
 import { coordinatesForSpot } from '../../utils/spotCoordinates';
@@ -45,6 +45,8 @@ interface InteractiveMapProps {
   showCrowdPins?: boolean;
   /** Show the location-type filter chips. */
   showFilters?: boolean;
+  /** Called when a crowd pin is clicked (the field-map drawer hooks in here). */
+  onCrowdPinClick?: (report: CrowdReport) => void;
   className?: string;
 }
 
@@ -52,6 +54,7 @@ export default function InteractiveMap({
   height = 'h-[600px]',
   showCrowdPins = false,
   showFilters = true,
+  onCrowdPinClick,
   className,
 }: InteractiveMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -191,7 +194,7 @@ export default function InteractiveMap({
             ${
               location.website
                 ? `<a href="${esc(location.website)}" target="_blank" rel="noopener noreferrer"
-                     style="display:inline-block; margin-top:10px; color:#e07a3a;
+                     style="display:inline-block; margin-top:10px; color:#c9a06b;
                             font-size:11px; letter-spacing:0.18em; text-transform:uppercase;">
                      Visit site →
                    </a>`
@@ -253,12 +256,19 @@ export default function InteractiveMap({
           </div>
         `;
 
+        if (onCrowdPinClick) {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onCrowdPinClick(report);
+          });
+        }
+
         return new mapboxgl.Marker({ element: el, anchor: 'left' })
           .setLngLat(coords)
           .addTo(map);
       })
       .filter((m): m is mapboxgl.Marker => m !== null);
-  }, [isLoaded, showCrowdPins, reports]);
+  }, [isLoaded, showCrowdPins, reports, onCrowdPinClick]);
 
   if (error) {
     return (

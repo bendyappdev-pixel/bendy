@@ -10,7 +10,7 @@
  *   07  End Slate              stats + geo strip
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 
@@ -18,7 +18,7 @@ import Hero from '../components/home/Hero';
 import CategoryCard from '../components/home/CategoryCard';
 import SequenceCard, { SequenceCardCompact } from '../components/guides/SequenceCard';
 import SceneHeader from '../components/ui/SceneHeader';
-import CrowdBadge, { CrowdLegend, crowdMeta } from '../components/ui/CrowdBadge';
+import { CrowdLegend, crowdMeta } from '../components/ui/CrowdBadge';
 import { PartnerBanner } from '../components/ads';
 import { CrowdReportForm } from '../components/crowd';
 import InteractiveMap from '../components/map/InteractiveMap';
@@ -39,7 +39,17 @@ import { campgrounds } from '../data/campgrounds';
 import { useWeather, getWeatherInfo, formatDay } from '../hooks/useWeather';
 import { useCrowdReports, formatTimeAgo } from '../hooks/useCrowdReports';
 import { useMountainConditions, useRiverConditions, useRoadConditions } from '../hooks/useConditions';
-import { CrowdLevel, Event as EventType } from '../types';
+import { CrowdLevel, CrowdReport, Event as EventType } from '../types';
+
+/* Content shown in the field-map slide-out drawer (scene 05). */
+interface FieldDrawerContent {
+  eyebrow: string;
+  title: string;
+  status?: string;
+  statusColor?: string;
+  body?: string;
+  rows: [string, string][];
+}
 
 /* Chapter band photography, keyed by category id. */
 const chapterImages: Record<string, string | undefined> = {
@@ -443,134 +453,191 @@ function FieldScene() {
   const { conditions: mountain } = useMountainConditions();
   const { rivers } = useRiverConditions();
   const { roads } = useRoadConditions();
-  const { reports } = useCrowdReports();
+
+  const [drawer, setDrawer] = useState<FieldDrawerContent | null>(null);
 
   const deschutes = rivers.find((r) => /deschutes/i.test(r.name)) ?? rivers[0];
   const notableRoad = roads.find((r) => r.status !== 'open') ?? roads[0];
 
-  const transmissions: { label: string; value: string; status: string; ember?: boolean }[] = [];
-
-  if (mountain) {
-    transmissions.push({
-      label: 'Snow · Bachelor',
-      value: `${mountain.snowDepthBase}" base · ${mountain.conditions}`,
-      status: `${mountain.liftsOpen}/${mountain.liftsTotal} lifts`,
-      ember: mountain.liftsOpen > 0,
-    });
-  }
+  /* The bottom strip and the Transmission drawer share these rows — only
+     feeds that actually have data appear (never fabricate). */
+  const conditionRows: [string, string][] = [];
+  if (mountain) conditionRows.push(['Snow · Bachelor', `${mountain.snowDepthBase}" base · ${mountain.liftsOpen}/${mountain.liftsTotal} lifts`]);
   if (deschutes) {
     const temp = deschutes.temperature !== null ? `${Math.round(deschutes.temperature)}° · ` : '';
-    transmissions.push({
-      label: `River · ${deschutes.name}`,
-      value: `${temp}${deschutes.flowRate.toLocaleString()} cfs · ${deschutes.flowTrend}`,
-      status: deschutes.paddlingRating,
-      ember: deschutes.status === 'good',
-    });
+    conditionRows.push([`River · ${deschutes.location}`, `${temp}${deschutes.flowRate.toLocaleString()} cfs`]);
   }
-  if (notableRoad) {
-    transmissions.push({
-      label: `Road · ${notableRoad.name}`,
-      value: 'Seasonal schedule — verify on TripCheck',
-      status: notableRoad.status.replace('-', ' '),
-      ember: notableRoad.status === 'open',
-    });
-  }
+  if (notableRoad) conditionRows.push([`Road · ${notableRoad.name}`, notableRoad.status.replace('-', ' ')]);
 
-  const latest = reports[0];
+  const openReport = (report: CrowdReport) => {
+    const meta = crowdMeta(report.crowdLevel);
+    setDrawer({
+      eyebrow: `Field report · ${formatTimeAgo(report.timestamp)}`,
+      title: report.locationName,
+      status: meta.full,
+      statusColor: meta.color,
+      body: report.comment ? `“${report.comment}”` : undefined,
+      rows: [
+        ['Crowd', meta.label],
+        ['Reported', formatTimeAgo(report.timestamp)],
+      ],
+    });
+  };
+
+  const openTransmission = () => {
+    setDrawer({
+      eyebrow: 'Field Transmission',
+      title: mountain ? `Bachelor Holds ${mountain.snowDepthBase}".` : 'The Cascades Are Still Spinning.',
+      body: 'Live river gauges, mountain reports in season, and the pass schedules — the same sources the locals check before they commit to a day.',
+      rows: conditionRows,
+    });
+  };
+
+  // Escape closes the drawer, mirroring the mobile nav and dialogs.
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawer(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawer]);
+
+  const clock = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Los_Angeles',
+  });
 
   return (
-    <section className="border-b border-hair bg-black">
-      <div className="container-app grid grid-cols-12 gap-6 py-20 lg:gap-10">
-        <div className="col-span-12 lg:col-span-7">
-          <div className="small-caps text-ember">Scene 05 · Live from the Field</div>
-          <h2 className="film-display mt-3 text-[clamp(48px,7vw,110px)]">
-            The Map
-            <br />
-            Is Live.
-          </h2>
-          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-mist">
-            Real-time crowd, weather and trail conditions, layered onto the geography that
-            shapes Bend. Click a peak. Drop a pin. File a report.
-          </p>
+    <section
+      className="relative w-full overflow-hidden border-b border-hair bg-black"
+      style={{ height: 'min(88vh, 900px)', minHeight: '620px' }}
+      onClick={() => setDrawer(null)}
+    >
+      {/* Full-bleed live map */}
+      <div className="absolute inset-0">
+        <InteractiveMap
+          height="h-full"
+          className="h-full"
+          showCrowdPins
+          showFilters={false}
+          onCrowdPinClick={openReport}
+        />
+      </div>
 
-          <div className="mt-8">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <div className="film-display-thin text-[26px] text-film-white">
-                  How busy is it right now?
-                </div>
-                <div className="mt-1 font-mono text-[11px] text-whisper">
-                  {latest
-                    ? `Reported by locals · latest ${formatTimeAgo(latest.timestamp)}`
-                    : 'Reported by locals · Bend & Central Oregon'}
-                </div>
-              </div>
+      {/* Scrims so the overlaid type stays legible over the map */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-64"
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.85), transparent)' }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }}
+      />
+
+      {/* Overlaid header */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-6 pt-10 lg:px-10">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-start justify-between gap-8">
+          <div className="pointer-events-auto">
+            <div className="small-caps text-ember">Scene 05 · Live from the Field</div>
+            <h2 className="film-display mt-3 text-[clamp(44px,6vw,92px)]">The Map Is Live.</h2>
+            <p className="mt-3 max-w-md text-[15px] leading-relaxed text-mist">
+              Crowd, weather and trail conditions across Bend — reported by the people out
+              in it. Click a pin. File a report.
+            </p>
+          </div>
+          <div className="pointer-events-auto flex flex-col items-end gap-3">
+            <div className="rec font-mono text-[10px] text-ember">LIVE · {clock} PT</div>
+            <div className="border border-hair bg-black/60 px-3 py-2">
               <CrowdLegend />
-            </div>
-
-            <div className="border border-hair">
-              <InteractiveMap height="aspect-[4/3]" showCrowdPins showFilters={false} />
             </div>
           </div>
         </div>
-
-        <aside className="col-span-12 lg:col-span-5">
-          <div className="small-caps flex items-center gap-3 text-whisper">
-            <span className="live-caret" aria-hidden="true" /> Field Transmission
-          </div>
-          <h3 className="film-display mt-3 text-[clamp(34px,4.5vw,60px)] leading-[0.9]">
-            {mountain
-              ? `Bachelor Holds ${mountain.snowDepthBase}".`
-              : 'The Cascades Are Still Spinning.'}
-          </h3>
-          <p className="mt-4 text-[16px] leading-relaxed text-mist">
-            Live river gauges, mountain reports in season, and the pass schedules — the
-            same sources the locals check before they commit to a day.
-          </p>
-
-          {transmissions.length > 0 && (
-            <ul className="mt-7 border-t border-hair">
-              {transmissions.map((t) => (
-                <li
-                  key={t.label}
-                  className="grid grid-cols-12 items-center gap-4 border-b border-hair py-4"
-                >
-                  <div className="col-span-4 font-mono text-[10px] uppercase text-whisper md:col-span-3">
-                    {t.label}
-                  </div>
-                  <div className="film-display-thin col-span-5 text-[22px] text-film-white md:col-span-7">
-                    {t.value}
-                  </div>
-                  <div
-                    className={`col-span-3 text-right font-mono text-[11px] md:col-span-2 ${
-                      t.ember ? 'text-ember' : 'text-whisper'
-                    }`}
-                  >
-                    {t.status}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {reports.length > 0 && (
-            <ul className="mt-6 space-y-3">
-              {reports.slice(0, 3).map((r, i) => (
-                <li key={r.id ?? i} className="flex items-center justify-between gap-4">
-                  <span className="film-display-thin text-[20px] text-film-white">
-                    {r.locationName}
-                  </span>
-                  <CrowdBadge level={r.crowdLevel as CrowdLevel} verbose />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <Link to="/map" className="btn-primary mt-8">
-            Open the full map <span aria-hidden="true">→</span>
-          </Link>
-        </aside>
       </div>
+
+      {/* Bottom conditions strip */}
+      <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-7 lg:px-10">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-end justify-between gap-6">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            {conditionRows.map(([k, v]) => (
+              <div key={k}>
+                <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-whisper">{k}</div>
+                <div className="film-display-thin mt-0.5 text-[19px] text-film-white">{v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openTransmission();
+              }}
+              className="btn-secondary"
+            >
+              Transmission
+            </button>
+            <Link to="/map" className="btn-primary" onClick={(e) => e.stopPropagation()}>
+              Open the full map <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Slide-out drawer */}
+      <aside
+        role="dialog"
+        aria-label={drawer?.title ?? 'Field details'}
+        aria-hidden={!drawer}
+        onClick={(e) => e.stopPropagation()}
+        className={`absolute right-0 top-0 z-20 h-full w-full overflow-y-auto border-l border-hair bg-[#0b0a08] transition-transform duration-300 sm:w-[420px] ${
+          drawer ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {drawer && (
+          <div className="p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div className="small-caps flex items-center gap-2 text-whisper">
+                <span className="live-caret" aria-hidden="true" />
+                {drawer.eyebrow}
+              </div>
+              <button
+                onClick={() => setDrawer(null)}
+                aria-label="Close"
+                className="-mt-1 p-1 leading-none text-whisper transition-colors hover:text-film-white"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <h3 className="film-display mt-4 text-[clamp(30px,3.6vw,46px)] leading-[0.9]">{drawer.title}</h3>
+            {drawer.status && (
+              <div className="mt-3 font-mono text-[11px]" style={{ color: drawer.statusColor }}>
+                {drawer.status}
+              </div>
+            )}
+            {drawer.body && <p className="mt-4 text-[15px] leading-relaxed text-mist">{drawer.body}</p>}
+            {drawer.rows.length > 0 && (
+              <ul className="mt-7 border-t border-hair">
+                {drawer.rows.map(([k, v]) => (
+                  <li key={k} className="flex items-baseline justify-between gap-4 border-b border-hair py-3.5">
+                    <span className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-whisper">{k}</span>
+                    <span className="film-display-thin text-[19px] text-film-white">{v}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-7 flex flex-col gap-3">
+              <Link to="/map" className="btn-primary justify-center">
+                Open the full map <span aria-hidden="true">→</span>
+              </Link>
+              <Link to="/map" className="btn-secondary justify-center">
+                File a report
+              </Link>
+            </div>
+          </div>
+        )}
+      </aside>
     </section>
   );
 }

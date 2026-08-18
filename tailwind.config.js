@@ -25,8 +25,8 @@ export default {
 
         // ── Accent ─────────────────────────────────────────────────────
         ember: {
-          DEFAULT: '#e07a3a', // section kickers, links, active nav, CTA hover
-          50:      'rgba(224,122,58,0.5)', // 50% ember for borders
+          DEFAULT: '#c9a06b', // section kickers, links, active nav, CTA hover
+          50:      'rgba(201,160,107,0.5)', // 50% ember for borders
         },
         flame: '#c95228', // REC pulse dot, newsletter button hover
 

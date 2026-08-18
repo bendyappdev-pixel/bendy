@@ -35,10 +35,10 @@ a graded film frame with a vignette, a light grain, and a mono slate label.
 | `mist` | `rgba(242,237,225,0.65)` | Secondary body copy |
 | `whisper` | `rgba(242,237,225,0.40)` | Metadata, labels, timestamps |
 | `hair` | `rgba(242,237,225,0.12)` | Standard hairline divider |
-| `ember` | `#e07a3a` | **The** accent — kickers, links, active nav, live |
-| `ember-50` | `rgba(224,122,58,0.5)` | Ember at 50%, for borders |
+| `ember` | `#c9a06b` | **The** accent — kickers, links, active nav, live. Re-graded to gold Aug 2026 (Benji's call via the design-tweaks pass); the token name stays `ember` |
+| `ember-50` | `rgba(201,160,107,0.5)` | Ember at 50%, for borders |
 | `flame` | `#c95228` | REC pulse dot, newsletter button hover |
-| `gold` | `#c9a06b` | Food & Drink chapter; ad-unit accent |
+| `gold` | `#c9a06b` | Food & Drink chapter; ad-unit accent. Now equal to `ember` — acceptable overlap, they never compete in one composition |
 | `pine` | `#5b7a4f` | Outdoor chapter |
 | `lake` | `#5a7d92` | Deschutes river, Kids chapter |
 | `crowd-empty` | `#7fb262` | Crowd level: "Quiet" |
@@ -270,3 +270,14 @@ script after adding any image.
 - No equal 3-column category grids.
 - CSS Grid for all multi-column layouts.
 - No broken image links.
+
+## Addendum — Aug 2026 field-map scene
+
+Scene 05 on the homepage is a **full-bleed live map** (`min(88vh,900px)`, min
+620px): the real Mapbox canvas edge to edge, top/bottom scrims for type,
+overlaid header (title at `clamp(44px,6vw,92px)`), LIVE clock + boxed
+`CrowdLegend` top-right, and a bottom conditions strip built from the same
+honest data rows as the Transmission drawer. Crowd pins open a **slide-out
+drawer** (`sm:w-[420px]`, translate-x transition, Escape / ✕ / click-outside
+closes) showing the real report — never invented narrative. Film grain runs at
+0.17 site-wide.

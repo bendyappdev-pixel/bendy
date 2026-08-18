@@ -35,11 +35,11 @@ export default function Header() {
             <span className="film-display text-[36px] tracking-[-0.02em]">BENDY</span>
           </Link>
 
-          {/* Seven nav links plus the wordmark do not fit at md (768px) — the
-              row overflowed the viewport between roughly 768 and 1100px. The
-              full nav appears at lg, the issue slug and search only at xl,
-              and the drawer covers everything below. */}
-          <nav className="hidden items-center gap-6 whitespace-nowrap lg:flex xl:gap-8">
+          {/* Per the updated design: nav returns at md with tighter gaps —
+              it fits there because the right-hand meta now waits until lg
+              (and the issue slug until xl), which is what overflowed the
+              768–1100px range before. The drawer covers everything below md. */}
+          <nav className="hidden items-center gap-5 whitespace-nowrap md:flex lg:gap-8">
             {navLinks.map((link) => {
               const active = location.pathname === link.href;
               return (
@@ -57,8 +57,8 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="hidden shrink-0 items-center gap-4 xl:flex">
-            <span className="small-caps text-mist">{REEL_ISSUE}</span>
+          <div className="hidden shrink-0 items-center gap-4 lg:flex">
+            <span className="small-caps hidden text-mist xl:inline">{REEL_ISSUE}</span>
             <Link
               to="/map"
               className="small-caps inline-flex items-center gap-2 border border-hair px-3 py-1.5 text-mist transition-colors hover:border-white/40 hover:text-film-white"
@@ -70,7 +70,7 @@ export default function Header() {
 
           <button
             onClick={() => setMobileNavOpen(true)}
-            className="p-2 transition-colors hover:bg-white/10 lg:hidden"
+            className="p-2 transition-colors hover:bg-white/10 md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6 text-film-white" />
