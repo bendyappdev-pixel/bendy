@@ -470,7 +470,7 @@ function FieldScene() {
   if (notableRoad) {
     transmissions.push({
       label: `Road · ${notableRoad.name}`,
-      value: notableRoad.conditions,
+      value: 'Seasonal schedule — verify on TripCheck',
       status: notableRoad.status.replace('-', ' '),
       ember: notableRoad.status === 'open',
     });
@@ -509,7 +509,7 @@ function FieldScene() {
             </div>
 
             <div className="border border-hair">
-              <InteractiveMap height="aspect-[4/3]" showCrowdPins />
+              <InteractiveMap height="aspect-[4/3]" showCrowdPins showFilters={false} />
             </div>
           </div>
         </div>

@@ -130,6 +130,11 @@ Utility classes: `.btn-primary`, `.btn-secondary`, `.container-app`,
 - **Buttons:** square. Primary is bone fill / black text, hovering to ember.
   Secondary is a hairline border at 30% white, hovering to 100% + 5% fill.
 - **Chips and filters:** square, hairline border, ember when active. Never pills.
+  Exception — the map's category filters form a **rail**: one hairline strip above
+  the canvas (inside the map's frame, never floating over it), whose chips are
+  dot + `.small-caps` text with no individual boxes; active is ember text and a
+  full-opacity dot. Labels stay visible at every width — the rail wraps rather
+  than degrading to bare dots.
 - **Loaders:** mono text ("Loading map…"), not spinners on flat UI.
 - **Nav links:** `.small-caps`, `text-mist`, hover `text-film-white`, active
   `text-ember`. No underline, no box.

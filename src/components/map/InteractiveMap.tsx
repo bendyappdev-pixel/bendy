@@ -282,32 +282,32 @@ export default function InteractiveMap({
 
   return (
     <div className={`relative ${className ?? ''}`}>
+      {/* Filter rail: part of the map's frame, never floating over the
+          photography/canvas. Text chips carry no individual boxes — the rail's
+          single hairline does the work, and labels stay visible at every width
+          (the row wraps rather than hiding meaning behind bare dots). */}
       {showFilters && (
-        <div className="absolute left-4 top-4 z-10 max-w-[calc(100%-2rem)] overflow-x-auto border border-hair bg-black/80 p-2">
-          <div className="flex gap-2">
-            {Object.entries(typeConfig).map(([type, config]) => {
-              const active = activeFilters.has(type as Location['type']);
-              return (
-                <button
-                  key={type}
-                  onClick={() => toggleFilter(type as Location['type'])}
-                  aria-pressed={active}
-                  className={`small-caps flex items-center gap-2 whitespace-nowrap border px-3 py-2 transition-colors ${
-                    active
-                      ? 'border-ember text-ember'
-                      : 'border-hair text-whisper hover:text-film-white'
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: config.color, opacity: active ? 1 : 0.4 }}
-                  />
-                  <span className="hidden sm:inline">{config.label}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex flex-wrap gap-x-1 border-b border-hair bg-black px-2">
+          {Object.entries(typeConfig).map(([type, config]) => {
+            const active = activeFilters.has(type as Location['type']);
+            return (
+              <button
+                key={type}
+                onClick={() => toggleFilter(type as Location['type'])}
+                aria-pressed={active}
+                className={`small-caps flex items-center gap-2 whitespace-nowrap px-2.5 py-2.5 transition-colors ${
+                  active ? 'text-ember' : 'text-whisper hover:text-film-white'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: config.color, opacity: active ? 1 : 0.4 }}
+                />
+                {config.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
