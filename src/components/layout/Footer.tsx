@@ -212,7 +212,14 @@ export default function Footer() {
         {/* Card-out */}
         <div className="mt-12 grid grid-cols-12 items-center gap-3 border-t border-hair pt-6 font-mono text-[11px] text-whisper">
           <div className="col-span-12 md:col-span-4">
-            © {new Date().getFullYear()} Bendy · Not affiliated with the City of Bend.
+            © {new Date().getFullYear()} Bendy · Not affiliated with the City of Bend. ·{' '}
+            <Link to="/privacy" className="text-film-white hover:text-ember">
+              Privacy
+            </Link>{' '}
+            ·{' '}
+            <Link to="/terms" className="text-film-white hover:text-ember">
+              Terms
+            </Link>
           </div>
           <div className="col-span-12 md:col-span-4 md:text-center">
             Reel №07 · Spring 2026 · v2.0

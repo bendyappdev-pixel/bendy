@@ -12,6 +12,8 @@ import CampingPage from './pages/CampingPage';
 import TrailsPage from './pages/TrailsPage';
 import TrailDetailPage from './pages/TrailDetailPage';
 import ConditionsPage from './pages/ConditionsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
           <Route path="/trails/:slug" element={<TrailDetailPage />} />
           <Route path="/conditions" element={<ConditionsPage />} />
           <Route path="/category/:category" element={<CategoryPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           {/* Catch-all. Without this an unrecognised URL rendered the shell
               around an empty <main> with no explanation and no way back. */}
           <Route path="*" element={<NotFoundPage />} />
