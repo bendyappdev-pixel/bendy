@@ -9,6 +9,7 @@ import {
   PollenData,
   PollenTypeInfo,
   PlantInfo,
+  FireIncident,
 } from '../types/conditions';
 import { appCheckFetch } from '../utils/appCheckFetch';
 
@@ -157,6 +158,88 @@ export function useRiverConditions() {
   }, [fetchRiverData]);
 
   return { rivers, loading, error, refresh: fetchRiverData };
+}
+
+
+// Wildfire incidents near Bend — NIFC/WFIGS interagency data (IRWIN), the
+// same source of truth the agencies use. Open, keyless, CORS-enabled.
+// We show incidents, never restrictions status: campfire-ban / IFPL data has
+// no reliable machine-readable source, and a wrong "no restrictions" claim is
+// dangerous — the UI links to centraloregonfire.org for that instead.
+const WFIGS_URL =
+  'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query' +
+  '?geometry=-121.3153,44.0582&geometryType=esriGeometryPoint&inSR=4326' +
+  '&distance=100&units=esriSRUnit_Kilometer' +
+  "&where=IncidentTypeCategory%3D%27WF%27" +
+  '&outFields=IncidentName,IncidentSize,PercentContained,FireDiscoveryDateTime,POOCounty,ModifiedOnDateTime_dt' +
+  '&f=json';
+
+/** "0433 BREWER" → "Brewer"; "0737 (Redmond FD Assist)" → "Redmond FD Assist". */
+function cleanFireName(raw: string): string {
+  const stripped = raw.replace(/^[\d#\s]*/, '').replace(/^\((.*)\)$/, '$1').trim();
+  const base = stripped || raw.trim();
+  return base
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+    .replace(/\bFd\b/, 'FD')
+    .replace(/\bWr\b/, 'WR');
+}
+
+export function useFireIncidents() {
+  const [fires, setFires] = useState<FireIncident[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFires = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(WFIGS_URL);
+      if (!response.ok) throw new Error('Failed to fetch fire data');
+      const data = await response.json();
+      if (data.error || !Array.isArray(data.features)) throw new Error('Bad WFIGS response');
+
+      const incidents: FireIncident[] = data.features
+        .map((f: { attributes: Record<string, unknown> }) => {
+          const a = f.attributes;
+          const contained = typeof a.PercentContained === 'number' ? a.PercentContained : null;
+          return {
+            name: cleanFireName(String(a.IncidentName ?? 'Unnamed')),
+            county: String(a.POOCounty ?? ''),
+            acres: typeof a.IncidentSize === 'number' ? Math.round(a.IncidentSize) : null,
+            percentContained: contained,
+            discovered: new Date(Number(a.FireDiscoveryDateTime) || 0),
+            lastUpdated: new Date(Number(a.ModifiedOnDateTime_dt) || 0),
+            active: contained === null || contained < 100,
+          };
+        })
+        // Zombie rows linger in the "current" layer; anything untouched for
+        // three weeks is not current fire information.
+        .filter((fire: FireIncident) => Date.now() - fire.lastUpdated.getTime() < 21 * 24 * 60 * 60 * 1000)
+        .sort((a: FireIncident, b: FireIncident) => (b.acres ?? 0) - (a.acres ?? 0));
+
+      setFires(incidents);
+    } catch (err) {
+      console.error('Error fetching fire incidents:', err);
+      setError('Unable to fetch wildfire data');
+      setFires([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFires();
+    // Refresh hourly
+    const interval = setInterval(fetchFires, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchFires]);
+
+  const active = fires.filter((f) => f.active);
+  const significant = active.filter((f) => (f.acres ?? 0) >= 100);
+
+  return { fires, active, significant, loading, error, refresh: fetchFires };
 }
 
 // Fetch air quality from Open-Meteo (free, no API key)

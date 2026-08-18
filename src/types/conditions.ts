@@ -90,3 +90,17 @@ export interface PollenData {
   overallStatus: ConditionStatus;
   lastUpdated: Date;
 }
+
+export interface FireIncident {
+  /** Cleaned display name — dispatch codes stripped ("0433 BREWER" → "Brewer"). */
+  name: string;
+  county: string;
+  /** Acres burned; null when the feed has no size yet. */
+  acres: number | null;
+  /** 0–100, or null when containment is not yet reported. */
+  percentContained: number | null;
+  discovered: Date;
+  lastUpdated: Date;
+  /** Not fully contained (or containment unreported). */
+  active: boolean;
+}

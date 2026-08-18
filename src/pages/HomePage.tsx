@@ -39,7 +39,7 @@ import { campgrounds } from '../data/campgrounds';
 import { useWeather, getWeatherInfo, formatDay } from '../hooks/useWeather';
 import { useCrowdReports, formatTimeAgo } from '../hooks/useCrowdReports';
 import { useReveal } from '../hooks/useReveal';
-import { useMountainConditions, useRiverConditions, useRoadConditions } from '../hooks/useConditions';
+import { useMountainConditions, useRiverConditions, useRoadConditions, useFireIncidents } from '../hooks/useConditions';
 import { CrowdLevel, CrowdReport, Event as EventType } from '../types';
 
 /* Content shown in the field-map slide-out drawer (scene 05). */
@@ -454,6 +454,7 @@ function FieldScene() {
   const { conditions: mountain } = useMountainConditions();
   const { rivers } = useRiverConditions();
   const { roads } = useRoadConditions();
+  const { significant: fires } = useFireIncidents();
 
   const [drawer, setDrawer] = useState<FieldDrawerContent | null>(null);
 
@@ -469,6 +470,13 @@ function FieldScene() {
     conditionRows.push([`River · ${deschutes.location}`, `${temp}${deschutes.flowRate.toLocaleString()} cfs`]);
   }
   if (notableRoad) conditionRows.push([`Road · ${notableRoad.name}`, notableRoad.status.replace('-', ' ')]);
+  const topFire = fires[0];
+  if (topFire && topFire.acres !== null) {
+    conditionRows.push([
+      `Fire · ${topFire.name}`,
+      `${topFire.acres.toLocaleString()} ac${topFire.percentContained !== null ? ` · ${topFire.percentContained}% contained` : ''}`,
+    ]);
+  }
 
   const openReport = (report: CrowdReport) => {
     const meta = crowdMeta(report.crowdLevel);

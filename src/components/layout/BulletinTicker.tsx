@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react';
 import { useWeather } from '../../hooks/useWeather';
-import { useMountainConditions, useRiverConditions } from '../../hooks/useConditions';
+import { useMountainConditions, useRiverConditions, useFireIncidents } from '../../hooks/useConditions';
 import { useCrowdReports } from '../../hooks/useCrowdReports';
 import { crowdMeta } from '../ui/CrowdBadge';
 import { CrowdLevel } from '../../types';
@@ -35,6 +35,7 @@ export default function BulletinTicker() {
   const { weather } = useWeather();
   const { conditions: mountain } = useMountainConditions();
   const { rivers } = useRiverConditions();
+  const { significant: fires } = useFireIncidents();
   const { reports } = useCrowdReports();
 
   const items = useMemo<TickerItem[]>(() => {
@@ -73,6 +74,19 @@ export default function BulletinTicker() {
       });
     }
 
+    // Largest active fire, when one is significant — real WFIGS data only.
+    const fire = fires[0];
+    if (fire && fire.acres !== null) {
+      out.push({
+        key: 'fire',
+        text: `FIRE · ${fire.name.toUpperCase()} · ${fire.acres.toLocaleString()} AC${
+          fire.percentContained !== null ? ` · ${fire.percentContained}% CONTAINED` : ''
+        }`,
+        glyph: '●',
+        glyphColor: 'var(--flame)',
+      });
+    }
+
     const deschutes = rivers.find((r) => /deschutes/i.test(r.name)) ?? rivers[0];
     if (deschutes) {
       const temp = deschutes.temperature !== null ? ` · ${Math.round(deschutes.temperature)}°F` : '';
@@ -95,7 +109,7 @@ export default function BulletinTicker() {
 
     out.push({ key: 'tune', text: '▲ TUNE IN ▲', glyphColor: 'var(--ember)' });
     return out;
-  }, [weather, mountain, rivers, reports]);
+  }, [weather, mountain, rivers, fires, reports]);
 
   // Rendered twice — the -50% translate in the `ticker` keyframes assumes it.
   const run = (pass: string) =>

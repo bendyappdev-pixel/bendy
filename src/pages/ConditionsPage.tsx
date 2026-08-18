@@ -1,5 +1,5 @@
 /**
- * ConditionsPage — the almanac language taken all the way. Eight scenes, one
+ * ConditionsPage — the almanac language taken all the way. Nine scenes, one
  * per live data source, each a numbered SceneHeader over a hairline-divided
  * grid of mono/display readouts. No cards, no filled backgrounds, no emoji —
  * every status is read off the shared crowd-token palette via `conditionMeta`
@@ -9,20 +9,22 @@
  *   01  Mt. Bachelor           mountain snow report
  *   02  Hoodoo Ski Area        mountain snow report
  *   03  Air Quality            Open-Meteo AQI
- *   04  Pollen & Allergies     Google Pollen API
- *   05  River Flows            USGS gauges
- *   06  Sun & Light            sunrise / sunset / golden hour
- *   07  Road Conditions        mountain pass status
- *   08  Downtown Parking       estimated availability
+ *   04  Fire                   NIFC/WFIGS wildfire incidents
+ *   05  Pollen & Allergies     Google Pollen API
+ *   06  River Flows            USGS gauges
+ *   07  Sun & Light            sunrise / sunset / golden hour
+ *   08  Road Conditions        mountain pass status
+ *   09  Downtown Parking       typical availability
  */
 
 import { ReactNode, useEffect, useState } from 'react';
-import { TrendingDown, TrendingUp, Minus, RefreshCw, TreePine, Sprout, Flower2 } from 'lucide-react';
+import { TrendingDown, TrendingUp, Minus, RefreshCw, TreePine, Sprout, Flower2, Flame } from 'lucide-react';
 
 import { mockParkingConditions, calculateSunTimes } from '../data/conditions';
 import {
   AirQuality,
   ConditionStatus,
+  FireIncident,
   MountainConditions,
   PollenData,
   RiverConditions,
@@ -32,6 +34,7 @@ import {
   useRiverConditions,
   useAirQuality,
   usePollenData,
+  useFireIncidents,
   useMountainConditions,
   useHoodooConditions,
   useRoadConditions,
@@ -176,6 +179,7 @@ export default function ConditionsPage() {
   const { conditions: mountain, loading: mtLoading, error: mtError } = useMountainConditions();
   const { conditions: hoodoo, loading: hoodooLoading, error: hoodooError } = useHoodooConditions();
   const { roads, loading: roadsLoading } = useRoadConditions();
+  const { active: activeFires, significant: significantFires, loading: firesLoading, error: firesError } = useFireIncidents();
 
   useEffect(() => {
     // Recalculate sun times at midnight
@@ -230,6 +234,8 @@ export default function ConditionsPage() {
       />
 
       <AirQualityScene airQuality={airQuality} loading={aqLoading} />
+
+      <FireScene active={activeFires} significant={significantFires} loading={firesLoading} error={firesError} />
 
       <PollenScene pollenData={pollenData} loading={pollenLoading} />
 
@@ -485,7 +491,138 @@ function AirQualityScene({ airQuality, loading }: { airQuality: AirQuality | nul
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 04 · POLLEN & ALLERGIES
+   SCENE 04 · FIRE
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Wildfire incidents within 100 km of Bend, from the NIFC/WFIGS interagency
+    feed. Incidents only — never restrictions status, which has no reliable
+    machine-readable source; the meta links out for that instead. */
+function FireScene({
+  active,
+  significant,
+  loading,
+  error,
+}: {
+  active: FireIncident[];
+  significant: FireIncident[];
+  loading: boolean;
+  error: string | null;
+}) {
+  const shown = significant.slice(0, 5);
+  const newest = active.reduce<Date | null>(
+    (acc, f) => (acc === null || f.lastUpdated > acc ? f.lastUpdated : acc),
+    null
+  );
+  const smallStarts = active.length - significant.length;
+
+  return (
+    <section className="border-b border-hair bg-film-deep">
+      <div className="container-app pt-16">
+        <SceneHeader
+          scene="04"
+          kicker="Fire"
+          title={
+            loading
+              ? 'Reading The Smoke.'
+              : error
+              ? 'Feed Unavailable.'
+              : significant.length > 0
+              ? `${significant.length} ${significant.length === 1 ? 'Fire' : 'Fires'} Burning Nearby.`
+              : 'No Active Fires Nearby.'
+          }
+          meta={
+            !error && (
+              <>
+                <LiveTag />
+                {newest && (
+                  <>
+                    <br />
+                    Updated {getTimeAgo(newest)}
+                  </>
+                )}
+                <br />
+                NIFC · WFIGS · 60 mi radius
+                <br />
+                <a
+                  href="https://centraloregonfire.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ember"
+                >
+                  Restrictions &amp; closures ↗
+                </a>
+              </>
+            )
+          }
+        />
+      </div>
+
+      <div className="container-app py-10">
+        {loading ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Reading the smoke…
+          </p>
+        ) : error ? (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            Wildfire data is unavailable right now — check centraloregonfire.org.
+          </p>
+        ) : shown.length > 0 ? (
+          <div className="border-t border-hair">
+            {shown.map((fire) => (
+              <div
+                key={fire.name + fire.county}
+                className="flex flex-col gap-3 border-b border-hair py-6 md:flex-row md:items-center md:justify-between md:gap-6"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-3">
+                    <span className="film-display-thin flex items-center gap-2.5 text-[20px] text-film-white">
+                      <Flame className="h-4 w-4 text-ember" aria-hidden="true" />
+                      {fire.name}
+                    </span>
+                    <span className="font-mono text-[11px] text-whisper">{fire.county} County</span>
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] uppercase text-whisper">
+                    Discovered {fire.discovered.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-baseline gap-6">
+                  <span className="film-display-thin text-[22px] text-film-white">
+                    {fire.acres !== null ? `${fire.acres.toLocaleString()} ac` : '— ac'}
+                  </span>
+                  <span
+                    className="font-mono text-[11px]"
+                    style={{
+                      color:
+                        (fire.percentContained ?? 0) >= 90 ? 'var(--crowd-empty)' : 'var(--crowd-packed)',
+                    }}
+                  >
+                    {fire.percentContained !== null
+                      ? `${fire.percentContained}% contained`
+                      : 'containment unreported'}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {smallStarts > 0 && (
+              <p className="py-4 font-mono text-[10px] uppercase text-whisper">
+                + {smallStarts} small {smallStarts === 1 ? 'start' : 'starts'} under 100 acres being tracked
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
+            No active wildfires within 60 miles of Bend.
+            {smallStarts > 0 &&
+              ` ${smallStarts} small ${smallStarts === 1 ? 'start' : 'starts'} under 100 acres being tracked.`}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCENE 05 · POLLEN & ALLERGIES
    ═══════════════════════════════════════════════════════════════════ */
 
 function pollenSeverity(pt: { inSeason: boolean; indexValue: number }): ConditionStatus {
@@ -499,7 +636,7 @@ function PollenScene({ pollenData, loading }: { pollenData: PollenData | null; l
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="04"
+          scene="05"
           kicker="Pollen & Allergies"
           title={
             loading
@@ -603,7 +740,7 @@ function PollenScene({ pollenData, loading }: { pollenData: PollenData | null; l
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 05 · RIVER FLOWS
+   SCENE 06 · RIVER FLOWS
    ═══════════════════════════════════════════════════════════════════ */
 
 function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: boolean }) {
@@ -613,7 +750,7 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="05"
+          scene="06"
           kicker="River Flows"
           title={
             loading
@@ -729,7 +866,7 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 06 · SUN & LIGHT
+   SCENE 07 · SUN & LIGHT
    ═══════════════════════════════════════════════════════════════════ */
 
 function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes> }) {
@@ -737,7 +874,7 @@ function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes>
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="06"
+          scene="07"
           kicker="Sun & Light"
           title={`${sunTimes.dayLength} Of Daylight.`}
           meta={
@@ -776,7 +913,7 @@ function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes>
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 07 · ROAD CONDITIONS
+   SCENE 08 · ROAD CONDITIONS
    ═══════════════════════════════════════════════════════════════════ */
 
 function roadConditionStatus(status: RoadCondition['status']): ConditionStatus {
@@ -796,7 +933,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="07"
+          scene="08"
           kicker="Road Conditions"
           title={loading ? 'Reading The Passes.' : `${roads.length} Passes Tracked.`}
           meta={
@@ -855,7 +992,7 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SCENE 08 · DOWNTOWN PARKING
+   SCENE 09 · DOWNTOWN PARKING
    ═══════════════════════════════════════════════════════════════════ */
 
 function ParkingScene() {
@@ -863,7 +1000,7 @@ function ParkingScene() {
     <section className="border-b border-hair bg-film-coal">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="08"
+          scene="09"
           kicker="Downtown Parking"
           title="Typical Availability."
           meta={
@@ -918,8 +1055,8 @@ function FooterNote() {
   return (
     <div className="container-app py-14 text-center">
       <p className="font-mono text-[11px] uppercase tracking-wide text-whisper">
-        Data sources — USGS Water Services · Open-Meteo Air Quality API · Google Pollen API · Mt.
-        Bachelor · TripCheck
+        Data sources — USGS Water Services · Open-Meteo Air Quality API · NIFC WFIGS · Google
+        Pollen API · Mt. Bachelor · TripCheck
       </p>
       <p className="mt-2 font-mono text-[10px] text-whisper">
         River and air quality data updates automatically. Always verify conditions before heading
