@@ -246,6 +246,24 @@
   .scrubber { @apply relative h-0.5; background: rgba(242,237,225,0.15); }
   .scrubber > i { @apply absolute -top-1 w-2.5 h-2.5; background: var(--ember); }
 
+  /* ── Scroll motion ─────────────────────────────────────────────────
+     The "cut": a section fades and settles 14px the first time it enters
+     the viewport, once, via useReveal. Not a bounce — an edit. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reveal.is-revealed { opacity: 1; transform: none; }
+
+  /* The runtime bar: document scroll progress as a 2px film scrubber
+     pinned to the viewport top. Sits above the grain (z-60). */
+  .runtime-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 2px;
+    z-index: 70; pointer-events: none;
+  }
+  .runtime-bar > i { display: block; height: 100%; width: 0; background: var(--ember); }
+
   .contour-svg path { stroke: rgba(242,237,225,0.10); fill: none; stroke-width: 1; }
   .contour-svg path.heavy { stroke: rgba(242,237,225,0.25); }
 
@@ -313,6 +331,8 @@ body::before {
   .rec::before { animation: none; }
   .reel.hoverable { transition: none; }
   .reel.hoverable:hover { transform: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .runtime-bar { display: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

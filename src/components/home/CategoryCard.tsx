@@ -10,6 +10,7 @@
 import { Link } from 'react-router-dom';
 import { Category } from '../../types';
 import Reel from '../ui/Reel';
+import { useReveal } from '../../hooks/useReveal';
 
 /**
  * Chapter accents. The old map keyed off Tailwind class names carried in
@@ -60,9 +61,10 @@ export default function CategoryCard({
 }: CategoryCardProps) {
   const accent = categoryColorMap[category.color] ?? 'var(--ember)';
   const numeral = String(index).padStart(2, '0');
+  const { ref, revealed } = useReveal<HTMLLIElement>(0.15);
 
   return (
-    <li className="group relative">
+    <li ref={ref} className={`reveal group relative ${revealed ? 'is-revealed' : ''}`}>
       <Link to={category.href} className="block">
         <Reel
           src={image}

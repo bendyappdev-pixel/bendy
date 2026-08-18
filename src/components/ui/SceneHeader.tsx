@@ -8,6 +8,7 @@
 
 import { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
+import { useReveal } from '../../hooks/useReveal';
 
 export interface SceneHeaderProps {
   /** Scene number, e.g. "02". Rendered as "Scene 02 · {kicker}". */
@@ -37,8 +38,15 @@ export default function SceneHeader({
   className,
   size = 'scene',
 }: SceneHeaderProps) {
+  // Every scene header cuts in on first view — the one reveal wiring that
+  // covers all eleven pages.
+  const { ref, revealed } = useReveal<HTMLDivElement>();
+
   return (
-    <div className={cn('grid grid-cols-12 items-end gap-6', className)}>
+    <div
+      ref={ref}
+      className={cn('reveal grid grid-cols-12 items-end gap-6', revealed && 'is-revealed', className)}
+    >
       <div className="col-span-12 md:col-span-8">
         <div className="small-caps text-ember">
           {scene ? `Scene ${scene} · ${kicker}` : kicker}

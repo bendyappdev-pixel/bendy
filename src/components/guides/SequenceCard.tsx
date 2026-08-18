@@ -9,6 +9,7 @@
 import { Link } from 'react-router-dom';
 import { Guide } from '../../types/guide';
 import Reel from '../ui/Reel';
+import { useReveal } from '../../hooks/useReveal';
 
 /** Difficulty drives the accent on the numeral and the first call-sheet rule. */
 const difficultyAccent: Record<Guide['difficulty'], string> = {
@@ -38,9 +39,10 @@ export default function SequenceCard({
   const firstStop = guide.stops[0];
   // Six slots read as a call sheet; more turns into a wall of type.
   const callSheet = guide.stops.slice(0, 6);
+  const { ref, revealed } = useReveal<HTMLElement>(0.15);
 
   return (
-    <article className="relative">
+    <article ref={ref} className={`reveal relative ${revealed ? 'is-revealed' : ''}`}>
       <Reel
         src={guide.heroImage}
         alt=""
@@ -134,9 +136,10 @@ export function SequenceCardCompact({
   leak?: boolean;
 }) {
   const numeral = String(index).padStart(2, '0');
+  const { ref, revealed } = useReveal<HTMLElement>(0.15);
 
   return (
-    <article className="col-span-12 md:col-span-6">
+    <article ref={ref} className={`reveal col-span-12 md:col-span-6 ${revealed ? 'is-revealed' : ''}`}>
       <Link to={`/guides/${guide.slug}`} className="group block">
         <Reel
           src={guide.heroImage}

@@ -38,6 +38,7 @@ import { trails } from '../data/trails';
 import { campgrounds } from '../data/campgrounds';
 import { useWeather, getWeatherInfo, formatDay } from '../hooks/useWeather';
 import { useCrowdReports, formatTimeAgo } from '../hooks/useCrowdReports';
+import { useReveal } from '../hooks/useReveal';
 import { useMountainConditions, useRiverConditions, useRoadConditions } from '../hooks/useConditions';
 import { CrowdLevel, CrowdReport, Event as EventType } from '../types';
 
@@ -772,7 +773,42 @@ const geoData = [
   'MEAN ANNUAL TEMP 47°F',
 ];
 
+/** Counts a stat's numeric part up from zero when `active` flips true,
+    preserving any prefix/suffix ("≈100k", "3,623"). Reduced motion renders
+    the final value immediately. */
+function StatValue({ value, active }: { value: string; active: boolean }) {
+  const parsed = value.match(/^([^0-9]*)([\d,]+)(.*)$/);
+  const target = parsed ? parseInt(parsed[2].replace(/,/g, ''), 10) : 0;
+  // Reduced motion shows the real number from the first paint — no zero state.
+  const [n, setN] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ? target : 0
+  );
+
+  useEffect(() => {
+    if (!active || !parsed) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setN(target);
+      return;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / 900);
+      setN(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, target]);
+
+  if (!parsed) return <>{value}</>;
+  return <>{parsed[1] + n.toLocaleString('en-US') + parsed[3]}</>;
+}
+
 function EndSlateScene() {
+  const { ref: statsRef, revealed: statsRevealed } = useReveal<HTMLDListElement>(0.3);
+
   return (
     <section className="horizon border-b border-hair bg-black">
       <div className="container-app py-24">
@@ -788,11 +824,18 @@ function EndSlateScene() {
             so the numerals collided with their neighbours and pushed the page
             into h-scroll. Two rows of three keeps the type genuinely large —
             which is the point of the end slate — and fits. */}
-        <dl className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 border-t border-hair pt-12 md:grid-cols-3">
-          {stats.map((stat) => (
-            <div key={stat.label} className="min-w-0">
+        <dl
+          ref={statsRef}
+          className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 border-t border-hair pt-12 md:grid-cols-3"
+        >
+          {stats.map((stat, i) => (
+            <div
+              key={stat.label}
+              className={`reveal min-w-0 ${statsRevealed ? 'is-revealed' : ''}`}
+              style={{ transitionDelay: `${i * 70}ms` }}
+            >
               <dd className="film-display text-[clamp(40px,6vw,104px)] leading-none text-film-white">
-                {stat.value}
+                <StatValue value={stat.value} active={statsRevealed} />
                 {stat.suffix && <span className="text-ember">{stat.suffix}</span>}
               </dd>
               <dt className="small-caps mt-3 text-whisper">{stat.label}</dt>

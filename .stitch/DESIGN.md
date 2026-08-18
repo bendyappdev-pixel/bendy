@@ -281,3 +281,20 @@ honest data rows as the Transmission drawer. Crowd pins open a **slide-out
 drawer** (`sm:w-[420px]`, translate-x transition, Escape / ✕ / click-outside
 closes) showing the real report — never invented narrative. Film grain runs at
 0.17 site-wide.
+
+## Addendum — Aug 2026 scroll motion
+
+Three scroll behaviors extend the motion vocabulary; nothing else does.
+
+1. **The cut** — `.reveal` + `useReveal` (`src/hooks/useReveal.ts`): a section
+   fades and settles 14px the first time it enters the viewport, once, never
+   re-triggering. Wired centrally in `SceneHeader` (all pages), plus chapter
+   bands, sequence cards and end-slate stats (staggered 70ms).
+2. **The runtime bar** — 2px scroll-progress scrubber pinned to the viewport
+   top (`RuntimeBar` in `App.tsx`, `.runtime-bar`), ember fill on no track.
+3. **The count-up** — end-slate numerals count from zero over 900ms on first
+   view (`StatValue` in HomePage).
+
+All three are neutralised by the `prefers-reduced-motion` block in
+`index.css`. Still banned: parallax inside reels (breaks the locked-frame
+metaphor), scroll-jacking/snap/pinning, animation libraries.

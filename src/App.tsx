@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -14,9 +15,44 @@ import TrailDetailPage from './pages/TrailDetailPage';
 import ConditionsPage from './pages/ConditionsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
+/** Document scroll progress rendered as a 2px film scrubber at the viewport
+    top — the site's "runtime". Hidden under prefers-reduced-motion (CSS). */
+function RuntimeBar() {
+  const fillRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+      if (fillRef.current) fillRef.current.style.width = `${(progress * 100).toFixed(2)}%`;
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div className="runtime-bar" aria-hidden="true">
+      <i ref={fillRef} />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <div className="min-h-[100dvh] flex flex-col">
+      <RuntimeBar />
       <Header />
       <main className="flex-1">
         <Routes>
