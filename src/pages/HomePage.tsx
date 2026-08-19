@@ -103,7 +103,7 @@ export default function HomePage() {
       <LocationsScene />
 
       {/* ── Scene 05 ─────────────────────────────────────────────── */}
-      <FieldScene />
+      <FieldScene onFileReport={() => setShowReportModal(true)} />
 
       {/* ── Scene 06 ─────────────────────────────────────────────── */}
       <MarqueeScene />
@@ -360,6 +360,7 @@ function SequencesScene() {
         <SceneHeader
           scene="03"
           kicker="Sequences"
+          accent="var(--flame)"
           title={
             <>
               Day-Long Itineraries.
@@ -419,7 +420,7 @@ function LocationsScene() {
   return (
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pb-12 pt-20">
-        <SceneHeader scene="04" kicker="Locations" title="Four Front Doors.">
+        <SceneHeader scene="04" kicker="Locations" accent="var(--pine)" title="Four Front Doors.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             Skiing in winter. Trails in summer. Kids menu sorted. Beer always. Pick a chapter.
           </p>
@@ -450,7 +451,7 @@ function LocationsScene() {
    SCENE 05 · LIVE FROM THE FIELD
    ═══════════════════════════════════════════════════════════════════ */
 
-function FieldScene() {
+function FieldScene({ onFileReport }: { onFileReport: () => void }) {
   const { conditions: mountain } = useMountainConditions();
   const { rivers } = useRiverConditions();
   const { roads } = useRoadConditions();
@@ -550,18 +551,27 @@ function FieldScene() {
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-6 pt-10 lg:px-10">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-start justify-between gap-8">
           <div className="pointer-events-auto">
-            <div className="small-caps text-ember">Scene 05 · Live from the Field</div>
+            <div aria-hidden="true" className="mb-3 h-[2px] w-10" style={{ background: 'var(--lake)' }} />
+            <div className="small-caps" style={{ color: 'var(--lake)' }}>Scene 05 · Live from the Field</div>
             <h2 className="film-display mt-3 text-[clamp(44px,6vw,92px)]">The Map Is Live.</h2>
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-mist">
-              Crowd, weather and trail conditions across Bend — reported by the people out
-              in it. Click a pin. File a report.
+              Crowd, weather and trail conditions — reported by the people out in it.
             </p>
           </div>
           <div className="pointer-events-auto flex flex-col items-end gap-3">
             <div className="rec font-mono text-[10px] text-ember">LIVE · {clock} PT</div>
-            <div className="border border-hair bg-black/60 px-3 py-2">
+            <div className="hidden border border-hair bg-black/60 px-3 py-2 sm:block">
               <CrowdLegend />
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onFileReport();
+              }}
+              className="btn-primary"
+            >
+              File a report
+            </button>
           </div>
         </div>
       </div>
@@ -640,9 +650,15 @@ function FieldScene() {
               <Link to="/map" className="btn-primary justify-center">
                 Open the full map <span aria-hidden="true">→</span>
               </Link>
-              <Link to="/map" className="btn-secondary justify-center">
+              <button
+                onClick={() => {
+                  setDrawer(null);
+                  onFileReport();
+                }}
+                className="btn-secondary justify-center"
+              >
                 File a report
-              </Link>
+              </button>
             </div>
           </div>
         )}
@@ -666,7 +682,7 @@ function MarqueeScene() {
         {/* A 12-col grid, not flex-wrap: the headline is wide enough to force
             a wrap, which dropped the blurb to the left edge instead of
             keeping it right-aligned in its own column. */}
-        <SceneHeader scene="06" kicker="Now Showing" title="The Marquee.">
+        <SceneHeader scene="06" kicker="Now Showing" accent="var(--flame)" title="The Marquee.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             {upcomingCount} events still to come. Tower Theatre. Hayden Homes. Drake
             Park. Sisters. The Old Mill. Pick your weekend.

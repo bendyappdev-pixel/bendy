@@ -159,8 +159,20 @@ export default function Hero() {
             </div>
             <div>
               <div className="small-caps text-whisper">Cast</div>
+              {/* The cast counts double as navigation — the numbers people
+                  already read are the fastest route to each section. */}
               <div className="film-display-thin mt-1 text-[22px] text-film-white">
-                {upcomingCount} events · {trails.length} trails · {guides.length} guides
+                <Link to="/events" className="text-film-white transition-colors hover:text-ember">
+                  {upcomingCount} events
+                </Link>
+                {' · '}
+                <Link to="/trails" className="text-film-white transition-colors hover:text-ember">
+                  {trails.length} trails
+                </Link>
+                {' · '}
+                <Link to="/guides" className="text-film-white transition-colors hover:text-ember">
+                  {guides.length} guides
+                </Link>
               </div>
             </div>
           </div>

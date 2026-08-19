@@ -298,3 +298,13 @@ Three scroll behaviors extend the motion vocabulary; nothing else does.
 All three are neutralised by the `prefers-reduced-motion` block in
 `index.css`. Still banned: parallax inside reels (breaks the locked-frame
 metaphor), scroll-jacking/snap/pinning, animation libraries.
+
+## Addendum — Aug 2026 section accents
+
+`SceneHeader` accepts an `accent` (any functional-palette token). The kicker
+and a 40×2px **leader rule** above it take the color, giving each section an
+identity landmark that survives mobile (where the meta column hides).
+Convention: section identity may borrow the functional palette (pine, lake,
+flame); **ember stays the only interactive accent**; the conditions page stays
+all-ember (one continuous almanac). Homepage: Sequences flame · Locations pine
+· Field Map lake · Marquee flame.

@@ -26,6 +26,13 @@ export interface SceneHeaderProps {
   className?: string;
   /** Headline size. `hero` is the full clamp(56px,9vw,140px) scene scale. */
   size?: 'scene' | 'sub';
+  /**
+   * Section-identity color for the kicker and its leader rule. Takes any of
+   * the functional palette tokens (var(--gold), var(--pine), var(--lake),
+   * var(--flame)); defaults to ember. Identity only — ember remains the sole
+   * *interactive* accent.
+   */
+  accent?: string;
 }
 
 export default function SceneHeader({
@@ -37,6 +44,7 @@ export default function SceneHeader({
   as: Heading = 'h2',
   className,
   size = 'scene',
+  accent = 'var(--ember)',
 }: SceneHeaderProps) {
   // Every scene header cuts in on first view — the one reveal wiring that
   // covers all eleven pages.
@@ -48,7 +56,11 @@ export default function SceneHeader({
       className={cn('reveal grid grid-cols-12 items-end gap-6', revealed && 'is-revealed', className)}
     >
       <div className="col-span-12 md:col-span-8">
-        <div className="small-caps text-ember">
+        {/* Film-leader mark: a short accent rule that gives each section an
+            identity landmark — the one wayfinding cue that survives mobile,
+            where the meta column is hidden. */}
+        <div aria-hidden="true" className="mb-3 h-[2px] w-10" style={{ background: accent }} />
+        <div className="small-caps" style={{ color: accent }}>
           {scene ? `Scene ${scene} · ${kicker}` : kicker}
         </div>
         {/* Both ends of the handoff's scale had to move for real content.

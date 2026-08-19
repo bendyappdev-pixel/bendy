@@ -96,8 +96,8 @@ export default function BulletinTicker() {
       });
     }
 
-    // Most recent community reports, freshest first.
-    reports.slice(0, 4).forEach((report, i) => {
+    // The two freshest community reports — the full list lives on /map.
+    reports.slice(0, 2).forEach((report, i) => {
       const meta = crowdMeta(report.crowdLevel as CrowdLevel);
       out.push({
         key: `crowd-${report.id ?? i}`,
