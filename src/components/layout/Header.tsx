@@ -14,7 +14,7 @@ const navLinks = [
   { name: 'Map', href: '/map' },
 ];
 
-export const REEL_ISSUE = 'Reel №07 · Spring 2026';
+export const EDITION = 'Summer/Fall 2026';
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -55,7 +55,7 @@ export default function Header() {
           </nav>
 
           <div className="hidden shrink-0 items-center gap-4 lg:flex">
-            <span className="small-caps hidden text-mist xl:inline">{REEL_ISSUE}</span>
+            <span className="small-caps hidden text-mist xl:inline">{EDITION}</span>
             <Link
               to="/map"
               className="small-caps inline-flex items-center gap-2 border border-hair px-3 py-1.5 text-mist transition-colors hover:border-white/40 hover:text-film-white"

@@ -100,7 +100,7 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 border-t border-hair p-4">
-          <p className="small-caps text-center text-whisper">Reel №07 · Spring 2026</p>
+          <p className="small-caps text-center text-whisper">Summer/Fall 2026</p>
         </div>
       </div>
     </div>

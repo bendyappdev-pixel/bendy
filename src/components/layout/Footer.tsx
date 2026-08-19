@@ -75,7 +75,7 @@ export default function Footer() {
             </Link>
             <p className="mt-4 max-w-md text-[14px] leading-relaxed text-mist">
               A field guide to Central Oregon, shot and written by people who actually live
-              here. Reel №07 · Spring 2026.
+              here. Summer/Fall 2026.
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Bendy · Not affiliated with the City of Bend.
           </div>
           <div className="col-span-12 md:col-span-4 md:text-center">
-            Reel №07 · Spring 2026 · v2.0
+            Summer/Fall 2026 · v2.0
           </div>
           <div className="col-span-12 text-ember md:col-span-4 md:text-right">FIN ·</div>
         </div>

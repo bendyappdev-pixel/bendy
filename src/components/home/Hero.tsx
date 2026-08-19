@@ -66,7 +66,7 @@ export default function Hero() {
   return (
     <HeroCarousel
       label="PANORAMA.MOV — CENTRAL OREGON · CASCADE RANGE"
-      timecode="REEL №07 · SPRING 2026"
+      timecode="SUMMER/FALL 2026"
       onFrameChange={handleFrameChange}
     >
       {/* Centre title. Bottom padding keeps it clear of the lower-thirds. */}
@@ -147,7 +147,7 @@ export default function Hero() {
             <div className="film-display-thin mt-1 text-[28px] text-film-white">
               A Field Guide to Central Oregon
             </div>
-            <div className="small-caps mt-1 text-whisper">Reel №07 · Spring 2026</div>
+            <div className="small-caps mt-1 text-whisper">Summer/Fall 2026</div>
           </div>
 
           <div className="col-span-12 flex flex-col gap-4 text-mist sm:flex-row sm:gap-8 md:col-span-4 md:justify-end">
