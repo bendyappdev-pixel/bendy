@@ -13,13 +13,13 @@
  *   05  River Flows            USGS gauges
  *   06  Sun & Light            sunrise / sunset / golden hour
  *   07  Road Conditions        mountain pass status
- *   08  Downtown Parking       typical availability
+ *   08  Downtown Parking       where to look (no live count)
  */
 
 import { ReactNode, useEffect, useState } from 'react';
 import { TrendingDown, TrendingUp, Minus, RefreshCw, Flame } from 'lucide-react';
 
-import { mockParkingConditions, calculateSunTimes } from '../data/conditions';
+import { calculateSunTimes } from '../data/conditions';
 import {
   AirQuality,
   ConditionStatus,
@@ -881,6 +881,13 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
    SCENE 08 · DOWNTOWN PARKING
    ═══════════════════════════════════════════════════════════════════ */
 
+/** Real zones, described in terms we can stand behind without a sensor. */
+const PARKING_ZONES = [
+  { name: 'Downtown Core', note: 'Metered · 2hr limit' },
+  { name: 'Old Mill District', note: 'Free lots · large' },
+  { name: 'Box Factory', note: 'Free · fills early on weekends' },
+];
+
 function ParkingScene() {
   return (
     <section className="border-b border-hair bg-film-coal">
@@ -888,46 +895,44 @@ function ParkingScene() {
         <SceneHeader
           scene="08"
           kicker="Downtown Parking"
-          title="Typical Availability."
+          title="Where To Look."
           meta={
             <>
-              Typical patterns — not live data
+              No live count
               <br />
-              Live sensors coming soon
+              Zones and their habits
             </>
           }
         />
       </div>
 
       <div className="container-app py-10">
+        {/* This scene used to render "108 / 120 open" per zone, with a fill
+            bar and a trend arrow, off a hardcoded fixture. The header said
+            "typical patterns", but a precise count next to a fill bar reads
+            as a measurement no matter what the header says — and nothing was
+            measured. Bend publishes no parking-occupancy feed.
+
+            The zones are real and knowing where to aim is genuinely useful,
+            so they stay, described in the terms we can actually stand
+            behind. */}
         <div className="border-t border-hair">
-          {mockParkingConditions.map((zone, idx) => {
-            const pctFull = Math.round(((zone.total - zone.available) / zone.total) * 100);
-            const meta = conditionMeta(zone.status);
-            return (
-              <div
-                key={idx}
-                className="flex flex-col gap-3 border-b border-hair py-6 md:flex-row md:items-center md:justify-between md:gap-6"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="film-display-thin text-[20px] text-film-white">{zone.zone}</span>
-                    <TrendIcon trend={zone.trend} />
-                  </div>
-                  <div className="mt-3 h-1.5 w-full max-w-xs" style={{ background: 'var(--hair)' }}>
-                    <div className="h-1.5" style={{ width: `${pctFull}%`, background: meta.color }} />
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <span className="film-display text-[26px] text-film-white">{zone.available}</span>
-                  <span className="ml-1.5 font-mono text-[11px] normal-case text-whisper">
-                    / {zone.total} open
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+          {PARKING_ZONES.map((zone) => (
+            <div
+              key={zone.name}
+              className="flex flex-col gap-2 border-b border-hair py-6 md:flex-row md:items-baseline md:justify-between md:gap-6"
+            >
+              <span className="film-display-thin text-[20px] text-film-white">{zone.name}</span>
+              <span className="font-mono text-[11px] normal-case text-whisper md:text-right">
+                {zone.note}
+              </span>
+            </div>
+          ))}
         </div>
+        <p className="mt-6 max-w-xl font-mono text-[11px] text-whisper">
+          There is no live count for these lots. If the city ever publishes
+          one, it belongs here — until then this is just where to look.
+        </p>
       </div>
     </section>
   );

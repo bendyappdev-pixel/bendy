@@ -1,32 +1,3 @@
-import { ParkingConditions } from '../types/conditions';
-
-// Typical downtown parking patterns — NOT live data. The ParkingScene labels
-// these honestly; replace with sensor data if the city ever exposes it.
-
-export const mockParkingConditions: ParkingConditions[] = [
-  {
-    zone: 'Downtown Core',
-    available: 108,
-    total: 120,
-    status: 'good',
-    trend: 'stable',
-  },
-  {
-    zone: 'Old Mill District',
-    available: 315,
-    total: 350,
-    status: 'good',
-    trend: 'stable',
-  },
-  {
-    zone: 'Box Factory',
-    available: 72,
-    total: 80,
-    status: 'good',
-    trend: 'stable',
-  },
-];
-
 // Helper function to calculate sunrise/sunset for Bend, OR
 export function calculateSunTimes(): {
   sunrise: string;
