@@ -113,8 +113,6 @@ export default function GuideDetailPage() {
   const accent = difficultyAccent[guide.difficulty] ?? 'var(--ember)';
 
   // Scene kickers stay contiguous even though Seasonal Notes is conditional.
-  let sceneCount = 1; // About is always scene 01.
-  const nextScene = () => String(++sceneCount).padStart(2, '0');
 
   return (
     <div>
@@ -201,7 +199,7 @@ export default function GuideDetailPage() {
           <div className="col-span-12 lg:col-span-8">
             {/* Scene 01 · About */}
             <section>
-              <SceneHeader scene="01" kicker="About This Sequence" title="The Brief." size="sub" />
+              <SceneHeader kicker="About This Sequence" title="The Brief." size="sub" />
               <p className="mt-6 max-w-3xl text-[16px] leading-relaxed text-mist">
                 {guide.description}
               </p>
@@ -222,7 +220,6 @@ export default function GuideDetailPage() {
             {guide.seasonalNotes.length > 0 && (
               <section className="mt-14 border-t border-hair pt-10">
                 <SceneHeader
-                  scene={nextScene()}
                   kicker="Seasonal Notes"
                   title="Plan Around The Weather."
                   size="sub"
@@ -243,7 +240,6 @@ export default function GuideDetailPage() {
             {/* Call Sheet — the centrepiece: every stop, timed and mapped. */}
             <section className="mt-14 border-t border-hair pt-10">
               <SceneHeader
-                scene={nextScene()}
                 kicker="The Call Sheet"
                 title="Your Itinerary."
                 size="sub"

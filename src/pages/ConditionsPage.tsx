@@ -209,7 +209,6 @@ export default function ConditionsPage() {
       />
 
       <MountainScene
-        scene="01"
         kicker="Mt. Bachelor"
         href="https://www.mtbachelor.com/"
         bg="bg-black"
@@ -219,7 +218,6 @@ export default function ConditionsPage() {
       />
 
       <MountainScene
-        scene="02"
         kicker="Hoodoo Ski Area"
         href="https://www.skihoodoo.com/"
         bg="bg-film-deep"
@@ -329,7 +327,6 @@ function Masthead({
    ═══════════════════════════════════════════════════════════════════ */
 
 function MountainScene({
-  scene,
   kicker,
   href,
   bg,
@@ -337,7 +334,6 @@ function MountainScene({
   loading,
   notice,
 }: {
-  scene: string;
   kicker: string;
   href: string;
   bg: string;
@@ -349,7 +345,6 @@ function MountainScene({
     <section className={cn('border-b border-hair', bg)}>
       <div className="container-app pt-16">
         <SceneHeader
-          scene={scene}
           kicker={kicker}
           title={
             loading ? (
@@ -431,7 +426,6 @@ function AirQualityScene({ airQuality, loading }: { airQuality: AirQuality | nul
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="03"
           kicker="Air Quality"
           title={
             loading ? (
@@ -523,7 +517,6 @@ function FireScene({
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="04"
           kicker="Fire"
           title={
             loading
@@ -636,7 +629,6 @@ function RiversScene({ rivers, loading }: { rivers: RiverConditions[]; loading: 
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="05"
           kicker="River Flows"
           title={
             loading
@@ -760,7 +752,6 @@ function SunScene({ sunTimes }: { sunTimes: ReturnType<typeof calculateSunTimes>
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="06"
           kicker="Sun & Light"
           title={`${sunTimes.dayLength} Of Daylight.`}
           meta={
@@ -819,7 +810,6 @@ function RoadsScene({ roads, loading }: { roads: RoadCondition[]; loading: boole
     <section className="border-b border-hair bg-black">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="07"
           kicker="Road Conditions"
           title={loading ? 'Reading The Passes.' : `${roads.length} Passes Tracked.`}
           meta={
@@ -893,7 +883,6 @@ function ParkingScene() {
     <section className="border-b border-hair bg-film-coal">
       <div className="container-app pt-16">
         <SceneHeader
-          scene="08"
           kicker="Downtown Parking"
           title="Where To Look."
           meta={

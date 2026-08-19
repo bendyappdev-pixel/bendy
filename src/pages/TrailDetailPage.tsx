@@ -75,8 +75,6 @@ export default function TrailDetailPage() {
 
   // Scene kickers stay contiguous even though a couple of sections are
   // conditional on the trail's data (crowd reporting, nearby trails).
-  let sceneCount = 2; // About + Trailhead are always scenes 01 / 02.
-  const nextScene = () => String(++sceneCount).padStart(2, '0');
 
   return (
     <div>
@@ -158,7 +156,7 @@ export default function TrailDetailPage() {
           <div className="col-span-12 lg:col-span-8">
             {/* Scene 01 · About */}
             <section>
-              <SceneHeader scene="01" kicker="About This Trail" title="Trail Notes." size="sub" />
+              <SceneHeader kicker="About This Trail" title="Trail Notes." size="sub" />
               <p className="mt-6 max-w-3xl text-[16px] leading-relaxed text-mist">
                 {trail.description}
               </p>
@@ -212,7 +210,7 @@ export default function TrailDetailPage() {
 
             {/* Scene 02 · Trailhead */}
             <section className="mt-14 border-t border-hair pt-10">
-              <SceneHeader scene="02" kicker="Trailhead & Access" title="Getting There." size="sub" />
+              <SceneHeader kicker="Trailhead & Access" title="Getting There." size="sub" />
 
               <div className="mt-6 space-y-5">
                 <div className="flex items-start gap-3">
@@ -271,7 +269,6 @@ export default function TrailDetailPage() {
             {trailSpot && (
               <section className="mt-14 border-t border-hair pt-10">
                 <SceneHeader
-                  scene={nextScene()}
                   kicker="Current Conditions"
                   title="Right Now."
                   size="sub"
@@ -319,7 +316,7 @@ export default function TrailDetailPage() {
             {/* Nearby Trails */}
             {nearbyTrails.length > 0 && (
               <section className="mt-14 border-t border-hair pt-10">
-                <SceneHeader scene={nextScene()} kicker="Nearby Trails" title="Keep Rolling." size="sub" />
+                <SceneHeader kicker="Nearby Trails" title="Keep Rolling." size="sub" />
                 <div className="mt-6 divide-y divide-hair border-t border-hair">
                   {nearbyTrails.map((nearbyTrail) => (
                     <Link

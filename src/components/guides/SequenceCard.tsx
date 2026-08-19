@@ -22,7 +22,6 @@ interface SequenceCardProps {
   guide: Guide;
   /** 1-based sequence number. */
   index: number;
-  total: number;
   leak?: boolean;
   priority?: boolean;
 }
@@ -30,7 +29,6 @@ interface SequenceCardProps {
 export default function SequenceCard({
   guide,
   index,
-  total,
   leak = false,
   priority = false,
 }: SequenceCardProps) {
@@ -53,7 +51,11 @@ export default function SequenceCard({
         /* The call-sheet letterbox owns the bottom of this frame. */
         creditPosition="top"
         label={`SEQ${numeral}_${guide.slug.toUpperCase()}.MOV`}
-        timecode={`SCENE ${numeral} OF ${String(total).padStart(2, '0')} · ${guide.duration.toUpperCase()}`}
+        /* The №01 stencil below is the only place this card states its
+           position. It also appeared here and in the top slate — three
+           printings of one number on a single card, which is what made the
+           homepage scan as a wall of ordinals. */
+        timecode={guide.duration.toUpperCase()}
         className="flex"
         /* min-height, not height: real guide titles run longer than the
            design reference's and a fixed frame clipped the stencil off the
@@ -63,7 +65,7 @@ export default function SequenceCard({
       >
         {/* Top slate */}
         <div className="letterbox small-caps absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-6 py-3 lg:px-10">
-          <span className="rec">Sequence {numeral}</span>
+          <span className="rec">{guide.seasons.join(' · ')}</span>
           {firstStop && (
             <span className="hidden text-whisper md:inline">
               {firstStop.location} · {firstStop.time}

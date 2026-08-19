@@ -1,13 +1,16 @@
 /**
  * HomePage — seven scenes.
  *
- *   01  Title Card Hero        (components/home/Hero)
- *   02  Today's Almanac        weather / on the ground / this week
- *   03  Sequences              guides as cinematic title cards
- *   04  Locations              categories as chapter bands
- *   05  Live from the Field    map + field transmission
- *   06  The Marquee            events as a table
- *   07  End Slate              stats + geo strip
+ * Section order (these numbers are for reading this file — the page itself
+ * prints no section ordinals; see SceneHeader):
+ *
+ *   Title Card Hero        (components/home/Hero)
+ *   Today's Almanac        weather / on the ground / this week
+ *   Sequences              guides as cinematic title cards
+ *   Locations              categories as chapter bands
+ *   Live from the Field    map + field transmission
+ *   The Marquee            events as a table
+ *   End Slate              stats + geo strip
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -151,7 +154,6 @@ function AlmanacScene({ onFileReport }: { onFileReport: () => void }) {
     <section id="almanac" className="border-b border-hair bg-film-deep">
       <div className="container-app pt-14">
         <SceneHeader
-          scene="02"
           kicker="Today's Almanac"
           title="The Day, In One Frame."
           meta={
@@ -358,7 +360,6 @@ function SequencesScene() {
     <section id="sequences" className="border-b border-hair bg-black">
       <div className="container-app pb-10 pt-20">
         <SceneHeader
-          scene="03"
           kicker="Sequences"
           accent="var(--flame)"
           title={
@@ -384,7 +385,6 @@ function SequencesScene() {
           key={guide.id}
           guide={guide}
           index={i + 1}
-          total={guides.length}
           leak={i % 2 === 1}
         />
       ))}
@@ -420,7 +420,7 @@ function LocationsScene() {
   return (
     <section className="border-b border-hair bg-film-deep">
       <div className="container-app pb-12 pt-20">
-        <SceneHeader scene="04" kicker="Locations" accent="var(--pine)" title="Four Front Doors.">
+        <SceneHeader kicker="Locations" accent="var(--pine)" title="Four Front Doors.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             Skiing in winter. Trails in summer. Kids menu sorted. Beer always. Pick a chapter.
           </p>
@@ -434,7 +434,6 @@ function LocationsScene() {
             category={category}
             displayName={chapterNames[category.id]}
             index={i + 1}
-            total={categories.length}
             image={chapterImages[category.id]}
             cta={chapterCtas[category.id]}
             meta={chapterMeta[category.id]}
@@ -552,7 +551,7 @@ function FieldScene({ onFileReport }: { onFileReport: () => void }) {
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-start justify-between gap-8">
           <div className="pointer-events-auto">
             <div aria-hidden="true" className="mb-3 h-[2px] w-10" style={{ background: 'var(--lake)' }} />
-            <div className="small-caps" style={{ color: 'var(--lake)' }}>Scene 05 · Live from the Field</div>
+            <div className="small-caps" style={{ color: 'var(--lake)' }}>Live from the Field</div>
             <h2 className="film-display mt-3 text-[clamp(44px,6vw,92px)]">The Map Is Live.</h2>
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-mist">
               Crowd, weather and trail conditions — reported by the people out in it.
@@ -682,7 +681,7 @@ function MarqueeScene() {
         {/* A 12-col grid, not flex-wrap: the headline is wide enough to force
             a wrap, which dropped the blurb to the left edge instead of
             keeping it right-aligned in its own column. */}
-        <SceneHeader scene="06" kicker="Now Showing" accent="var(--flame)" title="The Marquee.">
+        <SceneHeader kicker="Now Showing" accent="var(--flame)" title="The Marquee.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             {upcomingCount} events still to come. Tower Theatre. Hayden Homes. Drake
             Park. Sisters. The Old Mill. Pick your weekend.
@@ -836,7 +835,7 @@ function EndSlateScene() {
   return (
     <section className="horizon border-b border-hair bg-black">
       <div className="container-app py-24">
-        <SceneHeader scene="07" kicker="End Slate" title="Bend, By the Numbers.">
+        <SceneHeader kicker="End Slate" title="Bend, By the Numbers.">
           <p className="max-w-md leading-relaxed text-mist md:ml-auto">
             Population, peaks, breweries, sun. The math behind why people keep moving here —
             and why the locals never leave.

@@ -36,7 +36,6 @@ export default function GuidesPage() {
             key={guide.id}
             guide={guide}
             index={i + 1}
-            total={guides.length}
             leak={i % 2 === 1}
             priority={i === 0}
           />

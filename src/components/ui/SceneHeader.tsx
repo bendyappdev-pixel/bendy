@@ -1,9 +1,13 @@
 /**
- * SceneHeader — the numbered section header used on every page.
+ * SceneHeader — the section header used on every page.
  *
- * Sections in this system are "scenes": a mono small-caps kicker in ember
- * ("Scene 02 · Today's Almanac"), a very large condensed display headline,
- * and optional right-aligned metadata.
+ * Sections in this system are "scenes": a mono small-caps kicker in ember,
+ * a very large display headline, and optional right-aligned metadata.
+ *
+ * Deliberately carries NO ordinal. Sections used to print "Scene 02 · " while
+ * the cards inside them numbered themselves independently, so scanning the
+ * homepage read 2, 3, 1, 2, 4, 5 — and "scene" meant both a page section and
+ * a card within one. One number per thing; sections state theirs not at all.
  */
 
 import { ReactNode } from 'react';
@@ -11,9 +15,7 @@ import { cn } from '../../lib/utils';
 import { useReveal } from '../../hooks/useReveal';
 
 export interface SceneHeaderProps {
-  /** Scene number, e.g. "02". Rendered as "Scene 02 · {kicker}". */
-  scene?: string;
-  /** Kicker text after the scene number. */
+  /** Kicker text. */
   kicker: string;
   /** The display headline. */
   title: ReactNode;
@@ -36,7 +38,6 @@ export interface SceneHeaderProps {
 }
 
 export default function SceneHeader({
-  scene,
   kicker,
   title,
   meta,
@@ -61,7 +62,7 @@ export default function SceneHeader({
             where the meta column is hidden. */}
         <div aria-hidden="true" className="mb-3 h-[2px] w-10" style={{ background: accent }} />
         <div className="small-caps" style={{ color: accent }}>
-          {scene ? `Scene ${scene} · ${kicker}` : kicker}
+          {kicker}
         </div>
         {/* Both ends of the handoff's scale had to move for real content.
             The floors (56px / 48px) overflowed a 390px phone on words like

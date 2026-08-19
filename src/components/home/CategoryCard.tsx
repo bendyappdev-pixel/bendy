@@ -34,8 +34,6 @@ interface CategoryCardProps {
   displayName?: string;
   /** 1-based chapter index, rendered as the stencil numeral. */
   index: number;
-  /** Total chapters, for the "CHAPTER 01 / 04" timecode. */
-  total: number;
   /** Photo for the band, when one exists. */
   image?: string;
   /** Right-hand call to action wording. */
@@ -52,7 +50,6 @@ export default function CategoryCard({
   category,
   displayName,
   index,
-  total,
   image,
   cta = 'Open the chapter',
   meta,
@@ -71,7 +68,10 @@ export default function CategoryCard({
           leak={leak}
           scrim="left"
           label={`CH${numeral}_${category.name.replace(/\W+/g, '-').toUpperCase()}_BROLL.MOV`}
-          timecode={`CHAPTER ${numeral} / ${String(total).padStart(2, '0')}`}
+          /* The stencil numeral beside the copy is where this band states
+             its position; printing "CHAPTER 01 / 04" here too was the second
+             of three. */
+          timecode={category.name.toUpperCase()}
           className="flex"
           /* min-height so a long blurb lengthens the band instead of
              spilling past its own hairline. */
