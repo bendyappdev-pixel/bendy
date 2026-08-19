@@ -78,7 +78,7 @@ export default function MapPage() {
             onClick={() => setCrowdTab('current')}
             aria-pressed={crowdTab === 'current'}
             className={cn(
-              'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+              'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
               crowdTab === 'current'
                 ? 'border-ember text-ember'
                 : 'border-hair text-whisper hover:text-film-white'
@@ -91,7 +91,7 @@ export default function MapPage() {
             onClick={() => setCrowdTab('history')}
             aria-pressed={crowdTab === 'history'}
             className={cn(
-              'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+              'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
               crowdTab === 'history'
                 ? 'border-ember text-ember'
                 : 'border-hair text-whisper hover:text-film-white'

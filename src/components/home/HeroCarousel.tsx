@@ -150,19 +150,27 @@ export default function HeroCarousel({
         {children}
 
         {/* Frame selector — square, ember when live. Sits clear of the
-            lower-third letterbox, which owns the bottom of the frame. */}
+            lower-third letterbox, which owns the bottom of the frame. The
+            bar stays 6px; each button's padding is the tap target — the
+            bare bar was a 24×6px control. */}
         {heroImages.length > 1 && (
-          <div className="absolute left-1/2 top-6 z-30 flex -translate-x-1/2 gap-2">
+          <div className="absolute left-1/2 top-6 z-30 flex -translate-x-1/2">
             {heroImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`h-1.5 transition-all ${
-                  index === currentIndex ? 'w-6 bg-ember' : 'w-3 bg-white/40 hover:bg-white/70'
-                }`}
+                className="group p-2.5"
                 aria-label={`Show frame ${index + 1} of ${heroImages.length}`}
                 aria-current={index === currentIndex ? 'true' : undefined}
-              />
+              >
+                <span
+                  className={`block h-1.5 transition-all ${
+                    index === currentIndex
+                      ? 'w-6 bg-ember'
+                      : 'w-3 bg-white/40 group-hover:bg-white/70'
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}

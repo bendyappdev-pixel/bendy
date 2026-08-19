@@ -141,7 +141,10 @@
      specifies this ("transform: scale(1.005), 600ms") but the shipped token
      file omitted the rule, so .hoverable was inert. */
   .reel.hoverable { transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .reel.hoverable:hover { transform: scale(1.005); }
+  @media (hover: hover) and (pointer: fine) {
+    .reel.hoverable:hover { transform: scale(1.005); }
+  }
+  .reel.hoverable:active { transform: scale(0.998); }
 
   /* <Reel> wraps its <img> in a <picture> so it can offer WebP. The picture
      element must not generate a line box of its own inside the frame. */
@@ -241,7 +244,13 @@
 
   /* ── Utility surfaces ──────────────────────────────────────────────── */
 
-  .row-hover:hover { background: rgba(242,237,225,0.04); }
+  /* Hover feedback is gated to devices that have a hover; on touch the
+     :active state carries the same feedback (hover-only affordances are
+     invisible on a phone). */
+  @media (hover: hover) and (pointer: fine) {
+    .row-hover:hover { background: rgba(242,237,225,0.04); }
+  }
+  .row-hover:active { background: rgba(242,237,225,0.07); }
 
   .scrubber { @apply relative h-0.5; background: rgba(242,237,225,0.15); }
   .scrubber > i { @apply absolute -top-1 w-2.5 h-2.5; background: var(--ember); }
@@ -280,19 +289,23 @@
   /* ── Buttons ───────────────────────────────────────────────────────── */
   /* Square corners. The old rounded-xl is gone across the whole system. */
 
+  /* min-height 44px: the 10.5px mono label made these ~38px tall, under the
+     touch-target standard. :active mirrors :hover so taps get feedback. */
   .btn-primary {
-    @apply inline-flex items-center gap-3 px-5 py-3 font-mono uppercase transition-colors;
+    @apply inline-flex items-center gap-3 px-5 py-3 font-mono uppercase transition-colors min-h-[44px];
     background: var(--film-white); color: var(--film-black);
     letter-spacing: 0.22em; font-size: 10.5px;
   }
-  .btn-primary:hover { background: var(--ember); color: var(--film-white); }
+  .btn-primary:hover,
+  .btn-primary:active { background: var(--ember); color: var(--film-white); }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 px-5 py-3 font-mono uppercase border transition-colors;
+    @apply inline-flex items-center gap-2 px-5 py-3 font-mono uppercase border transition-colors min-h-[44px];
     border-color: rgba(255,255,255,0.30); color: var(--film-white);
     letter-spacing: 0.22em; font-size: 10.5px;
   }
-  .btn-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+  .btn-secondary:hover,
+  .btn-secondary:active { border-color: #fff; background: rgba(255,255,255,0.05); }
 }
 
 @layer utilities {

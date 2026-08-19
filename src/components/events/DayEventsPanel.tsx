@@ -29,7 +29,7 @@ export default function DayEventsPanel({ date, events, onClose }: DayEventsPanel
           </h3>
           <button
             onClick={onClose}
-            className="row-hover flex h-8 w-8 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
+            className="row-hover flex h-11 w-11 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
             aria-label="Close panel"
           >
             <X className="h-4 w-4" />

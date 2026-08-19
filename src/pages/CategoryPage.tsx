@@ -271,7 +271,7 @@ export default function CategoryPage() {
                   onClick={() => setActiveSubcategory(subcat.id)}
                   aria-pressed={active}
                   className={cn(
-                    'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+                    'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
                     active
                       ? 'border-ember text-ember'
                       : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
@@ -286,7 +286,7 @@ export default function CategoryPage() {
             {category === 'outdoor' && (
               <Link
                 to="/trails"
-                className="small-caps flex items-center gap-2 border border-ember px-4 py-2.5 text-ember transition-colors hover:bg-ember hover:text-film-white"
+                className="small-caps flex items-center gap-2 border border-ember px-4 py-2.5 min-h-[44px] text-ember transition-colors hover:bg-ember hover:text-film-white"
               >
                 <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
                 Explore Trails

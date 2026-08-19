@@ -15,7 +15,7 @@ export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange('list')}
         aria-pressed={view === 'list'}
         className={cn(
-          'small-caps flex items-center gap-2 border-r border-hair px-4 py-2.5 transition-colors',
+          'small-caps flex items-center gap-2 border-r border-hair px-4 py-2.5 min-h-[44px] transition-colors',
           view === 'list'
             ? 'bg-[var(--ember-50)] text-film-white'
             : 'text-whisper hover:text-film-white'
@@ -28,7 +28,7 @@ export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         onClick={() => onViewChange('calendar')}
         aria-pressed={view === 'calendar'}
         className={cn(
-          'small-caps flex items-center gap-2 px-4 py-2.5 transition-colors',
+          'small-caps flex items-center gap-2 px-4 py-2.5 min-h-[44px] transition-colors',
           view === 'calendar'
             ? 'bg-[var(--ember-50)] text-film-white'
             : 'text-whisper hover:text-film-white'

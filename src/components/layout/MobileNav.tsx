@@ -68,7 +68,7 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
           <button
             ref={closeRef}
             onClick={onClose}
-            className="p-2 transition-colors hover:bg-white/10"
+            className="p-2.5 transition-colors hover:bg-white/10"
             aria-label="Close menu"
           >
             <X className="h-6 w-6 text-mist" />

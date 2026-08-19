@@ -157,7 +157,11 @@ export default function InteractiveMap({
       .map((location) => {
         const config = typeConfig[location.type];
 
+        // The dot stays 12px; the 28px wrapper is the tap target — a bare
+        // 12px span was nearly impossible to hit on a phone.
         const el = document.createElement('div');
+        el.style.cssText =
+          'width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;';
         el.innerHTML = `
           <span style="
             display:block;
@@ -167,7 +171,6 @@ export default function InteractiveMap({
             background:${config.color};
             box-shadow:0 0 10px ${config.color};
             border:1px solid rgba(7,6,5,0.8);
-            cursor:pointer;
           "></span>
         `;
 
@@ -310,7 +313,7 @@ export default function InteractiveMap({
                 key={type}
                 onClick={() => toggleFilter(type as Location['type'])}
                 aria-pressed={active}
-                className={`small-caps flex items-center gap-2 whitespace-nowrap px-2.5 py-2.5 transition-colors ${
+                className={`small-caps flex items-center gap-2 whitespace-nowrap px-2.5 py-2.5 min-h-[44px] transition-colors ${
                   active ? 'text-ember' : 'text-whisper hover:text-film-white'
                 }`}
               >

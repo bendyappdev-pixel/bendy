@@ -47,7 +47,7 @@ export default function NotFoundPage() {
               <li key={item.href}>
                 <Link
                   to={item.href}
-                  className="film-display-thin text-[26px] text-film-white hover:text-ember"
+                  className="film-display-thin inline-block py-2 text-[26px] text-film-white hover:text-ember"
                 >
                   {item.name}
                 </Link>

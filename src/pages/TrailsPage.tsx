@@ -86,7 +86,7 @@ function FilterDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+          'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
           active
             ? 'border-ember text-ember'
             : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
@@ -110,7 +110,7 @@ function FilterDropdown({
                 setIsOpen(false);
               }}
               className={cn(
-                'small-caps block w-full px-4 py-2.5 text-left transition-colors',
+                'small-caps block w-full px-4 py-2.5 min-h-[44px] text-left transition-colors',
                 !value ? 'text-ember' : 'text-whisper hover:text-film-white'
               )}
             >
@@ -124,7 +124,7 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  'small-caps block w-full px-4 py-2.5 text-left transition-colors',
+                  'small-caps block w-full px-4 py-2.5 min-h-[44px] text-left transition-colors',
                   value === option.id ? 'text-ember' : 'text-whisper hover:text-film-white'
                 )}
               >
@@ -154,7 +154,7 @@ function FeatureToggle({
     <button
       onClick={onClick}
       className={cn(
-        'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+        'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
         active
           ? 'border-ember text-ember'
           : 'border-hair text-whisper hover:border-film-white hover:text-film-white'
@@ -367,7 +367,7 @@ export default function TrailsPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="small-caps flex items-center gap-2 px-4 py-2.5 text-whisper transition-colors hover:text-film-white"
+                className="small-caps flex items-center gap-2 px-4 py-2.5 min-h-[44px] text-whisper transition-colors hover:text-film-white"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
                 Clear ({activeFilterCount})

@@ -52,7 +52,7 @@ export default function EventCalendar({
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
-            className="row-hover flex h-8 w-8 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
+            className="row-hover flex h-11 w-11 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
             aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -62,7 +62,7 @@ export default function EventCalendar({
           </h2>
           <button
             onClick={handleNextMonth}
-            className="row-hover flex h-8 w-8 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
+            className="row-hover flex h-11 w-11 items-center justify-center border border-hair text-whisper transition-colors hover:text-film-white"
             aria-label="Next month"
           >
             <ChevronRight className="h-4 w-4" />
@@ -70,7 +70,7 @@ export default function EventCalendar({
         </div>
         <button
           onClick={handleToday}
-          className="small-caps border border-ember px-3 py-1.5 text-ember transition-colors hover:bg-[var(--ember-50)] hover:text-film-white"
+          className="small-caps border border-ember px-3 py-3 text-ember transition-colors hover:bg-[var(--ember-50)] hover:text-film-white"
         >
           Today
         </button>

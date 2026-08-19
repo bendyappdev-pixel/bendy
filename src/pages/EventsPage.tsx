@@ -87,7 +87,7 @@ export default function EventsPage() {
               onClick={() => setFilter(cat.value)}
               aria-pressed={filter === cat.value}
               className={cn(
-                'small-caps border px-3 py-2 transition-colors',
+                'small-caps border px-3 py-2 min-h-[44px] transition-colors',
                 filter === cat.value
                   ? 'border-ember text-ember'
                   : 'border-hair text-whisper hover:text-film-white'

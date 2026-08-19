@@ -316,7 +316,7 @@ function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        'small-caps flex items-center gap-2 border px-4 py-2.5 transition-colors',
+        'small-caps flex items-center gap-2 border px-4 py-2.5 min-h-[44px] transition-colors',
         active
           ? 'border-ember text-ember'
           : 'border-hair text-whisper hover:border-film-white hover:text-film-white'

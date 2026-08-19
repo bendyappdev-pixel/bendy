@@ -84,7 +84,7 @@ export default function Footer() {
             <ul className="film-display-thin space-y-2 text-[20px]">
               {sections.map((s) => (
                 <li key={s.href}>
-                  <Link to={s.href} className="text-film-white hover:text-ember">
+                  <Link to={s.href} className="inline-block py-1.5 text-film-white hover:text-ember">
                     {s.name}
                   </Link>
                 </li>
@@ -97,7 +97,7 @@ export default function Footer() {
             <ul className="film-display-thin space-y-2 text-[20px]">
               {calendar.map((s) => (
                 <li key={s.href}>
-                  <Link to={s.href} className="text-film-white hover:text-ember">
+                  <Link to={s.href} className="inline-block py-1.5 text-film-white hover:text-ember">
                     {s.name}
                   </Link>
                 </li>

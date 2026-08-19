@@ -97,7 +97,9 @@ export default function CategoryCard({
                 {category.description}
               </p>
             </div>
-            <span className="small-caps hidden items-center gap-3 text-film-white transition-colors group-hover:text-ember md:inline-flex">
+            {/* Visible at every width — hiding it below md left the band
+                with no call to action at all on a phone. */}
+            <span className="small-caps inline-flex items-center gap-3 text-film-white transition-colors group-hover:text-ember">
               {cta}
               <span
                 className="film-display text-[40px] leading-none transition-transform group-hover:translate-x-1"

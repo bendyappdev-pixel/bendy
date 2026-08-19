@@ -625,9 +625,9 @@ function FieldScene({ onFileReport }: { onFileReport: () => void }) {
               <button
                 onClick={() => setDrawer(null)}
                 aria-label="Close"
-                className="-mt-1 p-1 leading-none text-whisper transition-colors hover:text-film-white"
+                className="-mr-2 -mt-2 p-3 leading-none text-whisper transition-colors hover:text-film-white"
               >
-                <X className="h-4 w-4" aria-hidden="true" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
             <h3 className="film-display mt-4 text-[clamp(30px,3.6vw,46px)] leading-[0.9]">{drawer.title}</h3>

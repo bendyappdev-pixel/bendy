@@ -57,7 +57,7 @@ export default function Header() {
                   key={link.href}
                   to={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`small-caps transition-colors duration-200 ${
+                  className={`small-caps px-1 py-3 transition-colors duration-200 ${
                     active ? 'text-ember' : 'text-mist hover:text-film-white'
                   }`}
                 >
@@ -80,7 +80,7 @@ export default function Header() {
 
           <button
             onClick={() => setMobileNavOpen(true)}
-            className="p-2 transition-colors hover:bg-white/10 md:hidden"
+            className="p-2.5 transition-colors hover:bg-white/10 md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6 text-film-white" />
