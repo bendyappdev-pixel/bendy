@@ -10,6 +10,31 @@ import {
 } from '../types/conditions';
 import { appCheckFetch } from '../utils/appCheckFetch';
 
+/**
+ * Every conditions fetch goes through this.
+ *
+ * Without a timeout, an endpoint that accepts the connection and then stops
+ * responding leaves the page on "Reading the air…" until the OS gives up on
+ * the socket — measured at ~26s against an unresponsive host, with nothing
+ * on screen to say anything was wrong. The unavailable states this file is
+ * careful to reach are only useful if they arrive while someone is still
+ * looking at the page.
+ *
+ * 10s is chosen against the slowest of these in normal health: USGS
+ * routinely takes 2-4s.
+ */
+const FETCH_TIMEOUT_MS = 10_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await appCheckFetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // USGS Site IDs for Central Oregon rivers. Only gauges that actually report
 // real-time data belong here — the upper Deschutes gauges near Bend
 // (14064500, 14056500) and Fall River (14057500) were discontinued in 1991
@@ -76,7 +101,7 @@ export function useRiverConditions() {
       const siteIds = Object.values(USGS_SITES).join(',');
       const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteIds}&parameterCd=00060,00010&siteStatus=active`;
 
-      const response = await fetch(url);
+      const response = await fetchWithTimeout(url);
       if (!response.ok) throw new Error('Failed to fetch USGS data');
 
       const data: USGSResponse = await response.json();
@@ -192,7 +217,7 @@ export function useFireIncidents() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(WFIGS_URL);
+      const response = await fetchWithTimeout(WFIGS_URL);
       if (!response.ok) throw new Error('Failed to fetch fire data');
       const data = await response.json();
       if (data.error || !Array.isArray(data.features)) throw new Error('Bad WFIGS response');
@@ -252,7 +277,7 @@ export function useAirQuality() {
 
       const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${BEND_COORDS.lat}&longitude=${BEND_COORDS.lng}&current=us_aqi,pm2_5,pm10,ozone&timezone=America/Los_Angeles`;
 
-      const response = await fetch(url);
+      const response = await fetchWithTimeout(url);
       if (!response.ok) throw new Error('Failed to fetch air quality data');
 
       const data: OpenMeteoAirQualityResponse = await response.json();
@@ -299,7 +324,7 @@ export function useMountainConditions() {
       setLoading(true);
       setError(null);
 
-      const response = await appCheckFetch('/api/mt-bachelor');
+      const response = await fetchWithTimeout('/api/mt-bachelor');
       if (!response.ok) throw new Error('Failed to fetch Mt. Bachelor conditions');
 
       const data = await response.json();
@@ -353,7 +378,7 @@ export function useHoodooConditions() {
       setLoading(true);
       setError(null);
 
-      const response = await appCheckFetch('/api/hoodoo');
+      const response = await fetchWithTimeout('/api/hoodoo');
       if (!response.ok) throw new Error('Failed to fetch Hoodoo conditions');
 
       const data = await response.json();
@@ -405,7 +430,7 @@ export function useRoadConditions() {
       setLoading(true);
       setError(null);
 
-      const response = await appCheckFetch('/api/roads');
+      const response = await fetchWithTimeout('/api/roads');
       if (!response.ok) throw new Error('Failed to fetch road conditions');
 
       const data = await response.json();
