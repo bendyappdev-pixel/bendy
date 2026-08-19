@@ -24,9 +24,12 @@ interface HeroCarouselProps {
   onFrameChange?: (index: number) => void;
 }
 
+/* min-height, not height: the lower-thirds letterbox is a flow sibling of
+   the title block, and on a phone it wraps to two-plus rows — a fixed frame
+   height clipped the CTAs underneath it. The frame keeps its cinematic
+   proportions and grows only when the content genuinely needs it. */
 const FRAME_STYLE: React.CSSProperties = {
-  height: 'min(92vh, 940px)',
-  minHeight: 680,
+  minHeight: 'min(92vh, 940px)',
 };
 
 export default function HeroCarousel({
@@ -74,7 +77,7 @@ export default function HeroCarousel({
   if (!hasImages) {
     return (
       <section className="relative">
-        <div className="reel leak" style={FRAME_STYLE}>
+        <div className="reel leak flex flex-col" style={FRAME_STYLE}>
           <div className="brackets" aria-hidden="true">
             <i className="tl" />
             <i className="tr" />
@@ -91,7 +94,7 @@ export default function HeroCarousel({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="reel has-photo leak" style={FRAME_STYLE}>
+      <div className="reel has-photo leak flex flex-col" style={FRAME_STYLE}>
         {heroImages.map((src, index) => (
           <div
             key={src}

@@ -56,7 +56,7 @@ export default function SequenceCard({
            printings of one number on a single card, which is what made the
            homepage scan as a wall of ordinals. */
         timecode={guide.duration.toUpperCase()}
-        className="flex"
+        className="flex flex-col"
         /* min-height, not height: real guide titles run longer than the
            design reference's and a fixed frame clipped the stencil off the
            top. The frame keeps its cinematic proportions and grows only when
@@ -77,8 +77,10 @@ export default function SequenceCard({
         </div>
 
         {/* Title block. In flow rather than absolutely positioned so the
-            frame can grow around it; pt/pb clear the two letterbox slates. */}
-        <div className="relative z-10 flex w-full min-w-0 flex-col justify-end px-6 pb-40 pt-20 md:pb-44 lg:px-16">
+            frame can grow around it; pt clears the top slate, and the call
+            sheet below is a flow sibling — on a phone it wraps to three rows
+            and a fixed bottom reserve here buried the CTA under it. */}
+        <div className="relative z-10 flex w-full min-w-0 flex-1 flex-col justify-end px-6 pb-10 pt-20 lg:px-16">
           <div className="max-w-3xl">
             <div
               className="stencil text-[clamp(56px,13vw,180px)] leading-none opacity-70"
@@ -105,7 +107,7 @@ export default function SequenceCard({
 
         {/* Call sheet */}
         {callSheet.length > 0 && (
-          <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+          <div className="letterbox relative z-20 w-full">
             <ol className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-hair px-6 py-4 font-mono text-[10px] text-mist md:grid-cols-6 lg:px-10">
               {callSheet.map((stop, i) => (
                 <li

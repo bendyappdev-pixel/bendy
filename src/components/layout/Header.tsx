@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import MobileNav from './MobileNav';
 import ViewfinderMark from '../ui/ViewfinderMark';
@@ -19,6 +19,19 @@ export const EDITION = 'Summer/Fall 2026';
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // The Search affordance advertises ⌘K — make that true.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        navigate('/map');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
 
   return (
     <>

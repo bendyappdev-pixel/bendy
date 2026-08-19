@@ -69,8 +69,10 @@ export default function Hero() {
       timecode="SUMMER/FALL 2026"
       onFrameChange={handleFrameChange}
     >
-      {/* Centre title. Bottom padding keeps it clear of the lower-thirds. */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-6 pb-40">
+      {/* Centre title. In flow (flex-1) with the lower-thirds below it, so
+          however many rows the letterbox wraps to on a phone, it can never
+          overlap the CTAs. pt clears the frame-selector dots. */}
+      <div className="relative z-10 flex w-full flex-1 items-center justify-center px-6 pb-12 pt-24">
         <div className="text-center">
           {/* The design reference set this as "BEND", reading it as a title
               card for the city. That is wrong for this brand: the Y is the
@@ -120,7 +122,7 @@ export default function Hero() {
       </div>
 
       {/* Lower-thirds */}
-      <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+      <div className="letterbox relative z-20 w-full">
         <div className="grid grid-cols-12 items-center gap-6 px-6 py-5 lg:px-10">
           <div className="col-span-12 flex items-center gap-5 md:col-span-4">
             {weather && (

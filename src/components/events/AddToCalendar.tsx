@@ -24,24 +24,24 @@ export default function AddToCalendar({ event, compact = false }: AddToCalendarP
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
+      // The panel is position:fixed, so coordinates are viewport-relative —
+      // adding scrollY here pushed the menu a full page-height below the
+      // viewport on any scrolled page. Clamp left so the 192px panel never
+      // runs off the right edge of a phone.
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 192 - 8));
+
       // Position above if not enough space below
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-        setDropdownPosition({
-          top: rect.top - dropdownHeight - 4 + window.scrollY,
-          left: rect.left + window.scrollX,
-        });
+        setDropdownPosition({ top: rect.top - dropdownHeight - 4, left });
       } else {
-        setDropdownPosition({
-          top: rect.bottom + 4 + window.scrollY,
-          left: rect.left + window.scrollX,
-        });
+        setDropdownPosition({ top: rect.bottom + 4, left });
       }
     }
   }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(e.target as Node) &&
@@ -54,7 +54,11 @@ export default function AddToCalendar({ event, compact = false }: AddToCalendarP
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
+      };
     }
   }, [isOpen]);
 

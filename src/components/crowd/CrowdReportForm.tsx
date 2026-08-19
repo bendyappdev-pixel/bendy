@@ -11,7 +11,7 @@ interface CrowdReportFormProps {
 }
 
 const fieldClass =
-  'w-full border border-hair bg-transparent px-4 py-3 font-mono text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none transition-colors';
+  'w-full border border-hair bg-transparent px-4 py-3 font-mono text-[16px] md:text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none transition-colors';
 
 export default function CrowdReportForm({
   onSuccess,

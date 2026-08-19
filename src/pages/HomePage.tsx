@@ -575,8 +575,10 @@ function FieldScene({ onFileReport }: { onFileReport: () => void }) {
         </div>
       </div>
 
-      {/* Bottom conditions strip */}
-      <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-7 lg:px-10">
+      {/* Bottom conditions strip. pointer-events-none on the container —
+          without it this full-width box intercepted every touch across the
+          bottom of the map; only the buttons need to be interactive. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-6 pb-7 lg:px-10">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-end justify-between gap-6">
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
             {conditionRows.map(([k, v]) => (
@@ -586,7 +588,7 @@ function FieldScene({ onFileReport }: { onFileReport: () => void }) {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="pointer-events-auto flex items-center gap-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();

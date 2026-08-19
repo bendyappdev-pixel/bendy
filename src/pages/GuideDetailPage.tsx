@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -122,7 +123,7 @@ export default function GuideDetailPage() {
         alt={guide.title}
         priority
         scrim="bottom"
-        className="flex border-b border-hair"
+        className="flex flex-col border-b border-hair"
         style={{ minHeight: 'min(72vh, 680px)' }}
       >
         <div className="absolute left-4 top-4 z-20 md:left-8 md:top-8">
@@ -135,7 +136,7 @@ export default function GuideDetailPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 flex w-full flex-col justify-end px-6 pb-32 pt-24 md:pb-36 lg:px-10">
+        <div className="relative z-10 flex w-full flex-1 flex-col justify-end px-6 pb-10 pt-24 lg:px-10">
           <div className="small-caps text-ember">
             {guide.difficulty} · {guide.duration}
           </div>
@@ -159,7 +160,7 @@ export default function GuideDetailPage() {
         </div>
 
         {/* Letterboxed lower-third: the stat block */}
-        <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+        <div className="letterbox relative z-20 w-full">
           <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-hair px-6 py-6 md:grid-cols-4 lg:px-10">
             <div>
               <div className="small-caps text-whisper">Duration</div>
@@ -371,16 +372,11 @@ export default function GuideDetailPage() {
                 </div>
               </div>
 
-              {/* Share/Save */}
+              {/* Share */}
               <div className="mt-10 border-t border-hair pt-6">
                 <h3 className="small-caps text-whisper">Share This Sequence</h3>
                 <div className="mt-4 flex gap-3">
-                  <button className="btn-primary flex-1 justify-center text-[10px]">
-                    Copy Link
-                  </button>
-                  <button className="btn-secondary flex-1 justify-center text-[10px]">
-                    Save
-                  </button>
+                  <ShareButton title={guide.title} />
                 </div>
               </div>
             </div>
@@ -388,5 +384,32 @@ export default function GuideDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Native share sheet where the platform has one; copy-to-clipboard elsewhere. */
+function ShareButton({ title }: { title: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const share = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch {
+        // Dismissed the sheet — nothing to do.
+        return;
+      }
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button onClick={share} className="btn-primary flex-1 justify-center text-[10px]">
+      {copied ? 'Link Copied' : 'Share'}
+    </button>
   );
 }

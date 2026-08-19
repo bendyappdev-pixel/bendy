@@ -108,6 +108,11 @@ export default function InteractiveMap({
         style: 'mapbox://styles/mapbox/dark-v11',
         center: DEFAULT_CENTER,
         zoom: DEFAULT_ZOOM,
+        // One-finger pan trapped page scroll on touch — a swipe landing on
+        // the canvas moved the map, not the page. Cooperative mode requires
+        // two fingers on touch (Ctrl/⌘+scroll on desktop) and overlays its
+        // own hint when a single finger tries.
+        cooperativeGestures: true,
       });
 
       mapRef.current = map;

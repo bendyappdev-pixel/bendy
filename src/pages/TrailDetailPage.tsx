@@ -84,7 +84,7 @@ export default function TrailDetailPage() {
         alt={trail.name}
         priority
         scrim="bottom"
-        className="flex border-b border-hair"
+        className="flex flex-col border-b border-hair"
         style={{ minHeight: 'min(72vh, 680px)' }}
       >
         <div className="absolute left-4 top-4 z-20 md:left-8 md:top-8">
@@ -97,7 +97,7 @@ export default function TrailDetailPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 flex w-full flex-col justify-end px-6 pb-32 pt-24 md:pb-36 lg:px-10">
+        <div className="relative z-10 flex w-full flex-1 flex-col justify-end px-6 pb-10 pt-24 lg:px-10">
           <div className="small-caps text-ember">
             {trail.difficulty} · {trail.trailType.replace('-', ' ')}
           </div>
@@ -113,7 +113,7 @@ export default function TrailDetailPage() {
         </div>
 
         {/* Letterboxed lower-third: the stat block */}
-        <div className="letterbox absolute bottom-0 left-0 right-0 z-20">
+        <div className="letterbox relative z-20 w-full">
           <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-hair px-6 py-6 md:grid-cols-5 lg:px-10">
             <div>
               <div className="small-caps text-whisper">Distance</div>

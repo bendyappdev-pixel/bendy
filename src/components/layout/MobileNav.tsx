@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import ViewfinderMark from '../ui/ViewfinderMark';
 
 interface MobileNavProps {
@@ -98,6 +98,17 @@ export default function MobileNav({ isOpen, onClose, links }: MobileNavProps) {
             );
           })}
         </nav>
+
+        {/* The header's Search affordance is desktop-only (hidden lg:flex),
+            so this is the drawer's equivalent — same destination. */}
+        <Link
+          to="/map"
+          onClick={onClose}
+          className="small-caps flex items-center gap-3 px-5 py-4 text-mist transition-colors hover:text-film-white"
+        >
+          <Search className="h-4 w-4" aria-hidden="true" />
+          Search the map
+        </Link>
 
         <div className="absolute bottom-0 left-0 right-0 border-t border-hair p-4">
           <p className="small-caps text-center text-whisper">Summer/Fall 2026</p>

@@ -297,7 +297,7 @@ export default function TrailsPage() {
               placeholder="Search trails…"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full border border-hair bg-film-deep py-3 pl-11 pr-4 font-mono text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none"
+              className="w-full border border-hair bg-film-deep py-3 pl-11 pr-4 font-mono text-[16px] md:text-[13px] text-film-white placeholder:text-whisper focus:border-ember focus:outline-none"
             />
           </div>
 
