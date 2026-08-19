@@ -173,9 +173,9 @@ export default function InteractiveMap({
         }).setHTML(`
           <div style="padding:14px; min-width:200px; font-family:'JetBrains Mono', monospace;">
             <div style="
-              font-family:'Big Shoulders Display', sans-serif;
-              font-weight:500; text-transform:uppercase; line-height:0.9;
-              font-size:22px; color:#f2ede1; margin-bottom:6px;
+              font-family:Archivo, system-ui, sans-serif;
+              font-weight:500; line-height:1.05; letter-spacing:-0.01em;
+              font-size:20px; color:#f2ede1; margin-bottom:6px;
             ">${esc(location.name)}</div>
             <div style="
               font-size:10px; letter-spacing:0.22em; text-transform:uppercase;
@@ -246,8 +246,8 @@ export default function InteractiveMap({
               padding:6px 10px; line-height:1.15;
             ">
               <div style="
-                font-family:'Big Shoulders Display', sans-serif; font-weight:500;
-                text-transform:uppercase; font-size:15px; color:#f2ede1;
+                font-family:Archivo, system-ui, sans-serif; font-weight:500;
+                font-size:14px; letter-spacing:-0.01em; color:#f2ede1;
               ">${esc(report.locationName)}</div>
               <div style="
                 font-family:'JetBrains Mono', monospace; font-size:9px; color:${meta.color};

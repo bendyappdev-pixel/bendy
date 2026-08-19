@@ -56,11 +56,11 @@ export default {
       },
 
       fontFamily: {
-        // Condensed display — every headline, big numeral, and stat.
-        // Replaces Outfit.
-        display: ['"Big Shoulders Display"', 'Anton', 'system-ui', 'sans-serif'],
-        // Body copy + UI. Replaces Instrument Sans.
-        body:    ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+        // Three families, not four. Archivo carries BOTH the display and
+        // the body role across its 400..800 range — weight and size do the
+        // separating that a second family used to do.
+        display: ['Archivo', 'system-ui', 'sans-serif'],
+        body:    ['Archivo', 'system-ui', 'sans-serif'],
         // Editorial voice — pull quotes, taglines, place names ONLY.
         serif:   ['"Instrument Serif"', 'Georgia', 'serif'],
         // All data: timecodes, coordinates, labels, kickers, stats.

@@ -6,10 +6,8 @@
    BENDY — CINEMATIC FACELIFT
    Drop-in replacement for src/index.css
 
-   Font loading: replace the Google Fonts <link> in index.html with —
-   <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-
-   Also update <meta name="theme-color" content="#070605" /> (was #0f172a).
+   Three families, loaded in index.html: Archivo (display AND body),
+   Instrument Serif (taglines only), JetBrains Mono (all data).
    ───────────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -43,10 +41,10 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display uppercase;
-    font-weight: 800;
-    letter-spacing: -0.005em;
-    line-height: 0.85;
+    @apply font-display;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
   }
 
   /* Links must be defined — the editor lets users add <a> tags later and
@@ -58,20 +56,25 @@
 @layer components {
   /* ── Typography roles ──────────────────────────────────────────────── */
 
-  /* Heavy condensed display. Headlines, chapter titles, big numerals. */
+  /* Display. Headlines, chapter titles, big numerals.
+     Sentence case: this was uppercase everywhere, which is the loudest of
+     the AI-design tells and costs real legibility at headline size. Archivo
+     is a normal-width grotesque where Big Shoulders was condensed, so the
+     metrics are retuned — tighter tracking, looser leading — or the same
+     words set far wider. */
   .film-display {
-    @apply font-display uppercase;
-    font-weight: 800;
-    letter-spacing: -0.005em;
-    line-height: 0.85;
+    @apply font-display;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
   }
 
-  /* Light condensed. Sub-headlines, list item titles, event names. */
+  /* Lighter display. Sub-headlines, list item titles, event names. */
   .film-display-thin {
-    @apply font-display uppercase;
+    @apply font-display;
     font-weight: 500;
-    letter-spacing: 0;
-    line-height: 0.9;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
   }
 
   /* Editorial italic. Taglines and pull quotes ONLY — never body copy. */
