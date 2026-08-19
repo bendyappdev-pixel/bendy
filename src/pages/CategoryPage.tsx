@@ -211,7 +211,6 @@ export default function CategoryPage() {
   }
 
   const chapterIndex = categories.findIndex((c) => c.id === category) + 1;
-  const chapterTotal = categories.length;
   const numeral = String(chapterIndex || 1).padStart(2, '0');
   const categoryEntry = categories.find((c) => c.id === category);
   const accent = categoryAccentMap[categoryEntry?.color ?? ''] ?? 'var(--ember)';
@@ -236,7 +235,9 @@ export default function CategoryPage() {
           leak={chapterIndex % 2 === 1}
           priority
           label={`CH${numeral}_${info.title.replace(/\W+/g, '-').toUpperCase()}_BROLL.MOV`}
-          timecode={`CHAPTER ${numeral} / ${String(chapterTotal).padStart(2, '0')}`}
+          // The stencil numeral below is where this page states its chapter
+          // number; the timecode carries the title, matching CategoryCard.
+          timecode={info.title.toUpperCase()}
           style={{ minHeight: 'min(56vh, 460px)' }}
         >
           <div className="relative z-10 flex h-full min-w-0 flex-col justify-end px-6 pb-10 pt-24 lg:px-16">
