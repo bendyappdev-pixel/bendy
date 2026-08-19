@@ -434,7 +434,9 @@ function AirQualityScene({ airQuality, loading }: { airQuality: AirQuality | nul
               <>
                 AQI {airQuality.aqi}.
                 <br />
-                {airQuality.category}.
+                {/* Carries the status colour — the colour-coded rows this
+                    headline made redundant are gone. */}
+                <span style={{ color: meta.color }}>{airQuality.category}.</span>
               </>
             ) : (
               'Off The Air.'
@@ -460,23 +462,14 @@ function AirQualityScene({ airQuality, loading }: { airQuality: AirQuality | nul
             Reading the air…
           </p>
         ) : airQuality ? (
-          <div className="grid grid-cols-12 gap-6 border-t border-hair pt-10 lg:gap-12">
-            <div className="col-span-12 lg:col-span-4">
-              <DataCell
-                label="Air quality index"
-                value={airQuality.aqi}
-                valueColor={meta.color}
-                className="text-[clamp(56px,7vw,96px)]"
-              />
-            </div>
-            <div className="col-span-12 min-w-0 lg:col-span-8">
-              <StatRow label="Category" value={airQuality.category} valueColor={meta.color} />
-              <StatRow label="Primary pollutant" value={airQuality.primaryPollutant} />
-              <StatRow label="Forecast" value={airQuality.forecast} />
-              <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-mist">
-                {airQuality.healthMessage}
-              </p>
-            </div>
+          /* The headline already states the AQI and its category — this block
+             carries only what the headline doesn't. */
+          <div className="max-w-2xl border-t border-hair pt-10">
+            <StatRow label="Primary pollutant" value={airQuality.primaryPollutant} />
+            <StatRow label="Forecast" value={airQuality.forecast} />
+            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-mist">
+              {airQuality.healthMessage}
+            </p>
           </div>
         ) : (
           <p className="border-t border-hair py-10 font-mono text-[12px] text-whisper">
