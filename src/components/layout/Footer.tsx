@@ -1,4 +1,3 @@
-import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ViewfinderMark from '../ui/ViewfinderMark';
 import { creditedContributors, UNATTRIBUTED_COUNT } from '../../data/photoCredits';
@@ -30,15 +29,6 @@ const calendar = [
 ];
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubscribe = (e: FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitted(true);
-  };
-
   return (
     <footer className="mt-auto bg-black">
       <div className="container-app py-20">
@@ -56,35 +46,9 @@ export default function Footer() {
               6am. No noise.
             </p>
 
-            {submitted ? (
-              <p className="mt-6 font-mono text-[13px] text-ember" role="status">
-                Subscribed. First dispatch lands Sunday at 6am.
-              </p>
-            ) : (
-              <form
-                onSubmit={handleSubscribe}
-                className="mt-6 flex max-w-lg flex-col gap-3 sm:flex-row"
-              >
-                <label htmlFor="footer-email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="footer-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email"
-                  className="flex-1 border border-white/20 bg-transparent px-4 py-3 font-mono text-[13px] placeholder:text-whisper focus:border-ember focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="small-caps whitespace-nowrap bg-ember px-6 py-3 text-film-black transition-colors hover:bg-flame"
-                >
-                  Subscribe ▶
-                </button>
-              </form>
-            )}
+            <p className="mt-6 inline-block border border-white/20 px-4 py-3 font-mono text-[13px] text-whisper">
+              Coming soon. The dispatch desk isn&apos;t staffed yet.
+            </p>
           </div>
 
           <div className="col-span-12 md:col-span-6">
