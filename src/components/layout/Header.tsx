@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import MobileNav from './MobileNav';
-import BulletinTicker from './BulletinTicker';
 import ViewfinderMark from '../ui/ViewfinderMark';
 
 const navLinks = [
@@ -23,8 +22,6 @@ export default function Header() {
 
   return (
     <>
-      <BulletinTicker />
-
       {/* Not fixed — the masthead scrolls away with the page. The old
           `scrolled` state, backdrop blur, and the h-16 spacer that
           compensated for fixed positioning are all gone. */}

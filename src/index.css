@@ -236,9 +236,6 @@
     box-shadow: 0 0 8px 2px rgba(201,82,40,0.6);
   }
 
-  /* Top bulletin ticker. Duplicate the content twice inside for a seamless loop. */
-  .ticker { white-space: nowrap; animation: ticker 70s linear infinite; }
-
   /* ── Utility surfaces ──────────────────────────────────────────────── */
 
   .row-hover:hover { background: rgba(242,237,225,0.04); }
@@ -323,11 +320,10 @@ body::before {
 }
 
 /* ── Reduced motion ────────────────────────────────────────────────────
-   The ticker scroll and REC pulse are continuous and unstoppable, which is
-   exactly the class of motion WCAG 2.2.2 asks us to let users turn off. */
+   The REC pulse and the scroll-linked motion are continuous and
+   unstoppable, exactly the class WCAG 2.2.2 asks us to let users turn off. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ticker { animation: none; transform: none; }
   .rec::before { animation: none; }
   .reel.hoverable { transition: none; }
   .reel.hoverable:hover { transform: none; }

@@ -72,10 +72,6 @@ export default {
       },
 
       keyframes: {
-        ticker: {
-          from: { transform: 'translateX(0)' },
-          to:   { transform: 'translateX(-50%)' },
-        },
         emberPulse: {
           '0%':   { boxShadow: '0 0 0 0 rgba(201,82,40,0.5)' },
           '70%':  { boxShadow: '0 0 0 12px rgba(201,82,40,0)' },
@@ -83,7 +79,6 @@ export default {
         },
       },
       animation: {
-        ticker: 'ticker 70s linear infinite',
         'ember-pulse': 'emberPulse 1.6s ease-out infinite',
       },
     },
