@@ -1283,13 +1283,13 @@ export const events: Event[] = [
   // === RECURRING: Downtown Bend Farmers Market - Wednesdays, May through October ===
   ...generateWeeklyEvents({
     title: 'Downtown Bend Farmers Market',
-    location: 'NW Brooks Street',
+    location: 'Brooks Alley',
     address: 'Downtown Bend, OR',
     category: 'food',
-    description: 'Weekly farmers market featuring local produce, artisan goods, baked items, and prepared foods. Wednesdays 2-6 PM through October.',
+    description: 'Weekly farmers market featuring local produce, artisan goods, baked items, and prepared foods. Wednesdays 11 AM - 3 PM through mid-October.',
     price: 'Free entry',
     startDate: new Date('2026-05-06'),
-    endDate: new Date('2026-10-28'),
+    endDate: new Date('2026-10-14'),
     dayOfWeek: 3, // Wednesday
     startId: 300,
   }),
@@ -1327,7 +1327,7 @@ function generateWeeklyEvents(config: {
   let id = config.startId;
 
   while (current <= config.endDate) {
-    if (current.getDay() === config.dayOfWeek) {
+    if (current.getUTCDay() === config.dayOfWeek) {
       events.push({
         id: String(id++),
         title: config.title,
@@ -1339,7 +1339,7 @@ function generateWeeklyEvents(config: {
         price: config.price,
       });
     }
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return events;
